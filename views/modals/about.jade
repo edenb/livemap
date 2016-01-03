@@ -1,0 +1,12 @@
+#about-modal.modal.fade(tabindex='-1',role='dialog',aria-labelledby='myModalLabel',aria-hidden='true')
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type='button', class='close', data-dismiss='modal', aria-hidden='true') &times;
+        span.sr-only Close
+        h4.modal-title #{wclient.name}
+      .modal-body
+        p !{wclient.about}
+      .modal-footer
+        p(style='float:left;transform:translate(0,50%);') License: #{wclient.license}
+        button(type='button', class='btn btn-default', data-dismiss='modal') Close

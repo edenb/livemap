@@ -1,0 +1,13 @@
+#register-modal.modal.fade(tabindex='-1',role='dialog',aria-labelledby='myModalLabel',aria-hidden='true')
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type='button', class='close', data-dismiss='modal', aria-hidden='true') &times;
+        span.sr-only Close
+        h4.modal-title #{wclient.name}
+      .modal-body
+        p.
+          Registration is not possible at this time.
+        br
+      .modal-footer
+        button(type='button', class='btn btn-default', data-dismiss='modal') Close

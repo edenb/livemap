@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  include mainnavbar
+  include modals/about
+  include modals/alert
+  .container-fluid.main-container-fluid
+    .row-fluid.main-row-fluid
+      .col-xs-12.col-md-8.no-padding.main-livemap-height#livemap
+        include map
+      .col-xs-12.col-md-4
+        #sidebar.main-sidebar
+          include sidebar
+  if flash && (flash.info || flash.success || flash.error)
+    script $(document).ready(function(){$('#alert-modal').modal('show');});

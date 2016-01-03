@@ -1,0 +1,16 @@
+{
+  "server": {
+    "port": "PORT"
+  },
+  "db": {
+    "url": "C_DB_URL"
+  },
+  "sessions": {
+    "secret": "C_SESSIONS_SECRET"
+  },
+  "wclient": {
+    "name": "C_WCLIENT_NAME",
+    "license": "C_WCLIENT_LICENSE",
+    "about": "C_WCLIENT_ABOUT"
+  }
+}

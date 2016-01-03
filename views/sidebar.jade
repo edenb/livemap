@@ -1,0 +1,26 @@
+h4#table-locations-title Locations
+#toolbar
+  button#remove.btn.btn-danger.disable Delete
+table#table-locations(
+  data-toggle='table-locations',
+  data-toolbar='#toolbar',
+  data-search='false',
+  data-show-refresh='false',
+  data-show-toggle='true',
+  data-show-columns='false',
+  data-show-export='true',
+  data-detail-view='false',
+  data-minimum-count-columns='2',
+  data-show-pagination-switch='true',
+  data-pagination='true',
+  data-id-field='device_id',
+  data-unique-id='device_id',
+  data-page-list='[10, 25, 50, 100, ALL]',
+  data-show-footer='false')
+    thead
+      tr
+        th(data-field='state', data-checkbox='true') state
+        th(data-field='alias') Device
+        th(data-field='loc_timestamp', data-formatter='dateTimeFormatter') Date/time stamp
+script
+  include main/sidebar.js
