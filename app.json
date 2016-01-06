@@ -1,0 +1,16 @@
+{
+  "name": "Live Map",
+  "env": {
+    "NODE_ENV": {
+      "description": "Production environment",
+      "value": "production"
+    },
+    "C_FORCESSL": {
+      "description": "Force server to use HTTPS",
+      "value": "true"
+    }
+  },
+  "addons": [
+    "heroku-postgresql"
+  ]
+}
