@@ -1,4 +1,7 @@
 {
+  "server": {
+    "forceSSL": "true"
+  },
   "sessions": {
     "secret": "myproductioncookiesecret"
   },

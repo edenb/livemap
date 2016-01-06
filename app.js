@@ -21,8 +21,8 @@ var port = config.get('server.port');
 // Express set-up
 var app = express();
 
-// Force HTTPS in production
-if (process.env.NODE_ENV === 'production') {
+// Force HTTPS
+if (config.get('server.forceSSL') === 'true') {
     app.use(function (req, res, next) {
         if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
             res.redirect('https://' + req.headers.host + req.url);

@@ -1,9 +1,10 @@
 {
   "server": {
-    "port": "PORT"
+    "port": "PORT",
+    "forceSSL": "C_FORCESSL"
   },
   "db": {
-    "url": "C_DB_URL"
+    "url": "DATABASE_URL"
   },
   "sessions": {
     "secret": "C_SESSIONS_SECRET"
