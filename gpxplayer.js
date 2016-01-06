@@ -99,45 +99,50 @@ gpxPlayer.prototype.start = function start() {
 function startAll() {
     var allFiles, gpxFiles = {}, fileSplit, i, fileExt, fileName, key;
 
-    allFiles = fs.readdirSync('./tracks/');
-    for (i in allFiles) {
-        fileExt = '';
-        fileName = '';
-        fileSplit = allFiles[i].split('.');
-        if (fileSplit.length > 1) {
-            fileExt = fileSplit[fileSplit.length - 1];
-        }
-        // Only allow file names with format: name.ext (only one dot)
-        if (fileSplit.length === 2) {
-            fileName = fileSplit[0];
-        }
-        // If a valid file found
-        if (fileName !== '' && fileExt === 'gpx') {
-            gpxFiles[fileName] = fileName;
-        }
-    }
-
-    // Check for added track files
-    for (key in gpxFiles) {
-        if (gpxFiles.hasOwnProperty(key)) {
-            if (typeof gpxTracks[key] === 'undefined') {
-                gpxTracks[key] = new gpxPlayer(gpxFiles[key], './tracks/' +  gpxFiles[key] + '.gpx', 'http://localhost:' + port + '/location/gpx');
-                console.log('Added track: ' + gpxTracks[key].fileName);
+    fs.readdir('./tracks/', function (err, allFiles) {
+        if (err === null) {
+            for (i in allFiles) {
+                fileExt = '';
+                fileName = '';
+                fileSplit = allFiles[i].split('.');
+                if (fileSplit.length > 1) {
+                    fileExt = fileSplit[fileSplit.length - 1];
+                }
+                // Only allow file names with format: name.ext (only one dot)
+                if (fileSplit.length === 2) {
+                    fileName = fileSplit[0];
+                }
+                // If a valid file found
+                if (fileName !== '' && fileExt === 'gpx') {
+                    gpxFiles[fileName] = fileName;
+                }
             }
-        }
-    }
 
-    // Check for removed track files and start all players (if not already started)
-    for (key in gpxTracks) {
-        if (gpxTracks.hasOwnProperty(key)) {
-            if (typeof gpxFiles[key] === 'undefined') {
-                console.log('Removed track: ' + gpxTracks[key].fileName);
-                delete gpxTracks[key];
-            } else {
-                gpxTracks[key].start();
+            // Check for added track files
+            for (key in gpxFiles) {
+                if (gpxFiles.hasOwnProperty(key)) {
+                    if (typeof gpxTracks[key] === 'undefined') {
+                        gpxTracks[key] = new gpxPlayer(gpxFiles[key], './tracks/' +  gpxFiles[key] + '.gpx', 'http://localhost:' + port + '/location/gpx');
+                        console.log('Added track: ' + gpxTracks[key].fileName);
+                    }
+                }
             }
+
+            // Check for removed track files and start all players (if not already started)
+            for (key in gpxTracks) {
+                if (gpxTracks.hasOwnProperty(key)) {
+                    if (typeof gpxFiles[key] === 'undefined') {
+                        console.log('Removed track: ' + gpxTracks[key].fileName);
+                        delete gpxTracks[key];
+                    } else {
+                        gpxTracks[key].start();
+                    }
+                }
+            }
+        } else {
+            console.error('Missing tracks directory.', err);
         }
-    }
+    });
 }
 
 module.exports.startAll = startAll;
