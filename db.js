@@ -2,6 +2,7 @@ var config = require('config');
 var pg = require('pg');
 var pgStore = require('connect-pg-simple');
 var dbcache = require('./dbcache');
+var fs = require('fs');
 
 // Get the PostgreSQL login details from the config.
 // Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
@@ -25,6 +26,7 @@ queryDef.insertPosition = {'qstr': 'INSERT INTO locations(device_id, device_id_t
 queryDef.insertDevice = {'qstr': 'INSERT INTO devices(api_key, identifier, alias) VALUES ($1, $2, $3) RETURNING *', 'readTables': [], 'writeTables': ['devices'], 'cached': false};
 queryDef.deleteDevices = {'qstr': 'DELETE FROM devices WHERE device_id = ANY($1::int[])', 'readTables': [], 'writeTables': ['devices'], 'cached': false};
 queryDef.findSessionById = {'qstr': 'SELECT sess FROM sessions WHERE sid = $1', 'readTables': ['sessions'], 'writeTables': [], 'cached': false};
+queryDef.getNumberOfTables = {'qstr': 'SELECT count(*) FROM information_schema.tables WHERE table_schema = \'public\'', 'readTables': [], 'writeTables': [], 'cached': false};
 
 //
 // Database operations with predefined queries
@@ -86,6 +88,49 @@ function queryDb(key, sqlParams, callback) {
 }
 
 //
+// Database operations with queries from file
+//
+
+function queryDbFromFile(fileName, callback) {
+    var query, rows = [];
+
+    fs.readFile(fileName, function (fileError, fileData) {
+        if (fileError === null) {
+            pg.connect(connectionString, function (err, client, done) {
+                if (err) {
+                    console.error('Database connection error: ', err);
+                    if (typeof callback === 'function') {
+                        callback(err, [], null);
+                    }
+                    done();
+                } else {
+                    query = client.query(fileData.toString());
+
+                    query.on('error', function (err) {
+                        console.error('Database query error: ', err);
+                        done();
+                    });
+
+                    query.on('row', function (row) {
+                        rows.push(row);
+                    });
+
+                    query.on('end', function (result) {
+                        if (typeof callback === 'function') {
+                            console.log('queryDbFromFile: ' + fileName);
+                            callback(null, rows, result);
+                        }
+                        done();
+                    });
+                }
+            });
+        } else {
+            console.error('Unable to open SQL file.', fileError);
+        }
+    });
+}
+
+//
 // Sessions
 //
 
@@ -100,6 +145,25 @@ function getStore() {
 //
 // Database maintenance
 //
+
+function createDbSchema() {
+    queryDb('getNumberOfTables', [], function (err, rows, result) {
+        if (err === null && rows !== null) {
+            console.log('Current number of tables in the database: ' + rows[0].count);
+            if (rows[0].count === '0') {
+                queryDbFromFile('./setup/schema.sql', function (err, rows, result) {
+                    if (err === null) {
+                        console.log('New database created.');
+                    } else {
+                        console.err('Database creation failed.', err);
+                    }
+                });
+            }
+        } else {
+            console.error('Database error retrieving the number of tables.', err);
+        }
+    });
+}
 
 function removeOldestPositions() {
     var sqlStmt, query;
@@ -134,6 +198,7 @@ function removeOldestPositions() {
 }
 
 function startMaintenance() {
+    createDbSchema();
     removeOldestPositions();
     setInterval(removeOldestPositions, config.get('db.maintenanceInterval'));
 }

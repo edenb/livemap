@@ -40,3 +40,5 @@ CREATE TABLE sessions (
   expire                timestamp(6) NOT NULL,
   CONSTRAINT sessions_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE
 ) WITH (OIDS=FALSE);
+
+INSERT INTO users (username, role) VALUES ('admin','admin');
