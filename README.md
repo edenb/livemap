@@ -25,3 +25,9 @@ On a local NodeJS setup you first need to install some packages.
 Login with username 'admin' and any password the first time. Don't forget to change the admin password right away.
 
 TBC
+
+## To Do
+* View, add, modify and delete user accounts (admin only)
+* Make your devices visible for other users
+* Show tail of previous locations on selected marker
+* Add MQTT support to ingest location updates
