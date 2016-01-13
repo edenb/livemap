@@ -120,6 +120,39 @@ module.exports = function (passport) {
         }
     });
 
+    // GET Manage Users Page. Only Admins are allowed to make changes.
+    router.get('/manageusers', ensureAuthenticated, function (req, res) {
+        if (req.user.role === 'admin') {
+            usr.getAllUsers(function (allUsers) {
+                res.render('manageusers', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, users: allUsers});
+                console.log(JSON.stringify(allUsers));
+            });
+        } else {
+            res.redirect('/main');
+        }
+    });
+
+    // Handle Manage Users POST
+    router.post('/manageusers', ensureAuthenticated, function (req, res) {
+        if (req.body.operation === 'cancel') {
+            res.redirect('/main');
+        } else {
+            usr.changeDetails(req.user, req.body.fullname, req.body.email, function (err) {
+                if (err === null) {
+                    req.flash('info', 'Details changed');
+                    req.session.save(function (err) {
+                        res.redirect('/main');
+                    });
+                } else {
+                    req.flash('error', err);
+                    req.session.save(function (err) {
+                        res.redirect('/changedetails');
+                    });
+                }
+            });
+        }
+    });
+
     // Handle remove devices POST
     router.post('/removedevices', ensureAuthenticated, function (req, res) {
         // console.log(JSON.stringify(req.body));

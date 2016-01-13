@@ -35,6 +35,16 @@ function loadUsersFromDB(callback) {
     });
 }
 
+function getAllUsers(callback) {
+    loadUsersFromDB(function (err) {
+        if (err === null) {
+            callback(users);
+        } else {
+            callback([]);
+        }
+    });
+}
+
 function findUser(field, val, callback) {
     var queryDefinition = null;
     if (field === 'id') {
@@ -149,6 +159,7 @@ function isKnownAPIkey(apiKey) {
 }
 
 module.exports.loadUsersFromDB = loadUsersFromDB;
+module.exports.getAllUsers = getAllUsers;
 module.exports.findUser = findUser;
 module.exports.changeDetails = changeDetails;
 module.exports.changePassword = changePassword;

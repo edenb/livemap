@@ -13,7 +13,7 @@ var connectionString = config.get('db.url');
 var sessionStore;
 var queryDef = [];
 
-queryDef.getAllUsers = {'qstr': 'SELECT * FROM users', 'readTables': ['users'], 'writeTables': [], 'cached': true};
+queryDef.getAllUsers = {'qstr': 'SELECT user_id, username, fullname, email, role, api_key FROM users', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.findUserById = {'qstr': 'SELECT * FROM users WHERE user_id = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.findUserByUsername = {'qstr': 'SELECT * FROM users WHERE username = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.changeDetailsByUsername = {'qstr': 'UPDATE users SET fullname = $2, email = $3 WHERE username = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
