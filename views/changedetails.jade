@@ -3,12 +3,13 @@ extends layout
 block content
   include mainnavbar
   include modals/about
+  include modals/alert
   .container-fluid.main-container-fluid
     .row-fluid.main-row-fluid
       .col-xs-12.col-md-6.col-md-offset-3
         br
-        if flash.error && flash.error.length > 0
-          h3.text-center.alert.alert-danger(role='alert') #{flash.error}
+        if flash && (flash.info || flash.success || flash.error)
+          script $(document).ready(function(){$('#alert-modal').modal('show');});
         form(method='POST')
           legend Change details
           .form-group
@@ -16,22 +17,51 @@ block content
             input.form-control(type='text', name='username', value=user.username, readonly='true')
           .form-group
             label(for='fullname') Full name
-            if mod === 'true'
+            if user.role === 'admin' || user.role === 'manager'
               input.form-control(type='text', name='fullname', value=user.fullname)
             else
               input.form-control(type='text', name='fullname', value=user.fullname, readonly='true')
           .form-group
             label(for='email') E-mail
-            if mod === 'true'
+            if user.role === 'admin' || user.role === 'manager'
               input.form-control(type='text', name='email', value=user.email)
             else
               input.form-control(type='text', name='email', value=user.email, readonly='true')
           .form-group
             label(for='api_key') API key
             input.form-control(type='text', name='api_key', value=user.api_key, readonly='true')
-          if mod === 'true'
+          if user.role === 'admin' || user.role === 'manager'
             button.btn.btn-primary(type='submit', name='operation', value='submit') Change
           else
             button.btn.btn-primary.disabled(type='submit', name='operation', value='submit') Change
           | &nbsp;
           button.btn.btn-default(type='submit', name='operation', value='cancel') Cancel
+          br
+          br
+          br
+          legend Select a user
+          table#table-allusers(
+            data-toggle='table-allusers',
+            data-toolbar='#toolbar',
+            data-search='false',
+            data-show-refresh='false',
+            data-show-toggle='true',
+            data-show-columns='false',
+            data-show-export='true',
+            data-detail-view='false',
+            data-minimum-count-columns='2',
+            data-show-pagination-switch='true',
+            data-pagination='true',
+            data-id-field='username',
+            data-unique-id='username',
+            data-page-list='[10, 25, 50, 100, ALL]',
+            data-show-footer='false')
+              thead
+                tr
+                  th(data-field='state', data-radio='true') state
+                  th(data-field='username') Username
+                  th(data-field='fullname') Full name
+                  th(data-field='role') Role
+          script usersData=!{JSON.stringify({users})};
+          script
+            include main/changedetails.js

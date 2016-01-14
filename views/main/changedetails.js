@@ -1,4 +1,4 @@
-var $table = $('#table-manageusers');
+var $table = $('#table-allusers');
 
 $(function () {
     $table.bootstrapTable({});

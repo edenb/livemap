@@ -19,14 +19,6 @@
             li
               if user.role=='admin' || user.role=='manager'
                 a(href='/changepassword') Change password
-        if user.role=='admin'
-          li.dropdown
-            a.dropdown-toggle(href='#', data-toggle='dropdown')
-              | Admin Settings
-              span.caret
-            ul.dropdown-menu(role='menu')
-              li
-                a(href='/manageusers') Manage Users
         li
           a(data-toggle='modal' href='#about-modal') About
       ul.nav.navbar-nav.navbar-right

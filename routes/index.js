@@ -66,11 +66,13 @@ module.exports = function (passport) {
 
     // GET Change Details Page. Only Admins and Managers are allowed to make changes.
     router.get('/changedetails', ensureAuthenticated, function (req, res) {
-        var modifyAllowed = 'false';
-        if (req.user.role === 'admin' || req.user.role === 'manager') {
-            modifyAllowed = 'true';
+        if (req.user.role === 'admin') {
+            usr.getAllUsers(function (allUsers) {
+                res.render('changedetails', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, users: allUsers});
+            });
+        } else {
+            res.render('changedetails', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, users: null});
         }
-        res.render('changedetails', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, mod: modifyAllowed});
     });
 
     // Handle change details POST
@@ -82,7 +84,7 @@ module.exports = function (passport) {
                 if (err === null) {
                     req.flash('info', 'Details changed');
                     req.session.save(function (err) {
-                        res.redirect('/main');
+                        res.redirect('/changedetails');
                     });
                 } else {
                     req.flash('error', err);
@@ -114,39 +116,6 @@ module.exports = function (passport) {
                     req.flash('error', err);
                     req.session.save(function (err) {
                         res.redirect('/changepassword');
-                    });
-                }
-            });
-        }
-    });
-
-    // GET Manage Users Page. Only Admins are allowed to make changes.
-    router.get('/manageusers', ensureAuthenticated, function (req, res) {
-        if (req.user.role === 'admin') {
-            usr.getAllUsers(function (allUsers) {
-                res.render('manageusers', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, users: allUsers});
-                console.log(JSON.stringify(allUsers));
-            });
-        } else {
-            res.redirect('/main');
-        }
-    });
-
-    // Handle Manage Users POST
-    router.post('/manageusers', ensureAuthenticated, function (req, res) {
-        if (req.body.operation === 'cancel') {
-            res.redirect('/main');
-        } else {
-            usr.changeDetails(req.user, req.body.fullname, req.body.email, function (err) {
-                if (err === null) {
-                    req.flash('info', 'Details changed');
-                    req.session.save(function (err) {
-                        res.redirect('/main');
-                    });
-                } else {
-                    req.flash('error', err);
-                    req.session.save(function (err) {
-                        res.redirect('/changedetails');
                     });
                 }
             });
