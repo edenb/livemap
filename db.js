@@ -117,7 +117,7 @@ function queryDbFromFile(fileName, callback) {
 
                     query.on('end', function (result) {
                         if (typeof callback === 'function') {
-                            console.log('queryDbFromFile: ' + fileName);
+                            //console.log('queryDbFromFile: ' + fileName);
                             callback(null, rows, result);
                         }
                         done();
@@ -166,33 +166,11 @@ function createDbSchema() {
 }
 
 function removeOldestPositions() {
-    var sqlStmt, query;
-
-    pg.connect(connectionString, function (err, client, done) {
-        if (err) {
-            console.error('Database error deleting oldest locations. ', err);
-            done();
+    queryDbFromFile('./setup/cleanup.sql', function (err, rows, result) {
+        if (err === null) {
+            console.log('Oldest locations deleted from the database.');
         } else {
-            sqlStmt  = 'DELETE FROM locations ';
-            sqlStmt += 'WHERE location_id IN ';
-            sqlStmt += '(SELECT location_id FROM ( ';
-            sqlStmt += '    SELECT loc1.location_id, loc1.device_id, loc1.created_at, COUNT(*) num ';
-            sqlStmt += '    FROM locations loc1 JOIN locations loc2 ';
-            sqlStmt += '        ON ((loc1.device_id = loc2.device_id) OR (loc1.device_id IS NULL AND loc2.device_id IS NULL)) AND loc1.created_at <= loc2.created_at ';
-            sqlStmt += '    GROUP BY loc1.location_id, loc1.device_id, loc1.created_at ';
-            sqlStmt += '    HAVING COUNT(*) > 100 ';
-            sqlStmt += '    ORDER BY device_id, created_at ';
-            sqlStmt += ') AS location_id);';
-            query = client.query(sqlStmt);
-
-            query.on('error', function (err) {
-                console.error('Database error deleting oldest locations. ', err);
-                done();
-            });
-
-            query.on('end', function (result) {
-                done();
-            });
+            console.err('Database error deleting oldest locations.', err);
         }
     });
 }
