@@ -36,32 +36,33 @@ block content
             button.btn.btn-primary.disabled(type='submit', name='operation', value='submit') Change
           | &nbsp;
           button.btn.btn-default(type='submit', name='operation', value='cancel') Cancel
-          br
-          br
-          br
-          legend Select a user
-          table#table-allusers(
-            data-toggle='table-allusers',
-            data-toolbar='#toolbar',
-            data-search='false',
-            data-show-refresh='false',
-            data-show-toggle='true',
-            data-show-columns='false',
-            data-show-export='true',
-            data-detail-view='false',
-            data-minimum-count-columns='2',
-            data-show-pagination-switch='true',
-            data-pagination='true',
-            data-id-field='username',
-            data-unique-id='username',
-            data-page-list='[10, 25, 50, 100, ALL]',
-            data-show-footer='false')
-              thead
-                tr
-                  th(data-field='state', data-radio='true') state
-                  th(data-field='username') Username
-                  th(data-field='fullname') Full name
-                  th(data-field='role') Role
-          script usersData=!{JSON.stringify({users})};
-          script
-            include main/changedetails.js
+          if user.role === 'admin'
+            br
+            br
+            br
+            legend Select a user
+            table#table-allusers(
+              data-toggle='table-allusers',
+              data-toolbar='#toolbar',
+              data-search='false',
+              data-show-refresh='false',
+              data-show-toggle='true',
+              data-show-columns='false',
+              data-show-export='true',
+              data-detail-view='false',
+              data-minimum-count-columns='2',
+              data-show-pagination-switch='true',
+              data-pagination='true',
+              data-id-field='username',
+              data-unique-id='username',
+              data-page-list='[10, 25, 50, 100, ALL]',
+              data-show-footer='false')
+                thead
+                  tr
+                    th(data-field='state', data-radio='true') state
+                    th(data-field='username') Username
+                    th(data-field='fullname') Full name
+                    th(data-field='role') Role
+            script usersData=!{JSON.stringify({users})};
+            script
+              include main/changedetails.js
