@@ -1,4 +1,3 @@
-var config = require('config');
 var db = require('./db.js');
 
 var devices = [];
@@ -48,7 +47,7 @@ function getDeviceByIdentity(apiKey, identifier, callback) {
 }
 
 function splitDeviceIdentity(devIdent, dividerChar) {
-    var dividerIdx, err = null, apiKey = null, identifier = null, identityObj = {};
+    var dividerIdx, identityObj = {};
 
     // Return object with API key and identifier. A valid identity returns err = null, otherwise err = <error string>
     identityObj.apiKey = null;
