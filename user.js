@@ -16,11 +16,13 @@ function generateAPIkey() {
 
 function checkChangesAllowed(user, modUser) {
     // ToDo: add more checks here
+    if (modUser.role === '') {
+        return 'No role selected';
+    }
     if (user.role === 'admin' && user.user_id === modUser.user_id && user.role !== modUser.role) {
         return 'You can not change your own role';
-    } else {
-        return null;
     }
+    return null;
 }
 
 function validateChanges(user, modUser) {

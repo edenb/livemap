@@ -82,7 +82,7 @@ module.exports = function (passport) {
         modUser.username = req.body.username;
         modUser.fullname = req.body.fullname;
         modUser.email = req.body.email;
-        modUser.role = req.body.role;
+        modUser.role = req.body.role || '';
         modUser.api_key = req.body.api_key;
 
         switch (req.body.operation) {
