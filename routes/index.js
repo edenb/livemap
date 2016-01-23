@@ -77,22 +77,51 @@ module.exports = function (passport) {
 
     // Handle change details POST
     router.post('/changedetails', ensureAuthenticated, function (req, res) {
-        if (req.body.operation === 'cancel') {
-            res.redirect('/main');
-        } else {
-            usr.changeDetails(req.user, req.body.fullname, req.body.email, function (err) {
-                if (err === null) {
-                    req.flash('info', 'Details changed');
-                    req.session.save(function (err) {
-                        res.redirect('/changedetails');
-                    });
-                } else {
-                    req.flash('error', err);
-                    req.session.save(function (err) {
-                        res.redirect('/changedetails');
-                    });
-                }
-            });
+        var modUser = {};
+        modUser.user_id = parseInt(req.body.user_id);
+        modUser.username = req.body.username;
+        modUser.fullname = req.body.fullname;
+        modUser.email = req.body.email;
+        modUser.role = req.body.role;
+        modUser.api_key = req.body.api_key;
+
+        switch (req.body.operation) {
+            case 'cancel':
+                res.redirect('/main');
+                break;
+            case 'submit':
+                usr.changeDetails(req.user, modUser, function (err) {
+                    if (err === null) {
+                        req.flash('info', 'Details changed');
+                        req.session.save(function (err) {
+                            res.redirect('/changedetails');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedetails');
+                        });
+                    }
+                });
+                break;
+            case 'delete':
+                usr.deleteUser(req.user, modUser, function (err) {
+                     if (err === null) {
+                        req.flash('info', 'User deleted');
+                        req.session.save(function (err) {
+                            res.redirect('/changedetails');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedetails');
+                        });
+                    }
+                });
+                break;
+            default:
+                res.redirect('/main');
+                break;
         }
     });
 

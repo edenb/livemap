@@ -13,29 +13,47 @@ block content
         form(method='POST')
           legend Change details
           .form-group
+            input(type='hidden', name='user_id', value=user.user_id)
             label(for='username') Username
-            input.form-control(type='text', name='username', value=user.username, readonly='true')
+            if user.role === 'admin'
+              input.form-control(type='text', name='username', placeholder='Enter username', value=user.username)
+            else
+              input.form-control(type='text', name='username', value=user.username, readonly='true')
           .form-group
             label(for='fullname') Full name
             if user.role === 'admin' || user.role === 'manager'
-              input.form-control(type='text', name='fullname', value=user.fullname)
+              input.form-control(type='text', name='fullname', placeholder='Enter full name', value=user.fullname)
             else
               input.form-control(type='text', name='fullname', value=user.fullname, readonly='true')
           .form-group
             label(for='email') E-mail
             if user.role === 'admin' || user.role === 'manager'
-              input.form-control(type='text', name='email', value=user.email)
+              input.form-control(type='text', name='email', placeholder='Enter e-mail', value=user.email)
             else
               input.form-control(type='text', name='email', value=user.email, readonly='true')
           .form-group
             label(for='api_key') API key
-            input.form-control(type='text', name='api_key', value=user.api_key, readonly='true')
-          if user.role === 'admin' || user.role === 'manager'
-            button.btn.btn-primary(type='submit', name='operation', value='submit') Change
-          else
-            button.btn.btn-primary.disabled(type='submit', name='operation', value='submit') Change
-          | &nbsp;
-          button.btn.btn-default(type='submit', name='operation', value='cancel') Cancel
+            if user.role === 'admin'
+              input.form-control(type='text', name='api_key', placeholder='Enter API key or leave empty for auto generated key', value=user.api_key)
+            else
+              input.form-control(type='text', name='api_key', value=user.api_key, readonly='true')
+          .form-group
+            label(for='role') Role
+            if user.role === 'admin'
+              select.form-control(name='role')
+                option(value='', disabled, hidden) Select a role
+                option(value='admin') Administrator
+                option(value='manager') Manager
+                option(value='viewer') Viewer
+            else
+              input.form-control(type='text', name='role', value=user.role, readonly='true')
+          .btn-toolbar
+            if user.role === 'admin' || user.role === 'manager'
+              button#btnSave.btn.btn-primary(type='submit', name='operation', value='submit') Save
+            button#btnCancel.btn.btn-default(type='submit', name='operation', value='cancel') Cancel
+            if user.role === 'admin'
+              button#btnDelUser.btn.btn-danger.pull-right(type='submit', name='operation', value='delete') Delete user
+              button#btnNewUser.btn.btn-primary.pull-right(type='button') New user
           if user.role === 'admin'
             br
             br
@@ -59,7 +77,6 @@ block content
               data-show-footer='false')
                 thead
                   tr
-                    th(data-field='state', data-radio='true') state
                     th(data-field='username') Username
                     th(data-field='fullname') Full name
                     th(data-field='role') Role

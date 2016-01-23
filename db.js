@@ -16,9 +16,10 @@ var queryDef = [];
 queryDef.getAllUsers = {'qstr': 'SELECT user_id, username, fullname, email, role, api_key FROM users', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.findUserById = {'qstr': 'SELECT * FROM users WHERE user_id = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.findUserByUsername = {'qstr': 'SELECT * FROM users WHERE username = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
-queryDef.changeDetailsByUsername = {'qstr': 'UPDATE users SET fullname = $2, email = $3 WHERE username = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
-queryDef.changeAPIkeyByUsername = {'qstr': 'UPDATE users SET api_key = $2 WHERE username = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
+queryDef.changeDetailsById = {'qstr': 'UPDATE users SET username = $2, fullname = $3, email = $4, role = $5, api_key = $6 WHERE user_id = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
 queryDef.changePwdByUsername = {'qstr': 'UPDATE users SET password = $2 WHERE username = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
+queryDef.insertUser = {'qstr': 'INSERT INTO users(username, fullname, email, role, api_key) VALUES ($1, $2, $3, $4, $5)', 'readTables': [], 'writeTables': ['users'], 'cached': false};
+queryDef.deleteUser = {'qstr': 'DELETE FROM users WHERE user_id = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
 queryDef.getAllDevices = {'qstr': 'SELECT * FROM devices', 'readTables': ['devices'], 'writeTables': [], 'cached': true};
 queryDef.getAllowedDevices = {'qstr': 'SELECT devices.* FROM devices INNER JOIN shared_devices ON devices.device_id = shared_devices.device_id WHERE shared_devices.user_id = $1 UNION SELECT devices.* FROM devices INNER JOIN users ON devices.api_key = users.api_key WHERE users.user_id = $1', 'readTables': ['devices', 'shared_devices', 'users'], 'writeTables': [], 'cached': true};
 queryDef.getLastPositions = {'qstr': 'SELECT locations.*, devices.alias FROM locations INNER JOIN devices ON locations.device_id = devices.device_id WHERE location_id IN (SELECT max(location_id) FROM locations WHERE device_id IN (SELECT device_id FROM shared_devices WHERE user_id = $1 UNION SELECT devices.device_id FROM devices INNER JOIN users ON devices.api_key = users.api_key WHERE users.user_id = $1) GROUP BY device_id)', 'readTables': ['locations', 'devices', 'shared_devices', 'users'], 'writeTables': [], 'cached': true};
@@ -155,7 +156,7 @@ function createDbSchema() {
                     if (err === null) {
                         console.log('New database created.');
                     } else {
-                        console.err('Database creation failed.', err);
+                        console.error('Database creation failed.', err);
                     }
                 });
             }
@@ -170,7 +171,7 @@ function removeOldestPositions() {
         if (err === null) {
             console.log('Oldest locations deleted from the database.');
         } else {
-            console.err('Database error deleting oldest locations.', err);
+            console.error('Database error deleting oldest locations.', err);
         }
     });
 }

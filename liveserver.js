@@ -131,7 +131,7 @@ function processGpx(srcData, callback) {
     var destData = {}, identObj;
 
     identObj = dev.splitDeviceIdentity(srcData.device_id, '_');
-    if ((identObj.err === null) && usr.isKnownAPIkey(identObj.apiKey)) {
+    if ((identObj.err === null) && usr.isKnownAPIkey(identObj.apiKey, null)) {
         dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function(destDevice) {    // Todo: check device_id existance
             if (destDevice !== null) {
                 destData.device_id = destDevice.device_id;
@@ -169,7 +169,7 @@ function processGeofancy(srcData, callback) {
     // Determine if it's a detection of an iBeacon (lon and lat are '0') or the location of a device
     if (srcData.latitude === '0' && srcData.longitude === '0') {
         identObj = dev.splitDeviceIdentity(srcData.id, ':');
-        if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey)) {
+        if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
             dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function(destDevice) {    // Todo: check device_id existance
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
@@ -205,7 +205,7 @@ function processGeofancy(srcData, callback) {
     } else {
         identity = srcData.id + ':' + srcData.device;
         identObj = dev.splitDeviceIdentity(identity, ':');
-        if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey)) {
+        if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
             dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function (destDevice) {
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;

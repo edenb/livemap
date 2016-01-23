@@ -3,17 +3,38 @@ var db = require('./db.js');
 var bcrypt = require('bcrypt');
 var shortid = require('shortid');
 
+// In memory list of all users with their attributes
 var users = [];
 
-function generateAPIkey(user, callback) {
-    var generatedAPIkey;
+//
+// Local functions
+//
 
-    generatedAPIkey = shortid.generate();
+function generateAPIkey() {
+    return shortid.generate();
+}
 
-    db.queryDb('changeAPIkeyByUsername', [user.username, generatedAPIkey], function (err, rows, result) {
-        user.api_key = generatedAPIkey;
-        return callback(err, user, result);
-    });
+function checkChangesAllowed(user, modUser) {
+    // ToDo: add more checks here
+    if (user.role === 'admin' && user.user_id === modUser.user_id && user.role !== modUser.role) {
+        return 'You can not change your own role';
+    } else {
+        return null;
+    }
+}
+
+function validateChanges(user, modUser) {
+    // ToDo: add more validations here
+
+    // The full name should have a minimal length
+    if (modUser.fullname.length < config.get('user.nameMinLength')) {
+        return 'Full name too short';
+    }
+    // An API key should be unique (mainly for manually changed API keys)
+    if (isKnownAPIkey(modUser.api_key, modUser)) {
+        return 'API key already in use';
+    }
+    return null;
 }
 
 //
@@ -59,39 +80,53 @@ function findUser(field, val, callback) {
                 if (result.rowCount === 0) {
                     return callback(err, null);
                 } else {
-                    // Every user gets an API key. Generate one if not present.
-                    if (rows[0].api_key === null) {
-                        generateAPIkey(rows[0], function (err, user, result) {
-                            if (result.rowCount === 0) {
-                                return callback(err, null);
-                            } else {
-                                return callback(err, user);
-                            }
-                        });
-                    } else {
-                        return callback(err, rows[0]);
-                    }
+                    return callback(err, rows[0]);
                 }
             }
         });
     }
 }
 
-function changeDetails(user, fullname, email, callback) {
-    if (fullname.length < config.get('user.nameMinLength')) {
-        return callback('Full name too short');
+function changeDetails(user, modUser, callback) {
+    var err;
+
+    // If the API key is empty generate one
+    if (modUser.api_key === '') {
+        modUser.api_key = generateAPIkey();
     }
-    db.queryDb('changeDetailsByUsername', [user.username, fullname, email], function (err, rows, result) {
-        if (err !== null) {
-            return callback(err);
-        } else {
-            if (result.rowCount === 0) {
-                return callback('Unable to change details');
+    err = checkChangesAllowed(user, modUser);
+    if (err !== null) {
+        return callback(err);
+    }
+    err = validateChanges(user, modUser);
+    if (err !== null) {
+        return callback(err);
+    }
+    if (modUser.user_id === 0) {
+        db.queryDb('insertUser', [modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key], function (err, rows, result) {
+            if (err !== null) {
+                return callback(err);
             } else {
-                return callback(null);
+                if (result.rowCount === 0) {
+                    return callback('Unable to add user');
+                } else {
+                    return callback(null);
+                }
             }
-        }
-    });
+        });
+    } else {
+        db.queryDb('changeDetailsById', [modUser.user_id, modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key], function (err, rows, result) {
+            if (err !== null) {
+                return callback(err);
+            } else {
+                if (result.rowCount === 0) {
+                    return callback('Unable to change details');
+                } else {
+                    return callback(null);
+                }
+            }
+        });
+    }
 }
 
 function changePassword(user, curPwd, newPwd, confirmPwd, callback) {
@@ -145,10 +180,31 @@ function checkPassword(user, password, callback) {
     }
 }
 
-function isKnownAPIkey(apiKey) {
-    var i = 0;
+function deleteUser(user, modUser, callback) {
+    if (user.user_id === modUser.user_id) {
+        callback('You can not delete your own account');
+    } else {
+        db.queryDb('deleteUser', [modUser.user_id], function (err, rows, result) {
+            if (err === null && rows !== null) {
+                return callback(null);
+            } else {
+                return callback('Failed to delete user');
+            }
+        });
+    }
+}
 
-    while ((i < users.length) && (users[i].api_key !== apiKey)) {
+function isKnownAPIkey(apiKey, ignoreUser) {
+    var i, ignoreId;
+
+    if (ignoreUser === null) {
+        ignoreId = -1;
+    } else {
+        ignoreId = ignoreUser.user_id;
+    }
+
+    i = 0;
+    while ((i < users.length) && (users[i].api_key !== apiKey || users[i].user_id === ignoreId)) {
         i++;
     }
     if (i !== users.length) {
@@ -164,4 +220,5 @@ module.exports.findUser = findUser;
 module.exports.changeDetails = changeDetails;
 module.exports.changePassword = changePassword;
 module.exports.checkPassword = checkPassword;
+module.exports.deleteUser = deleteUser;
 module.exports.isKnownAPIkey = isKnownAPIkey;

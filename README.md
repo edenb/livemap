@@ -27,7 +27,6 @@ Login with username 'admin' and any password the first time. Don't forget to cha
 TBC
 
 ## To Do
-* View, add, modify and delete user accounts (admin only)
 * Make your devices visible for other users
 * Show tail of previous locations on selected marker
 * Add MQTT support to ingest location updates
