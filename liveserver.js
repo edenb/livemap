@@ -135,7 +135,6 @@ function processGpx(srcData, callback) {
         dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function(destDevice) {    // Todo: check device_id existance
             if (destDevice !== null) {
                 destData.device_id = destDevice.device_id;
-                destData.api_key = destDevice.api_key;
                 destData.identifier = destDevice.identifier;
                 destData.alias = destDevice.alias;
                 destData.device_id_tag = null;
@@ -173,7 +172,6 @@ function processGeofancy(srcData, callback) {
             dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function(destDevice) {    // Todo: check device_id existance
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
-                    destData.api_key = identObj.apiKey;
                     destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
                     dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function(destDevice) {    // Todo: check id existance
                         if (destDevice !== null) {
@@ -210,7 +208,6 @@ function processGeofancy(srcData, callback) {
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
                     destData.device_id_tag = null;
-                    destData.api_key = srcData.id;
                     destData.alias = destDevice.alias;
                     destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
                     destData.loc_lat = srcData.latitude;
@@ -235,9 +232,6 @@ function processGeofancy(srcData, callback) {
 }
 
 function send2client(destData) {
-
-    // !!! remove api_key !!!
-
     // On a valid location reception:
     // 1. Store the location in the database
     // 2. Send a location update to every client that is authorized for this device
