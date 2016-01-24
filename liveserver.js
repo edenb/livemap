@@ -123,10 +123,6 @@ function isGpsDataValid(gpsData) {
     return isValid;
 }
 
-function isAllowed(devices_array, device) {
-    return devices_array.indexOf(device) > -1;
-}
-
 function processGpx(srcData, callback) {
     var destData = {}, identObj;
 
