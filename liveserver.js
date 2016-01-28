@@ -1,11 +1,9 @@
 var config = require('config');
-var qs = require('querystring');
 var io = require('socket.io');
 var cookieParser = require('cookie-parser');
 var gp = require('./gpxplayer.js');
 var db = require('./db.js');
 var usr = require('./user.js');
-var dev = require('./device.js');
 
 var socketClients = [];
 
@@ -49,11 +47,10 @@ function isInputDataValid(gpsData) {
     }
 
     if (!isValid) {
-        console.log('Invalid location: ' + qs.stringify(gpsData));
+        console.log('Invalid location: ' + JSON.stringify(gpsData));
     }
     return isValid;
 }
-
 
 //
 // Exported modules

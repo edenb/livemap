@@ -12,6 +12,7 @@ var db = require('./db.js');
 var usr = require('./user.js');
 var livesvr = require('./liveserver.js');
 var rest = require('./rest.js');
+var mqtt = require('./mqtt.js');
 
 var port = config.get('server.port');
 
@@ -123,5 +124,6 @@ var server = app.listen(port);
 
 db.startMaintenance();
 livesvr.start(server);
+mqtt.start();
 
 console.log('Server started on port ' + port);

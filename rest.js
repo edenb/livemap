@@ -113,7 +113,7 @@ function processGeofancy(srcData, callback) {
 
 function processLocation(request, response, type) {
     var form_data = '';
-    var i, srcData = {}, destData = {};
+    var srcData = {};
 
     request.on('data', function (chunk) {
         form_data += chunk.toString();

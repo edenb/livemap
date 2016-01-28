@@ -29,4 +29,3 @@ TBC
 ## To Do
 * Make your devices visible for other users
 * Show tail of previous locations on selected marker
-* Add MQTT support to ingest location updates

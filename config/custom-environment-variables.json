@@ -3,6 +3,11 @@
     "port": "PORT",
     "forceSSL": "C_FORCESSL"
   },
+  "mqtt": {
+    "brokerUrl": "C_MQTT_BROKERURL",
+    "brokerPort": "C_MQTT_BROKERPORT",
+    "topic": "C_MQTT_TOPIC"
+  },
   "db": {
     "url": "DATABASE_URL"
   },
