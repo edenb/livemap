@@ -4,8 +4,7 @@
     "forceSSL": "C_FORCESSL"
   },
   "mqtt": {
-    "brokerUrl": "C_MQTT_BROKERURL",
-    "brokerPort": "C_MQTT_BROKERPORT",
+    "url": "C_MQTT_URL",
     "topic": "C_MQTT_TOPIC"
   },
   "db": {

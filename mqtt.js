@@ -1,5 +1,6 @@
 var config = require('config');
 var mqtt = require('mqtt');
+var url = require('url');
 var usr = require('./user.js');
 var dev = require('./device.js');
 var livesvr = require('./liveserver.js');
@@ -56,10 +57,11 @@ function processMessage(messageStr, callback) {
 //
 
 function start() {
-    client = mqtt.connect({port: parseInt(config.get('mqtt.brokerPort')), host: config.get('mqtt.brokerUrl'), keepalive: 10000});
+    var brokerUrl = url.parse(config.get('mqtt.url'));
+    client = mqtt.connect(brokerUrl, {keepalive: 10000});
 
     client.on('connect', function () {
-        console.log('MQTT broker connected');
+        console.log('Connected to MQTT broker: ' + config.get('mqtt.url'));
         client.subscribe(config.get('mqtt.topic'));
         console.log('MQTT client started');
         // Test

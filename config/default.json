@@ -12,8 +12,7 @@
     "forceSSL": "false"
   },
   "mqtt": {
-    "brokerUrl": "test.mosquitto.org",
-    "brokerPort": "1883",
+    "url": "mqtt://test.mosquitto.org:1883",
     "topic": "livemap"
   },
   "db": {
