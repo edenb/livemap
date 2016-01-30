@@ -1,11 +1,56 @@
 var config = require('config');
 var mqtt = require('mqtt');
 var url = require('url');
+var ajv = require('ajv');
 var usr = require('./user.js');
 var dev = require('./device.js');
 var livesvr = require('./liveserver.js');
 
 var client;
+var MQTTvalidator = ajv({allErrors: true});
+
+var MQTTschema = {
+    "title": "MQTT Schema",
+    "type": "object",
+    "properties": {
+        "id": {
+            "description": "The unique identifier for a device or tag",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+        },
+        "apikey": {
+            "description": "The unique key of the owner of the device or tag",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20
+        },
+        "timestamp": {
+            "description": "Date and time of the location",
+            "type": "string",
+            "format": "date-time"
+        },
+        "lat": {
+            "description": "Latitude of the location",
+            "type": "number",
+            "minimum": -90.0,
+            "exclusiveMinimum": true,
+            "maximum": 90.0,
+            "exclusiveMaximum": true
+        },
+        "lon": {
+            "description": "Longitude of the location",
+            "type": "number",
+            "minimum": -180.0,
+            "exclusiveMinimum": true,
+            "maximum": 180.0,
+            "exclusiveMaximum": true
+        }
+    },
+    "required": ["id", "apikey", "timestamp", "lat", "lon"]
+};
+
+var validate = MQTTvalidator.compile(MQTTschema);
 
 function processMessage(messageStr, callback) {
     var srcData, destData = {};
@@ -17,6 +62,18 @@ function processMessage(messageStr, callback) {
         srcData = JSON.parse(messageStr);
     } catch (e) {
         srcData = null;
+    }
+
+    if (srcData !== null) {
+        if (validate(srcData)) {
+            // For now lat and lon are expected to be strings
+            srcData.lon = srcData.lon.toString();
+            srcData.lat = srcData.lat.toString();
+        } else {
+            console.log('Invalid: ' + MQTTvalidator.errorsText(validate.errors));
+            // Invalidate MQTT message
+            srcData = null;
+        }
     }
 
     if (srcData !== null) {
@@ -58,7 +115,7 @@ function processMessage(messageStr, callback) {
 
 function start() {
     var brokerUrl = url.parse(config.get('mqtt.url'));
-    client = mqtt.connect(brokerUrl, {keepalive: 10000});
+    client = mqtt.connect(brokerUrl, {keepalive: 10});
 
     client.on('connect', function () {
         console.log('Connected to MQTT broker: ' + config.get('mqtt.url'));
@@ -76,7 +133,8 @@ function start() {
                 usr.loadUsersFromDB(function (err) {
                     if (err === null) {
                         processMessage(message.toString(), function (destData) {
-                            livesvr.sendToClient(destData);
+                            if (destData !== null)
+                                livesvr.sendToClient(destData);
                         });
                     }
                 });
