@@ -14,13 +14,25 @@ var MQTTschema = {
     "type": "object",
     "properties": {
         "id": {
-            "description": "The unique identifier for a device or tag",
+            "description": "The unique identifier for a device",
             "type": "string",
             "minLength": 2,
             "maxLength": 50
         },
         "apikey": {
-            "description": "The unique key of the owner of the device or tag",
+            "description": "The unique key of the owner of the device",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20
+        },
+        "tagid": {
+            "description": "The unique identifier for a tag",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+        },
+        "tagapikey": {
+            "description": "The unique key of the owner of the tag",
             "type": "string",
             "minLength": 2,
             "maxLength": 20
@@ -45,9 +57,18 @@ var MQTTschema = {
             "exclusiveMinimum": true,
             "maximum": 180.0,
             "exclusiveMaximum": true
+        },
+        "type": {
+            "description": "Type of location",
+            "type": "string",
+            "enum": ["now", "rec", "left"]
+        },
+        "attr": {
+            "description": "Other attributes",
+            "type": "object"
         }
     },
-    "required": ["id", "apikey", "timestamp", "lat", "lon"]
+    "required": ["id", "apikey", "timestamp"]
 };
 
 var validate = MQTTvalidator.compile(MQTTschema);
@@ -56,8 +77,8 @@ function processMessage(messageStr, callback) {
     var srcData, destData = {};
 
     // Convert JSON string to object
-    // Required: id, apikey, timestamp, lat, lon
-    // Optional: tagid, tagapikey, alias, type, attr
+    // Required: id, apikey, timestamp
+    // Optional: lat, lon, tagid, tagapikey, type, attr
     try {
         srcData = JSON.parse(messageStr);
     } catch (e) {
@@ -90,8 +111,8 @@ function processMessage(messageStr, callback) {
                     destData.loc_timestamp = srcData.timestamp;
                     destData.loc_lat = srcData.lat;
                     destData.loc_lon = srcData.lon;
-                    destData.loc_attr = null;
-                    destData.loc_type = 'rec';
+                    destData.loc_type = srcData.type;
+                    destData.loc_attr = srcData.attr;
                     //console.log('Converted message: ' + JSON.stringify(destData));
                     return callback(destData);
                 } else {
