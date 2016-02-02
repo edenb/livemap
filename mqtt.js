@@ -66,7 +66,41 @@ var MQTTschema = {
         },
         "attr": {
             "description": "Other attributes",
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "miconname": {
+                    "description": "Name of the icon",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "miconlib": {
+                    "description": "Name of the icon library (glyphicon, fa or ion)",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "mcolor": {
+                    "description": "Color of the marker",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "miconcolor": {
+                    "description": "Color of the icon",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "mopacity": {
+                    "description": "Opacity of the marker",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": false,
+                    "maximum": 1.0,
+                    "exclusiveMaximum": false
+                }
+            }
         }
     },
     "required": ["id", "apikey", "timestamp"]

@@ -43,18 +43,39 @@ function setMarkerOptions(marker) {
     cMarkerColor = 'blue';
     cIconColor = 'white';
     cSpin = false;
-    // Define icon color
-    if (dev.loc_type === 'rec') {
-        cIcon = 'circle';
-        cMarkerColor = 'blue';
-    }
-    if ((dev.loc_type === 'now') || (dev.loc_type === 'left')) {
-        cIcon = 'circle';
-        cMarkerColor = 'green';
-    }
-    // Define icon opacity
-    if (dev.loc_type === 'left') {
-        customOpacity = 0.5;
+
+    // If loc_type is defined use predefined marker/icon sets
+    if (dev.loc_type) {
+        if (dev.loc_type === 'rec') {
+            cIcon = 'circle';
+            cMarkerColor = 'blue';
+        }
+        if ((dev.loc_type === 'now') || (dev.loc_type === 'left')) {
+            cIcon = 'circle';
+            cMarkerColor = 'green';
+        }
+        // Define icon opacity
+        if (dev.loc_type === 'left') {
+            customOpacity = 0.5;
+        }
+    } else {
+        if (dev.loc_attr) {
+            if (dev.loc_attr.miconname) {
+                cIcon = dev.loc_attr.miconname;
+            }
+            if (dev.loc_attr.miconlib) {
+                cPrefix = dev.loc_attr.miconlib;
+            }
+            if (dev.loc_attr.mcolor) {
+                cMarkerColor = dev.loc_attr.mcolor;
+            }
+            if (dev.loc_attr.miconcolor) {
+                cIconColor = dev.loc_attr.miconcolor;
+            }
+            if (dev.loc_attr.mopacity) {
+                customOpacity = dev.loc_attr.mopacity;
+            }
+        }
     }
 
     customIcon = L.AwesomeMarkers.icon({icon: cIcon, prefix: cPrefix, markerColor: cMarkerColor, iconColor: cIconColor, spin: cSpin});
