@@ -1,3 +1,4 @@
+"use strict";
 var config = require('config');
 var db = require('./db.js');
 var bcrypt = require('bcrypt');

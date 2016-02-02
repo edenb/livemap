@@ -1,3 +1,4 @@
+"use strict";
 var qs = require('querystring');
 var usr = require('./user.js');
 var dev = require('./device.js');
@@ -8,7 +9,7 @@ function processGpx(srcData, callback) {
 
     identObj = dev.splitDeviceIdentity(srcData.device_id, '_');
     if ((identObj.err === null) && usr.isKnownAPIkey(identObj.apiKey, null)) {
-        dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function(destDevice) {    // Todo: check device_id existance
+        dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function (destDevice) {    // Todo: check device_id existance
             if (destDevice !== null) {
                 destData.device_id = destDevice.device_id;
                 destData.identifier = destDevice.identifier;
@@ -45,11 +46,11 @@ function processGeofancy(srcData, callback) {
     if (srcData.latitude === '0' && srcData.longitude === '0') {
         identObj = dev.splitDeviceIdentity(srcData.id, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function(destDevice) {    // Todo: check device_id existance
+            dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function (destDevice) {    // Todo: check device_id existance
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
                     destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
-                    dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function(destDevice) {    // Todo: check id existance
+                    dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function (destDevice) {    // Todo: check id existance
                         if (destDevice !== null) {
                             destData.device_id_tag = destDevice.device_id;
                             destData.alias = destDevice.alias;
@@ -126,16 +127,16 @@ function processLocation(request, response, type) {
                 usr.loadUsersFromDB(function (err) {
                     if (err === null) {
                         switch (type) {
-                            case 'gpx':
-                                processGpx(srcData, function (destData) {
-                                    livesvr.sendToClient(destData);
-                                });
-                                break;
-                            case 'geofancy':
-                                processGeofancy(srcData, function (destData) {
-                                    livesvr.sendToClient(destData);
-                                });
-                                break;
+                        case 'gpx':
+                            processGpx(srcData, function (destData) {
+                                livesvr.sendToClient(destData);
+                            });
+                            break;
+                        case 'geofancy':
+                            processGeofancy(srcData, function (destData) {
+                                livesvr.sendToClient(destData);
+                            });
+                            break;
                         }
                     }
                 });

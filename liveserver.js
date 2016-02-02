@@ -1,3 +1,4 @@
+"use strict";
 var config = require('config');
 var io = require('socket.io');
 var cookieParser = require('cookie-parser');
@@ -126,6 +127,7 @@ function start(server) {
 }
 
 function sendToClient(destData) {
+    var i;
     // On a valid location reception:
     // 1. Store the location in the database
     // 2. Send a location update to every client that is authorized for this device
@@ -139,7 +141,7 @@ function sendToClient(destData) {
                         for (i = 0; i < rows.length; i += 1) {
                             client.devices.push(rows[i].device_id);
                             if (rows[i].device_id === destData.device_id) {
-                                client.emit('positionUpdate', JSON.stringify({ type: 'gps', data: destData}));
+                                client.emit('positionUpdate', JSON.stringify({type: 'gps', data: destData}));
                             }
                         }
                     }

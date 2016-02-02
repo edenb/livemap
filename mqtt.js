@@ -1,3 +1,4 @@
+"use strict";
 var config = require('config');
 var mqtt = require('mqtt');
 var url = require('url');
@@ -99,7 +100,7 @@ function processMessage(messageStr, callback) {
 
     if (srcData !== null) {
         if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
-            dev.getDeviceByIdentity(srcData.apikey, srcData.id, function(destDevice) {
+            dev.getDeviceByIdentity(srcData.apikey, srcData.id, function (destDevice) {
                 //console.log('MQTT message: ' + JSON.stringify(srcData));
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
@@ -154,8 +155,9 @@ function start() {
                 usr.loadUsersFromDB(function (err) {
                     if (err === null) {
                         processMessage(message.toString(), function (destData) {
-                            if (destData !== null)
+                            if (destData !== null) {
                                 livesvr.sendToClient(destData);
+                            }
                         });
                     }
                 });

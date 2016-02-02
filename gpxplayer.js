@@ -1,4 +1,5 @@
-﻿var config = require('config');
+﻿"use strict";
+var config = require('config');
 var http = require('http');
 var url = require('url');
 var qs = require('querystring');

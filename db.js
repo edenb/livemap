@@ -1,3 +1,4 @@
+"use strict";
 var config = require('config');
 var pg = require('pg');
 var pgStore = require('connect-pg-simple');
@@ -136,7 +137,7 @@ function queryDbFromFile(fileName, callback) {
 //
 
 function bindStore(session) {
-    sessionStore = new (pgStore(session))({tableName: config.get('sessions.tableName'), conString: connectionString, pg: pg});
+    sessionStore = new(pgStore(session))({tableName: config.get('sessions.tableName'), conString: connectionString, pg: pg});
 }
 
 function getStore() {

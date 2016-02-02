@@ -1,3 +1,4 @@
+"use strict";
 var config = require('config');
 var express = require('express');
 var favicon = require('serve-favicon');
@@ -56,7 +57,7 @@ app.set('view engine', 'jade');
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser(config.get('sessions.secret'))); // read cookies (needed for auth)
 app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.enable('trust proxy');
 
 // Sessions stored in database
@@ -89,11 +90,7 @@ passport.deserializeUser(function (req, id, done) {
     });
 });
 
-passport.use(new LocalStrategy({
-    usernameField: 'username',
-    passwordField: 'password',
-    passReqToCallback : true
-    },
+passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'password', passReqToCallback: true},
     function (req, username, password, done) {
         usr.findUser('username', username, function (err, user) {
             if (user === null) {
