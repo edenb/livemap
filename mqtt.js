@@ -8,7 +8,7 @@ var dev = require('./device.js');
 var livesvr = require('./liveserver.js');
 
 var client;
-var MQTTvalidator = ajv({allErrors: true});
+var MQTTvalidator = ajv({allErrors: true, coerceTypes: true});
 
 var MQTTschema = {
     "title": "MQTT Schema",
