@@ -75,10 +75,9 @@ var MQTTschema = {
                     "maxLength": 20
                 },
                 "miconlib": {
-                    "description": "Name of the icon library (glyphicon, fa or ion)",
+                    "description": "Name of the icon library",
                     "type": "string",
-                    "minLength": 2,
-                    "maxLength": 20
+                    "enum": ["glyphicon", "fa", "ion"]
                 },
                 "mcolor": {
                     "description": "Color of the marker",
