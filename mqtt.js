@@ -59,11 +59,6 @@ var MQTTschema = {
             "maximum": 180.0,
             "exclusiveMaximum": true
         },
-        "type": {
-            "description": "Type of location",
-            "type": "string",
-            "enum": ["now", "rec", "left"]
-        },
         "attr": {
             "description": "Other attributes",
             "type": "object",
@@ -145,7 +140,7 @@ function processMessage(messageStr, callback) {
                     destData.loc_timestamp = srcData.timestamp;
                     destData.loc_lat = srcData.lat;
                     destData.loc_lon = srcData.lon;
-                    destData.loc_type = srcData.type;
+                    destData.loc_type = null; // Deprecated for MQTT
                     destData.loc_attr = srcData.attr;
                     //console.log('Converted message: ' + JSON.stringify(destData));
                     return callback(destData);
