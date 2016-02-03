@@ -20,14 +20,34 @@ function getPopupText(dev) {
     var htmlText = '', PopupTime, PopupType;
 
     PopupTime = new Date(dev.loc_timestamp);
-    PopupType = loc_type_str[dev.loc_type];
+    // If loc_type is defined use predefined label
+    if (dev.loc_type) {
+        PopupType = loc_type_str[dev.loc_type];
 
-    htmlText += '<b>' + dev.alias + '</b>';
-    if (typeof PopupType !== 'undefined') {
-        htmlText += ' (' + PopupType + ')';
+        htmlText += '<b>' + dev.alias + '</b>';
+        if (typeof PopupType !== 'undefined') {
+            htmlText += ' (' + PopupType + ')';
+        }
+        htmlText += '<br>';
+        htmlText += PopupTime.toLocaleString() + '<br>';
+    } else {
+        if (dev.loc_attr) {
+            if (dev.loc_attr.labelshowalias) {
+                htmlText += '<b>' + dev.alias + '</b><br>';
+            }
+            if (dev.loc_attr.labelshowtime) {
+                htmlText += PopupTime.toLocaleString() + '<br>';
+            }
+            if (dev.loc_attr.labelcustomhtml) {
+                htmlText += dev.loc_attr.labelcustomhtml;
+            }
+        }
     }
-    htmlText += '<br>';
-    htmlText += PopupTime.toLocaleString() + '<br>';
+
+    if (htmlText === '') {
+        // Show at least the alias
+        htmlText = '<b>' + dev.alias + '</b>';
+    }
 
     return htmlText;
 }

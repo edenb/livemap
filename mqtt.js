@@ -93,6 +93,20 @@ var MQTTschema = {
                     "exclusiveMinimum": false,
                     "maximum": 1.0,
                     "exclusiveMaximum": false
+                },
+                "labelshowalias": {
+                    "description": "Show alias name on the marker label",
+                    "type": "boolean"
+                },
+                "labelshowtime": {
+                    "description": "Show date and time on the marker label",
+                    "type": "boolean"
+                },
+                "labelcustomhtml": {
+                    "description": "Custom HTML text on the marker label",
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 200
                 }
             }
         }
