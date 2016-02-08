@@ -85,7 +85,7 @@ module.exports = function (passport) {
         modUser.role = req.body.role || '';
         modUser.api_key = req.body.api_key;
 
-        switch (req.body.operation) {
+        switch (req.body.action) {
             case 'cancel':
                 res.redirect('/main');
                 break;

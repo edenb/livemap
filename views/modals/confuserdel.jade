@@ -1,0 +1,14 @@
+#confuserdel-modal.modal.fade(tabindex='-1',role='dialog',aria-labelledby='myModalLabel',aria-hidden='true')
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type='button', class='close', data-dismiss='modal', aria-hidden='true') &times;
+        span.sr-only Close
+        h4.modal-title Delete user?
+      .modal-body
+        p.
+          This will delete the user and all devices managed by this user. Also all stored locations from these devices will be deleted. This is an irreversible operation. 
+        br
+      .modal-footer
+        button.btn.btn-default#btnDelUser(type='button', data-dismiss='modal') OK
+        button.btn.btn-default(type='button', data-dismiss='modal') Cancel

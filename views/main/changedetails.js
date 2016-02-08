@@ -14,6 +14,21 @@ $(function () {
     $('#btnNewUser').click(function () {
         clearForm();
     });
+
+    $('#btnSave').click(function () {
+        $('input[name="action"]').val('submit');
+        $('#frmdetails').submit();
+    });
+
+    $('#btnCancel').click(function () {
+        $('input[name="action"]').val('cancel');
+        $('#frmdetails').submit();
+    });
+
+    $('#btnDelUser').click(function () {
+        $('input[name="action"]').val('delete');
+        $('#frmdetails').submit();
+    });
 });
 
 function updateForm(userdata) {

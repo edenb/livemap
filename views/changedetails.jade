@@ -4,15 +4,17 @@ block content
   include mainnavbar
   include modals/about
   include modals/alert
+  include modals/confuserdel
   .container-fluid.main-container-fluid
     .row-fluid.main-row-fluid
       .col-xs-12.col-md-6.col-md-offset-3
         br
         if flash && (flash.info || flash.success || flash.error)
           script $(document).ready(function(){$('#alert-modal').modal('show');});
-        form(method='POST')
+        form#frmdetails(method='POST')
           legend Change details
           .form-group
+            input(type='hidden', name='action')
             input(type='hidden', name='user_id', value=user.user_id)
             label(for='username') Username
             if user.role === 'admin'
@@ -49,10 +51,10 @@ block content
               input.form-control(type='text', name='role', value=user.role, readonly='true')
           .btn-toolbar
             if user.role === 'admin' || user.role === 'manager'
-              button#btnSave.btn.btn-primary(type='submit', name='operation', value='submit') Save
-            button#btnCancel.btn.btn-default(type='submit', name='operation', value='cancel') Cancel
+              button#btnSave.btn.btn-primary(type='button') Save
+            button#btnCancel.btn.btn-default(type='button') Cancel
             if user.role === 'admin'
-              button#btnDelUser.btn.btn-danger.pull-right(type='submit', name='operation', value='delete') Delete user
+              a.btn.btn-danger.pull-right(data-toggle='modal' href='#confuserdel-modal') Delete user
               button#btnNewUser.btn.btn-primary.pull-right(type='button') New user
           if user.role === 'admin'
             br
