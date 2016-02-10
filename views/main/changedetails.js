@@ -1,15 +1,17 @@
 var $table = $('#table-allusers');
 
 $(function () {
-    $table.bootstrapTable({});
-    $table.bootstrapTable('load', usersData.users);
+    if (usersData !== null) {
+        $table.bootstrapTable({});
+        $table.bootstrapTable('load', usersData.users);
 
-    $table.on('click-row.bs.table', function (e, row, $element) {
-        $('.success').removeClass('success');
-        $($element).addClass('success');
-        var index = $table.find('tr.success').data('index');
-        updateForm($table.bootstrapTable('getData')[index]);
-    });
+        $table.on('click-row.bs.table', function (e, row, $element) {
+            $('.success').removeClass('success');
+            $($element).addClass('success');
+            var index = $table.find('tr.success').data('index');
+            updateForm($table.bootstrapTable('getData')[index]);
+        });
+    }
 
     $('#btnNewUser').click(function () {
         clearForm();
