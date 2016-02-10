@@ -29,6 +29,10 @@ $(function () {
         $('input[name="action"]').val('delete');
         $('#frmdetails').submit();
     });
+
+    $('#confuserdel-modal').on('show.bs.modal', function(event){
+        $(this).find('.modal-title').html('Delete user \<b>' + $('input[name=fullname]').val() + '</b> ?');
+    });
 });
 
 function updateForm(userdata) {
