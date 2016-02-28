@@ -72,7 +72,19 @@ $(function () {
     });
 
     $('#btnRemoveUser').click(function () {
-        alert('Removal of users not possible yet');
+        var checkedDevices, sharedUser, i, checkedIds;
+
+        checkedDevices = $('#table-userdevices').bootstrapTable('getAllSelections');
+        sharedUser = $('input[name="shareduser"]').val();
+        i = 0;
+        checkedIds = [];
+        while (i < checkedDevices.length) {
+            checkedIds[i] = checkedDevices[i].device_id;
+            i++;
+        }
+        $.post("/deluserfromdevices", {sharedUser, checkedIds}, function(data,status) {
+        //    alert("Data: " + data + "\nStatus: " + status);
+        });
     });
 });
 

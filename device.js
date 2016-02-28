@@ -130,6 +130,16 @@ function addSharedUser(sharedUser, ids, callback) {
     });
 }
 
+function deleteSharedUser(sharedUser, ids, callback) {
+    db.queryDb('deleteSharedUser', [sharedUser, ids], function (err, rows, result) {
+        if (err === null && rows !== null) {
+            return callback(rows[0]);
+        } else {
+            return callback(null);
+        }
+    });
+}
+
 function deleteDevicesById(ids, callback) {
     db.queryDb('deleteDevices', [ids], function (err, rows, result) {
         if (err === null && rows !== null) {
@@ -146,4 +156,5 @@ module.exports.getDevicesByUser = getDevicesByUser;
 module.exports.changeDevice = changeDevice;
 module.exports.splitDeviceIdentity = splitDeviceIdentity;
 module.exports.addSharedUser = addSharedUser;
+module.exports.deleteSharedUser = deleteSharedUser;
 module.exports.deleteDevicesById = deleteDevicesById;

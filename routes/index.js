@@ -218,7 +218,16 @@ module.exports = function (passport) {
     // Handle add user to devices POST
     router.post('/addusertodevices', ensureAuthenticated, function (req, res) {
         dev.addSharedUser(req.body.sharedUser, req.body.checkedIds, function (resrow) {
-            res.send('OK');
+            //res.send('OK');
+            res.redirect('/changedevices');
+        });
+    });
+
+    // Handle remove user from devices POST
+    router.post('/deluserfromdevices', ensureAuthenticated, function (req, res) {
+        dev.deleteSharedUser(req.body.sharedUser, req.body.checkedIds, function (resrow) {
+            //res.send('OK');
+            res.redirect('/changedevices');
         });
     });
 
