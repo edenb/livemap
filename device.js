@@ -47,6 +47,50 @@ function getDeviceByIdentity(apiKey, identifier, callback) {
     }
 }
 
+function getDevicesByUser(userid, callback) {
+    var userdevices = [];
+
+    db.queryDb('findDevicesByUser', [userid], function (err, rows, result) {
+        if (err === null) {
+            if (rows !== null) {
+                userdevices = rows;
+            }
+            return callback(null, userdevices);
+        } else {
+            return callback(err, null);
+        }
+    });
+}
+
+function changeDevice(modDevice, callback) {
+    var err;
+    if (modDevice.device_id === 0) {
+        db.queryDb('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias], function (err, rows, result) {
+            if (err !== null) {
+                return callback(err);
+            } else {
+                if (result.rowCount === 0) {
+                    return callback('Unable to add device');
+                } else {
+                    return callback(null);
+                }
+            }
+        });
+    } else {
+        db.queryDb('changeDeviceById', [modDevice.device_id, modDevice.alias, modDevice.fixed_loc_lat, modDevice.fixed_loc_lon], function (err, rows, result) {
+            if (err !== null) {
+                return callback(err);
+            } else {
+                if (result.rowCount === 0) {
+                    return callback('Unable to change device');
+                } else {
+                    return callback(null);
+                }
+            }
+        });
+    }
+}
+
 function splitDeviceIdentity(devIdent, dividerChar) {
     var dividerIdx, identityObj = {};
 
@@ -75,6 +119,17 @@ function splitDeviceIdentity(devIdent, dividerChar) {
     return identityObj;
 }
 
+function addSharedUser(sharedUser, ids, callback) {
+    // ToDo: check for valid sharedUser and ids ?
+    db.queryDb('addSharedUser', [sharedUser, ids], function (err, rows, result) {
+        if (err === null && rows !== null) {
+            return callback(rows[0]);
+        } else {
+            return callback(null);
+        }
+    });
+}
+
 function deleteDevicesById(ids, callback) {
     db.queryDb('deleteDevices', [ids], function (err, rows, result) {
         if (err === null && rows !== null) {
@@ -87,5 +142,8 @@ function deleteDevicesById(ids, callback) {
 
 module.exports.loadDevicesFromDB = loadDevicesFromDB;
 module.exports.getDeviceByIdentity = getDeviceByIdentity;
+module.exports.getDevicesByUser = getDevicesByUser;
+module.exports.changeDevice = changeDevice;
 module.exports.splitDeviceIdentity = splitDeviceIdentity;
+module.exports.addSharedUser = addSharedUser;
 module.exports.deleteDevicesById = deleteDevicesById;

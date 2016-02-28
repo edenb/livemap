@@ -191,7 +191,7 @@ function start() {
     });
 
     client.on('message', function (topic, message) {
-        console.log('MQTT message (topic=' + topic + '): ' + message.toString());
+        //console.log('MQTT message (topic=' + topic + '): ' + message.toString());
         dev.loadDevicesFromDB(function (err) {
             if (err === null) {
                 usr.loadUsersFromDB(function (err) {

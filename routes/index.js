@@ -6,6 +6,15 @@ var dev = require('../device.js');
 
 var router = express.Router();
 
+function isNumber(num) {
+    if(parseInt(num) == num || parseFloat(num) == num) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 function ensureAuthenticated(req, res, next) {
     // if user is authenticated in the session, call the next() to call the next request handler 
     // Passport adds this method to request object. A middleware is allowed to add properties to
@@ -125,6 +134,61 @@ module.exports = function (passport) {
         }
     });
 
+    // GET Change Devices Page.
+    router.get('/changedevices', ensureAuthenticated, function (req, res) {
+        dev.getDevicesByUser(req.user.user_id, function (err, userdevices) {
+            if (err === null) {
+                res.render('changedevices', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, userdevices: userdevices});
+            } else {
+                req.flash('error', err);
+                req.session.save(function (err) {
+                    res.redirect('/main');
+                });
+            }
+        });
+    });
+
+    // Handle change devices POST
+    router.post('/changedevices', ensureAuthenticated, function (req, res) {
+        console.log('body: '+JSON.stringify(req.body));
+        var modDevice = {};
+        modDevice.device_id = parseInt(req.body.device_id);
+        modDevice.api_key = req.user.api_key;
+        modDevice.identifier = req.body.identifier;
+        modDevice.alias = req.body.alias;
+        if (isNumber(req.body.fixed_loc_lat) && isNumber(req.body.fixed_loc_lon)) {
+            modDevice.fixed_loc_lat = req.body.fixed_loc_lat;
+            modDevice.fixed_loc_lon = req.body.fixed_loc_lon;
+        } else {
+            modDevice.fixed_loc_lat = null;
+            modDevice.fixed_loc_lon = null;
+        }
+        console.log('modDevice: '+JSON.stringify(modDevice));
+        switch (req.body.action) {
+            case 'cancel':
+                res.redirect('/main');
+                break;
+            case 'submit':
+                dev.changeDevice(modDevice, function (err) {
+                    if (err === null) {
+                        req.flash('info', 'Device changed');
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                });
+                break;
+            default:
+                res.redirect('/main');
+                break;
+        }
+    });
+
     // GET Change Password Page
     router.get('/changepassword', ensureAuthenticated, function (req, res) {
         res.render('changepassword', {wclient: config.get('wclient'), flash: req.flash(), user: req.user});
@@ -149,6 +213,13 @@ module.exports = function (passport) {
                 }
             });
         }
+    });
+
+    // Handle add user to devices POST
+    router.post('/addusertodevices', ensureAuthenticated, function (req, res) {
+        dev.addSharedUser(req.body.sharedUser, req.body.checkedIds, function (resrow) {
+            res.send('OK');
+        });
     });
 
     // Handle remove devices POST
