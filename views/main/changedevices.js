@@ -35,9 +35,23 @@ $(function () {
         if ($('#fixedloc').prop('checked')) {
             $('input[name=fixed_loc_lon]').prop('readonly', false);
             $('input[name=fixed_loc_lat]').prop('readonly', false);
+            // Show placeholder
+            if ($('input[name=fixed_loc_lon]').val() === ' ') {
+                $('input[name=fixed_loc_lon]').val('');
+            }
+            if ($('input[name=fixed_loc_lat]').val() === ' ') {
+                $('input[name=fixed_loc_lat]').val('');
+            }
         } else {
             $('input[name=fixed_loc_lon]').prop('readonly', true);
             $('input[name=fixed_loc_lat]').prop('readonly', true);
+            // Hide placeholder
+            if ($('input[name=fixed_loc_lon]').val() === '') {
+                $('input[name=fixed_loc_lon]').val(' ');
+            }
+            if ($('input[name=fixed_loc_lat]').val() === '') {
+                $('input[name=fixed_loc_lat]').val(' ');
+            }
         }
     });
 
@@ -53,17 +67,12 @@ $(function () {
             i++;
         }
         $.post("/addusertodevices", {sharedUser, checkedIds}, function(data,status) {
-            alert("Data: " + data + "\nStatus: " + status);
+        //    alert("Data: " + data + "\nStatus: " + status);
         });
-        // alert('Add user ' + userInput + ' to devices: ' + JSON.stringify(checkedDevices));
     });
 
     $('#btnRemoveUser').click(function () {
         alert('Removal of users not possible yet');
-    });
-
-    $('#confuserdel-modal').on('show.bs.modal', function(event){
-        $(this).find('.modal-title').html('Delete user \<b>' + $('input[name=fullname]').val() + '</b> ?');
     });
 });
 
@@ -86,10 +95,6 @@ function updateForm(devicedata) {
     }
 }
 
-function clearForm() {
-    var newUser = {user_id:'0', username:'', fullname:'', email:'', api_key:'', role:''};
-    updateForm(newUser);
-}
 function shareFormatter(value) {
     if (parseInt(value) > 0) {
         return '<i class="glyphicon glyphicon-user"></i> ' + value;
