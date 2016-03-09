@@ -122,20 +122,28 @@ function splitDeviceIdentity(devIdent, dividerChar) {
 function addSharedUser(sharedUser, ids, callback) {
     // ToDo: check for valid sharedUser and ids ?
     db.queryDb('addSharedUser', [sharedUser, ids], function (err, rows, result) {
-        if (err === null && rows !== null) {
-            return callback(rows[0]);
+        if (err !== null) {
+            return callback(err);
         } else {
-            return callback(null);
+            if (result.rowCount === 0) {
+                return callback('No shared users were added');
+            } else {
+                return callback(null);
+            }
         }
     });
 }
 
 function deleteSharedUser(sharedUser, ids, callback) {
     db.queryDb('deleteSharedUser', [sharedUser, ids], function (err, rows, result) {
-        if (err === null && rows !== null) {
-            return callback(rows[0]);
+        if (err !== null) {
+            return callback(err);
         } else {
-            return callback(null);
+            if (result.rowCount === 0) {
+                return callback('No shared users were deleted');
+            } else {
+                return callback(null);
+            }
         }
     });
 }

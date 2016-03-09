@@ -22,12 +22,12 @@ $(function () {
             $('input[name=fixed_loc_lon]').val('');
             $('input[name=fixed_loc_lat]').val('');
         }
-        $('input[name="action"]').val('submit');
+        $('input[name=action]').val('submit');
         $('#frmdetails').submit();
     });
 
     $('#btnCancel').click(function () {
-        $('input[name="action"]').val('cancel');
+        $('input[name=action]').val('cancel');
         $('#frmdetails').submit();
     });
 
@@ -56,35 +56,33 @@ $(function () {
     });
 
     $('#btnAddUser').click(function () {
-        var checkedDevices, sharedUser, i, checkedIds;
+        var checkedDevices, i, checkedIds;
 
         checkedDevices = $('#table-userdevices').bootstrapTable('getAllSelections');
-        sharedUser = $('input[name="shareduser"]').val();
         i = 0;
         checkedIds = [];
         while (i < checkedDevices.length) {
             checkedIds[i] = checkedDevices[i].device_id;
             i++;
         }
-        $.post("/addusertodevices", {sharedUser, checkedIds}, function(data,status) {
-        //    alert("Data: " + data + "\nStatus: " + status);
-        });
+        $('input[name=checkedIds]').val(checkedIds);
+        $('input[name=action]').val('addSharedUser');
+        $('#frmdetails').submit();
     });
 
     $('#btnRemoveUser').click(function () {
-        var checkedDevices, sharedUser, i, checkedIds;
+        var checkedDevices, i, checkedIds;
 
         checkedDevices = $('#table-userdevices').bootstrapTable('getAllSelections');
-        sharedUser = $('input[name="shareduser"]').val();
         i = 0;
         checkedIds = [];
         while (i < checkedDevices.length) {
             checkedIds[i] = checkedDevices[i].device_id;
             i++;
         }
-        $.post("/deluserfromdevices", {sharedUser, checkedIds}, function(data,status) {
-        //    alert("Data: " + data + "\nStatus: " + status);
-        });
+        $('input[name=checkedIds]').val(checkedIds);
+        $('input[name=action]').val('delSharedUser');
+        $('#frmdetails').submit();
     });
 });
 
