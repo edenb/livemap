@@ -1,6 +1,6 @@
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 # Live Map
-A simple [Node.js](https://nodejs.org) server that a ingests HTTP POST (web hook) location updates and shows markers on all attached web clients. Originally developed to monitor devices with the Geofancy app installed (now: [Locative](https://itunes.apple.com/nl/app/locative/id725198453)). Tested with [Heroku](https://heroku.com) and on a local NodeJS setup.
+A simple [Node.js](https://nodejs.org) server that ingests location updates and shows markers on all attached web clients. [MQTT](http://mqtt.org) and HTTP POST (web hook) are supported to input new locations. Originally developed to monitor devices with the Geofancy app installed (now: [Locative](https://itunes.apple.com/nl/app/locative/id725198453)). Tested with [Heroku](https://heroku.com) and on a local NodeJS setup.
 
 ## Features
 * Instant marker updates using WebSockets
@@ -27,5 +27,4 @@ Login with username 'admin' and any password the first time. Don't forget to cha
 TBC
 
 ## To Do
-* Make your devices visible for other users
 * Show tail of previous locations on selected marker
