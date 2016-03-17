@@ -11,7 +11,7 @@ block content
         if flash && (flash.info || flash.success || flash.error)
           script $(document).ready(function(){$('#alert-modal').modal('show');});
         form#frmdetails(method='POST')
-          legend Change device details
+          legend Device
           .form-group
             input(type='hidden', name='action')
             input(type='hidden', name='device_id')
@@ -34,7 +34,7 @@ block content
             br
             br
             br
-            legend All devices
+            legend Select a device
             .input-group
               .input-group-btn
                 button.btn.btn-default.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Shared With&nbsp;
