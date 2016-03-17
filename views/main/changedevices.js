@@ -67,7 +67,10 @@ $(function () {
         }
         $('input[name=checkedIds]').val(checkedIds);
         $('input[name=action]').val('addSharedUser');
-        $('#frmdetails').submit();
+        // Only submit if one or more devices are selected
+        if (checkedDevices.length > 0) {
+            $('#frmdetails').submit();
+        }
     });
 
     $('#btnRemoveUser').click(function () {
@@ -82,7 +85,10 @@ $(function () {
         }
         $('input[name=checkedIds]').val(checkedIds);
         $('input[name=action]').val('delSharedUser');
-        $('#frmdetails').submit();
+        // Only submit if one or more devices are selected
+        if (checkedDevices.length > 0) {
+            $('#frmdetails').submit();
+        }
     });
 });
 
