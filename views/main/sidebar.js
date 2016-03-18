@@ -37,20 +37,4 @@ $(function () {
     });
 
     $('#table-locations').bootstrapTable('hideLoading');
-
-    $('#remove').click(function () {
-        var checkedDevices, checkedIds, i;
-
-        checkedDevices = $('#table-locations').bootstrapTable('getAllSelections');
-        i = 0;
-        checkedIds = [];
-        while (i < checkedDevices.length) {
-            checkedIds[i] = checkedDevices[i].device_id;
-            i++;
-        }
-        $.post("/removedevices", {checkedIds}, function(data,status) {
-            // alert("Data: " + data + "\nStatus: " + status);
-            socket.emit('getLastPositions');
-        });
-    });
 });

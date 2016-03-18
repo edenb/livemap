@@ -150,10 +150,14 @@ function deleteSharedUser(sharedUser, ids, callback) {
 
 function deleteDevicesById(ids, callback) {
     db.queryDb('deleteDevices', [ids], function (err, rows, result) {
-        if (err === null && rows !== null) {
-            return callback(rows[0]);
+        if (err !== null) {
+            return callback(err);
         } else {
-            return callback(null);
+            if (result.rowCount === 0) {
+                return callback('No devices were deleted');
+            } else {
+                return callback(null);
+            }
         }
     });
 }

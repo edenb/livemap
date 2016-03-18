@@ -90,6 +90,26 @@ $(function () {
             $('#frmdetails').submit();
         }
     });
+
+    $('#btnRemoveDevices').click(function () {
+        var checkedDevices, i, checkedIds;
+
+        checkedDevices = $('#table-userdevices').bootstrapTable('getAllSelections');
+        i = 0;
+        checkedIds = [];
+        while (i < checkedDevices.length) {
+            checkedIds[i] = checkedDevices[i].device_id;
+            i++;
+        }
+        $('input[name=checkedIds]').val(checkedIds);
+        $('input[name=action]').val('delDevices');
+        // Only submit if one or more devices are selected
+        if (checkedDevices.length > 0) {
+            $('#frmdetails').submit(function () {
+                socket.emit('getLastPositions');
+            });
+        }
+    });
 });
 
 function updateForm(devicedata) {

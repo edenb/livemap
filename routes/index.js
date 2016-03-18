@@ -211,6 +211,21 @@ module.exports = function (passport) {
                     }
                 });
                 break;
+            case 'delDevices':
+                dev.deleteDevicesById(req.body.checkedIds.split(','), function (err) {
+                    if (err === null) {
+                        req.flash('info', req.body.checkedIds.split(',').length + ' device(s) removed');
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                });
+                break;
             default:
                 res.redirect('/main');
                 break;
@@ -241,15 +256,6 @@ module.exports = function (passport) {
                 }
             });
         }
-    });
-
-    // Handle remove devices POST
-    router.post('/removedevices', ensureAuthenticated, function (req, res) {
-        // console.log(JSON.stringify(req.body));
-        // remove devices here. req.body.checkedIds = array with devices to be deleted
-        dev.deleteDevicesById(req.body.checkedIds, function (resrow) {
-            res.send('OK');
-        });
     });
 
     return router;
