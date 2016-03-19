@@ -67,9 +67,9 @@ block content
                 thead
                   tr
                     th(data-field='state', data-checkbox='true') state
-                    th(data-field='identifier') Identifier
-                    th(data-field='alias') Alias
-                    th(data-field='shared') Shared With
+                    th(data-field='identifier', data-sortable='true') Identifier
+                    th(data-field='alias', data-sortable='true') Alias
+                    th(data-field='shared', data-sortable='true') Shared With
           script userdevices=!{JSON.stringify({userdevices})};
           script
             include main/changedevices.js
