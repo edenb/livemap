@@ -41,4 +41,4 @@ CREATE TABLE sessions (
   CONSTRAINT sessions_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE
 ) WITH (OIDS=FALSE);
 
-INSERT INTO users (username, role) VALUES ('admin','admin');
+INSERT INTO users (username, password, role, api_key, fullname) VALUES ('admin','$2a$10$Rve2CVutQ8bi2Yph/u/tsesnFWt1SPtMRXBkKWZeQbJLZz16Uqn1y','admin','demokey','Administrator');
