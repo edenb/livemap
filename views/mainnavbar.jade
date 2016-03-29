@@ -15,9 +15,15 @@
             span.caret
           ul.dropdown-menu(role='menu')
             li
-              a(href='/changedetails') Details
+              if user.role=='admin'
+                a(href='/changedetails') Accounts
+              else
+                a(href='/changedetails') Account
             li
-              a(href='/changedevices') Devices
+              if user.role=='admin'
+                a(href='/changedevices') Devices
+              else
+                a(href='/changedevices') My Devices
             li
               if user.role=='admin' || user.role=='manager'
                 a(href='/changepassword') Change password

@@ -13,7 +13,7 @@
   },
   "mqtt": {
     "url": "mqtt://test.mosquitto.org:1883",
-    "topic": "livemap"
+    "topic": "livemap/#"
   },
   "db": {
     // Database in format: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)

@@ -150,7 +150,6 @@ module.exports = function (passport) {
 
     // Handle change devices POST
     router.post('/changedevices', ensureAuthenticated, function (req, res) {
-        console.log('body: '+JSON.stringify(req.body));
         var modDevice = {};
         modDevice.device_id = parseInt(req.body.device_id);
         modDevice.api_key = req.user.api_key;
@@ -163,7 +162,6 @@ module.exports = function (passport) {
             modDevice.fixed_loc_lat = null;
             modDevice.fixed_loc_lon = null;
         }
-        console.log('modDevice: '+JSON.stringify(modDevice));
         switch (req.body.action) {
             case 'cancel':
                 res.redirect('/main');
@@ -172,6 +170,51 @@ module.exports = function (passport) {
                 dev.changeDevice(modDevice, function (err) {
                     if (err === null) {
                         req.flash('info', 'Device changed');
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                });
+                break;
+            case 'addSharedUser':
+                dev.addSharedUser(req.body.shareduser, req.body.checkedIds.split(','), function (err) {
+                    if (err === null) {
+                        req.flash('info', req.body.checkedIds.split(',').length + ' device(s) shared with user: ' + req.body.shareduser);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                });
+                break;
+            case 'delSharedUser':
+                dev.deleteSharedUser(req.body.shareduser, req.body.checkedIds.split(','), function (err) {
+                    if (err === null) {
+                        req.flash('info', req.body.checkedIds.split(',').length + ' device(s) no longer shared with user: ' + req.body.shareduser);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', err);
+                        req.session.save(function (err) {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                });
+                break;
+            case 'delDevices':
+                dev.deleteDevicesById(req.body.checkedIds.split(','), function (err) {
+                    if (err === null) {
+                        req.flash('info', req.body.checkedIds.split(',').length + ' device(s) removed');
                         req.session.save(function (err) {
                             res.redirect('/changedevices');
                         });
@@ -213,31 +256,6 @@ module.exports = function (passport) {
                 }
             });
         }
-    });
-
-    // Handle add user to devices POST
-    router.post('/addusertodevices', ensureAuthenticated, function (req, res) {
-        dev.addSharedUser(req.body.sharedUser, req.body.checkedIds, function (resrow) {
-            //res.send('OK');
-            res.redirect('/changedevices');
-        });
-    });
-
-    // Handle remove user from devices POST
-    router.post('/deluserfromdevices', ensureAuthenticated, function (req, res) {
-        dev.deleteSharedUser(req.body.sharedUser, req.body.checkedIds, function (resrow) {
-            //res.send('OK');
-            res.redirect('/changedevices');
-        });
-    });
-
-    // Handle remove devices POST
-    router.post('/removedevices', ensureAuthenticated, function (req, res) {
-        // console.log(JSON.stringify(req.body));
-        // remove devices here. req.body.checkedIds = array with devices to be deleted
-        dev.deleteDevicesById(req.body.checkedIds, function (resrow) {
-            res.send('OK');
-        });
     });
 
     return router;

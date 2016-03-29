@@ -11,7 +11,7 @@ block content
         if flash && (flash.info || flash.success || flash.error)
           script $(document).ready(function(){$('#alert-modal').modal('show');});
         form#frmdetails(method='POST')
-          legend Change device details
+          legend Device
           .form-group
             input(type='hidden', name='action')
             input(type='hidden', name='device_id')
@@ -34,7 +34,7 @@ block content
             br
             br
             br
-            legend All devices
+            legend Select a device
             .input-group
               .input-group-btn
                 button.btn.btn-default.dropdown-toggle(data-toggle='dropdown', aria-haspopup='true', aria-expanded='false') Shared With&nbsp;
@@ -45,6 +45,9 @@ block content
                   li
                     a#btnRemoveUser Remove User
               input.form-control(type='text', name='shareduser', placeholder='Enter username')
+              input(type='hidden', name='checkedIds')
+            #toolbar
+              button#btnRemoveDevices.btn.btn-danger Delete
             table#table-userdevices(
               data-toggle='table-userdevices',
               data-toolbar='#toolbar',
@@ -64,9 +67,9 @@ block content
                 thead
                   tr
                     th(data-field='state', data-checkbox='true') state
-                    th(data-field='identifier') Identifier
-                    th(data-field='alias') Alias
-                    th(data-field='shared') Shared With
+                    th(data-field='identifier', data-sortable='true') Identifier
+                    th(data-field='alias', data-sortable='true') Alias
+                    th(data-field='shared', data-sortable='true') Shared With
           script userdevices=!{JSON.stringify({userdevices})};
           script
             include main/changedevices.js
