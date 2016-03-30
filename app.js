@@ -117,10 +117,20 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
 var routes = require('./routes/index')(passport);
 app.use('/', routes);
 
-var server = app.listen(port);
+function allUp() {
+    if (db.checkDbUp()) {
+        var server = app.listen(port);
 
-db.startMaintenance();
-livesvr.start(server);
-mqtt.start();
+        db.startMaintenance();
+        livesvr.start(server);
+        mqtt.start();
 
-console.log('Server started on port ' + port);
+        console.log('Server started on port ' + port);
+    } else {
+        console.log('Waiting for the database...');
+        setTimeout(allUp, 5000);
+    }
+}
+
+allUp();
+

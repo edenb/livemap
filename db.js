@@ -13,6 +13,7 @@ var fs = require('fs');
 var connectionString = config.get('db.url');
 var sessionStore;
 var queryDef = [];
+var databaseUp = false;
 
 queryDef.getAllUsers = {'qstr': 'SELECT user_id, username, fullname, email, role, api_key FROM users', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.findUserById = {'qstr': 'SELECT * FROM users WHERE user_id = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
@@ -152,7 +153,7 @@ function getStore() {
 // Database maintenance
 //
 
-function createDbSchema() {
+function checkDbUp() {
     queryDb('getNumberOfTables', [], function (err, rows, result) {
         if (err === null && rows !== null) {
             console.log('Current number of tables in the database: ' + rows[0].count);
@@ -160,15 +161,21 @@ function createDbSchema() {
                 queryDbFromFile('./setup/schema.sql', function (err, rows, result) {
                     if (err === null) {
                         console.log('New database created.');
+                        databaseUp = true;
                     } else {
                         console.error('Database creation failed.', err);
+                        databaseUp = false;
                     }
                 });
+            } else {
+                databaseUp = true;
             }
         } else {
             console.error('Database error retrieving the number of tables.', err);
+            databaseUp = false;
         }
     });
+    return databaseUp;
 }
 
 function removeOldestPositions() {
@@ -182,7 +189,6 @@ function removeOldestPositions() {
 }
 
 function startMaintenance() {
-    createDbSchema();
     removeOldestPositions();
     setInterval(removeOldestPositions, config.get('db.maintenanceInterval'));
 }
@@ -190,4 +196,5 @@ function startMaintenance() {
 module.exports.queryDb = queryDb;
 module.exports.bindStore = bindStore;
 module.exports.getStore = getStore;
+module.exports.checkDbUp = checkDbUp;
 module.exports.startMaintenance = startMaintenance;
