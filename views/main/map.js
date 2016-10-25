@@ -225,10 +225,28 @@ function initSocket() {
         }
     });
 
-    socket.on('staticLayers', function (geojsonData) {
-        staticLayer = L.geoJson(JSON.parse(geojsonData));
+    socket.on('staticLayers', function (geojsonString) {
+        geojsonData = JSON.parse(geojsonString)
+        staticLayer = L.geoJson(geojsonData, {
+            pointToLayer: function (feature, latlng) {
+                var staticMarker = L.marker(latlng);
+                var customIcon = L.AwesomeMarkers.icon({icon: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.icon) || 'star',
+                                                        prefix: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.prefix) || 'fa',
+                                                        markerColor: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.markercolor) || 'green',
+                                                        iconColor: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.iconcolor) || 'white',
+                                                        spin: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.spin) || false});
+                staticMarker.setIcon(customIcon);
+                staticMarker.setOpacity((geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.opacity) || 0.8);
+                return staticMarker;
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.popup) {
+                    layer.bindPopup(feature.properties.popup);
+                }
+            }
+        });
         staticLayer.addTo(map);
-        controlLayerSwitch.addOverlay(staticLayer, 'Overlay')
+        controlLayerSwitch.addOverlay(staticLayer, (geojsonData.properties && geojsonData.properties.name) || 'Overlay')
     });
 
     socket.on('positionUpdate', function (d) {
