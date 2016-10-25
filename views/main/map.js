@@ -189,7 +189,7 @@ function initMap() {
     // Add a layer to show the locations of the devices
     markerLayer = new L.FeatureGroup();
     // Add a control to select layers
-    L.control.layers({}, {'Devices': markerLayer}).addTo(map);
+    controlLayerSwitch = L.control.layers({}, {'Devices': markerLayer}, {collapsed: false}).addTo(map);
 }
 
 function onMapChange() {
@@ -203,7 +203,7 @@ function initSocket() {
 
     socket.on('loginSuccess', function (obj) {
         socket.emit('getLastPositions');
-        //socket.emit('startPosStream');
+        socket.emit('getStaticLayers');
         socket.emit('startGpxPlayer');
     });
 
@@ -223,6 +223,12 @@ function initSocket() {
         if (markerLayer.getLayers().length > 0 && mapAttr === null) {
             map.fitBounds(markerLayer.getBounds());
         }
+    });
+
+    socket.on('staticLayers', function (geojsonData) {
+        staticLayer = L.geoJson(JSON.parse(geojsonData));
+        staticLayer.addTo(map);
+        controlLayerSwitch.addOverlay(staticLayer, 'Overlay')
     });
 
     socket.on('positionUpdate', function (d) {

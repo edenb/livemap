@@ -2,6 +2,7 @@
 var config = require('config');
 var io = require('socket.io');
 var cookieParser = require('cookie-parser');
+var fs = require('fs');
 var gp = require('./gpxplayer.js');
 var db = require('./db.js');
 var usr = require('./user.js');
@@ -112,6 +113,14 @@ function start(server) {
                     }
                 });
             }
+        });
+
+        socket.on('getStaticLayers', function () {
+            fs.readFile('./staticlayers/sl.geojson', 'utf8', function (fileError, fileData) {
+                if (fileError === null) {
+                    socket.emit('staticLayers', fileData);
+                }
+            });
         });
 
         socket.on('startGpxPlayer', function () {
