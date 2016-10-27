@@ -229,7 +229,7 @@ function initSocket() {
         geojsonData = JSON.parse(geojsonString)
         staticLayer = L.geoJson(geojsonData, {
             pointToLayer: function (feature, latlng) {
-                var staticMarker = L.marker(latlng);
+                var staticMarker = L.marker(latlng, {zIndexOffset:-1000});
                 var customIcon = L.AwesomeMarkers.icon({icon: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.icon) || 'star',
                                                         prefix: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.prefix) || 'fa',
                                                         markerColor: (geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.markercolor) || 'green',
@@ -246,7 +246,7 @@ function initSocket() {
             }
         });
         staticLayer.addTo(map);
-        controlLayerSwitch.addOverlay(staticLayer, (geojsonData.properties && geojsonData.properties.name) || 'Overlay')
+        controlLayerSwitch.addOverlay(staticLayer, (geojsonData.properties && geojsonData.properties.name) || 'Overlay');
     });
 
     socket.on('positionUpdate', function (d) {
