@@ -116,9 +116,22 @@ function start(server) {
         });
 
         socket.on('getStaticLayers', function () {
-            fs.readFile('./staticlayers/sl.geojson', 'utf8', function (fileError, fileData) {
-                if (fileError === null) {
-                    socket.emit('staticLayers', fileData);
+            fs.readdir('./staticlayers/', function (err, allFiles) {
+                var fileNameParts = [], fileExt;
+                if (err === null) {
+                    allFiles.sort(function(a, b) {
+                        return a < b ? -1 : 1;
+                    }).forEach(function(fileName, key) {
+                        fileNameParts = fileName.split('.');
+                        fileExt = fileNameParts[fileNameParts.length - 1];
+                        if (fileNameParts.length > 1 && fileExt == 'geojson') {
+                            fs.readFile('./staticlayers/' + fileName, 'utf8', function (fileError, fileData) {
+                                if (fileError === null) {
+                                    socket.emit('staticLayers', fileData);
+                                }
+                            });
+                        }
+                    });
                 }
             });
         });
