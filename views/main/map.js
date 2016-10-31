@@ -239,6 +239,17 @@ function initSocket() {
                 staticMarker.setOpacity((geojsonData.properties && geojsonData.properties.marker && geojsonData.properties.marker.opacity) || 0.8);
                 return staticMarker;
             },
+            style: function(feature) {
+                // Only apply style to (multi)lines and polygons
+                if (feature.geometry.type !== 'Point') {
+                    var customStyle = {color: (geojsonData.properties && geojsonData.properties.line && geojsonData.properties.line.color) || 'red', //'#ff7800',
+                                      weight: (geojsonData.properties && geojsonData.properties.line && geojsonData.properties.line.weight) || 5,
+                                      opacity: (geojsonData.properties && geojsonData.properties.line && geojsonData.properties.line.opacity) || 0.65};
+                    return customStyle;
+                } else {
+                    return {};
+                }
+            },
             onEachFeature: function (feature, layer) {
                 if (feature.properties && feature.properties.popup) {
                     layer.bindPopup(feature.properties.popup);
