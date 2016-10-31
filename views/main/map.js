@@ -256,7 +256,7 @@ function initSocket() {
                 }
             }
         });
-        staticLayer.addTo(map);
+        //staticLayer.addTo(map);
         controlLayerSwitch.addOverlay(staticLayer, (geojsonData.properties && geojsonData.properties.name) || 'Overlay');
     });
 
