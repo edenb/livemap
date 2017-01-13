@@ -4,7 +4,7 @@ var socket_protocol = location.protocol;
 var socket_url = socket_protocol + '//' + socket_host + ':' + socket_port;
 var socket;
 
-var map, hash, devices = [], markerLayer;
+var map, hash, devices = [], markerLayer, overlayList = [];
 var mapAttr = {};
 var loc_type_str = {
     'rec': 'Recorded',
@@ -189,7 +189,7 @@ function initMap() {
     // Add a layer to show the locations of the devices
     markerLayer = new L.FeatureGroup();
     // Add a control to select layers
-    controlLayerSwitch = L.control.layers({}, {'Devices': markerLayer}, {collapsed: false}).addTo(map);
+    controlLayerSwitch = L.control.layers({}, {'Devices': markerLayer}, {collapsed: false, sortLayers: true}).addTo(map);
 }
 
 function onMapChange() {
@@ -256,8 +256,22 @@ function initSocket() {
                 }
             }
         });
-        //staticLayer.addTo(map);
-        controlLayerSwitch.addOverlay(staticLayer, (geojsonData.properties && geojsonData.properties.name) || 'Overlay');
+		
+		var oName = (geojsonData.properties && geojsonData.properties.name) || 'Overlay';
+		var oChecked = false;
+		// If the received overlay is already in the list than remove the previous one first
+		if (typeof overlayList[oName] !== 'undefined') {
+			// Save visibility of the layer
+			oChecked = map.hasLayer(overlayList[oName]);
+			controlLayerSwitch.removeLayer(overlayList[oName]);
+			overlayList[oName].remove();
+		}
+		overlayList[oName] = staticLayer;
+        controlLayerSwitch.addOverlay(staticLayer, oName);
+		// Keep visibility of the layer after a refresh
+		if (oChecked) {
+			staticLayer.addTo(map);
+		}
     });
 
     socket.on('positionUpdate', function (d) {
