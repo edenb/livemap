@@ -166,6 +166,19 @@ function updateDevice(gps) {
     }
 }
 
+function sortOverlays(layerA, layerB, nameA, nameB) {
+	nameA = nameA.toUpperCase(); // ignore upper and lowercase
+	nameB = nameB.toUpperCase(); // ignore upper and lowercase
+	if (nameA < nameB || nameA == 'DEVICES') {
+		return -1;
+	}
+	if (nameA > nameB || nameB == 'DEVICES') {
+		return 1;
+	}
+	// names must be equal
+	return 0;
+}
+
 function initMap() {
     var mapCookie;
     // Create a map in the "livemap" div
@@ -189,7 +202,7 @@ function initMap() {
     // Add a layer to show the locations of the devices
     markerLayer = new L.FeatureGroup();
     // Add a control to select layers
-    controlLayerSwitch = L.control.layers({}, {'Devices': markerLayer}, {collapsed: false, sortLayers: true}).addTo(map);
+    controlLayerSwitch = L.control.layers({}, {'Devices': markerLayer}, {collapsed: false, sortLayers: true, sortFunction: sortOverlays}).addTo(map);
 }
 
 function onMapChange() {
