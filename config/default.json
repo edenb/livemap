@@ -9,7 +9,7 @@
   },
   "db": {
     "url": "postgres://pguser:mysecretpgpassword@localhost",
-    "maintenanceInterval": 60000
+    "maintenanceInterval": 3600000
   },
   "sessions": {
     "tableName": "sessions",
