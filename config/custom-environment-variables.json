@@ -8,7 +8,8 @@
     "topic": "C_MQTT_TOPIC"
   },
   "db": {
-    "url": "DATABASE_URL"
+    "url": "DATABASE_URL",
+    "maintenanceInterval": "C_DB_MAINTENANCEINTERVAL"
   },
   "sessions": {
     "secret": "C_SESSIONS_SECRET"
