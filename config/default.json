@@ -1,14 +1,6 @@
-// Configuration control for the server is based on node-config  - https://www.npmjs.com/package/config
-// The default settings in this file can be overwritten by a second configuration file production.json
-// Add your personal settings to production.json, not default.json
-// Set your deployment environment before starting your application:
-//    set NODE_ENV=production (Windows)
-//    export NODE_ENV=production (*nix)
 {
   "server": {
-    // The port the server is listening on for both the web client and the HTTP POST webhook
     "port": 3000,
-    // Force the server to use HTTPS
     "forceSSL": "false"
   },
   "mqtt": {
@@ -16,9 +8,7 @@
     "topic": "livemap/#"
   },
   "db": {
-    // Database in format: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
     "url": "postgres://pguser:mysecretpgpassword@localhost",
-    // Periodical removal of old database records to reduce database size (in msec)
     "maintenanceInterval": 60000
   },
   "sessions": {
@@ -33,7 +23,6 @@
     "pwdSaltRounds": 10
   },
   "wclient": {
-    // Name of the application as shown in the web client
     "name": "Live Map (Dev)",
     "license": "MIT",
     "about": "This is the development version of the Live Map demo.<br><br>Use at your own risk."
