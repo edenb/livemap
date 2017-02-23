@@ -111,7 +111,7 @@ var MQTTschema = {
             }
         }
     },
-    "required": ["id", "apikey", "timestamp"]
+    "required": ["id", "apikey", "timestamp", "lat", "lon"]
 };
 
 var validate = MQTTvalidator.compile(MQTTschema);
@@ -120,8 +120,8 @@ function processMessage(messageStr, callback) {
     var srcData, destData = {};
 
     // Convert JSON string to object
-    // Required: id, apikey, timestamp
-    // Optional: lat, lon, tagid, tagapikey, type, attr
+    // Required: id, apikey, timestamp, lat, lon
+    // Optional: tagid, tagapikey, type, attr
     try {
         srcData = JSON.parse(messageStr);
     } catch (e) {
