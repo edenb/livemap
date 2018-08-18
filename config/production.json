@@ -3,7 +3,6 @@
     "forceSSL": "true"
   },
   "db": {
-    // Database in format: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
     "url": "postgres://pguser:mysecretpgpassword@localhost"
   },
   "sessions": {
