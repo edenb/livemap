@@ -1,16 +1,10 @@
 "use strict";
-var config = require('config');
-var pg = require('pg');
-var pgStore = require('connect-pg-simple');
-var dbcache = require('./dbcache');
-var fs = require('fs');
+const config = require('config');
+const { Pool } = require('pg');
+const pgStore = require('connect-pg-simple');
+const dbcache = require('./dbcache');
+const fs = require('fs');
 
-// Get the PostgreSQL login details from the config.
-// Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
-// To set environment variable:
-//  set C_DB_URL=user:pass@abc.com/table (Windows)
-//  export C_DB_URL=user:pass@abc.com/table (*nix)
-var connectionString = config.get('db.url');
 var sessionStore;
 var queryDef = [];
 var databaseUp = false;
@@ -35,12 +29,29 @@ queryDef.insertPosition = {'qstr': 'INSERT INTO locations(device_id, device_id_t
 queryDef.findSessionById = {'qstr': 'SELECT sess FROM sessions WHERE sid = $1', 'readTables': ['sessions'], 'writeTables': [], 'cached': false};
 queryDef.getNumberOfTables = {'qstr': 'SELECT count(*) FROM information_schema.tables WHERE table_schema = \'public\'', 'readTables': [], 'writeTables': [], 'cached': false};
 
+// Initialize the pool
+// Get the PostgreSQL login details from the config.
+// Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
+// To set environment variable:
+//  set DATABASE_URL=user:pass@abc.com/table (Windows)
+//  export DATABASE_URL=user:pass@abc.com/table (*nix)
+const pgPool = new Pool({
+    connectionString: config.get('db.url'),
+});
+
+// The pool emits an error if a backend or network error occurs
+// on any idle client. This is fatal so exit
+pgPool.on('error', function (err, client) {
+    console.error('Unexpected error on idle client', err);
+    process.exit(1);
+});
+
 //
 // Database operations with predefined queries
 //
 
 function queryDb(key, sqlParams, callback) {
-    var query, rows = [], cachedQryOut = null;
+    var cachedQryOut = null;
 
     if (typeof queryDef[key].qstr !== 'undefined') {
         if (queryDef[key].cached) {
@@ -53,35 +64,30 @@ function queryDb(key, sqlParams, callback) {
         }
 
         if (cachedQryOut === null) {
-            pg.connect(connectionString, function (err, client, done) {
+            pgPool.connect(function (err, client, release) {
                 if (err) {
                     console.error('Database connection error: ', err);
                     if (typeof callback === 'function') {
                         callback(err, [], null);
                     }
-                    done();
                 } else {
-                    query = client.query(queryDef[key].qstr, sqlParams || []);
-
-                    query.on('error', function (err) {
-                        console.error('Database query error(' + key + '): ', err);
-                        done();
-                    });
-
-                    query.on('row', function (row) {
-                        rows.push(row);
-                    });
-
-                    query.on('end', function (result) {
-                        dbcache.invalidate(queryDef[key]);
-                        if (queryDef[key].cached) {
-                            dbcache.save(queryDef[key], sqlParams, rows, result);
+                    client.query(queryDef[key].qstr, sqlParams || [], function (err, res) {
+                        release();
+                        if (err) {
+                            console.error('Database query error(' + key + '): ', err);
+                            if (typeof callback === 'function') {
+                                callback(err, [], null);
+                            }
+                        } else {
+                            dbcache.invalidate(queryDef[key]);
+                            if (queryDef[key].cached) {
+                                dbcache.save(queryDef[key], sqlParams, res.rows, res);
+                            }
+                            if (typeof callback === 'function') {
+                                // console.log('queryDb - **** from DB ****: ' + key);
+                                callback(null, res.rows, res);
+                            }
                         }
-                        if (typeof callback === 'function') {
-                           // console.log('queryDb - **** from DB ****: ' + key);
-                            callback(null, rows, result);
-                        }
-                        done();
                     });
                 }
             });
@@ -99,35 +105,28 @@ function queryDb(key, sqlParams, callback) {
 //
 
 function queryDbFromFile(fileName, callback) {
-    var query, rows = [];
-
     fs.readFile(fileName, function (fileError, fileData) {
         if (fileError === null) {
-            pg.connect(connectionString, function (err, client, done) {
+            pgPool.connect(function (err, client, release) {
                 if (err) {
                     console.error('Database connection error: ', err);
                     if (typeof callback === 'function') {
                         callback(err, [], null);
                     }
-                    done();
                 } else {
-                    query = client.query(fileData.toString());
-
-                    query.on('error', function (err) {
-                        console.error('Database query error: ', err);
-                        done();
-                    });
-
-                    query.on('row', function (row) {
-                        rows.push(row);
-                    });
-
-                    query.on('end', function (result) {
-                        if (typeof callback === 'function') {
-                            //console.log('queryDbFromFile: ' + fileName);
-                            callback(null, rows, result);
+                    client.query(fileData.toString(), function (err, res) {
+                        release();
+                        if (err) {
+                            console.error('Database query error: ', err);
+                            if (typeof callback === 'function') {
+                                callback(err, [], null);
+                            }
+                        } else {
+                            if (typeof callback === 'function') {
+                                //console.log('queryDbFromFile: ' + fileName);
+                                callback(null, res.rows, res);
+                            }
                         }
-                        done();
                     });
                 }
             });
@@ -142,7 +141,7 @@ function queryDbFromFile(fileName, callback) {
 //
 
 function bindStore(session) {
-    sessionStore = new(pgStore(session))({tableName: config.get('sessions.tableName'), conString: connectionString, pg: pg});
+    sessionStore = new(pgStore(session))({tableName: config.get('sessions.tableName'), pool: pgPool});
 }
 
 function getStore() {
