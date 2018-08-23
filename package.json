@@ -23,7 +23,7 @@
     "shortid": "~2.2.0",
     "mqtt": "~1.7.0",
     "url": "~0.11.0",
-    "ajv": "~3.5.0"
+    "ajv": "~6.5.0"
   },
   "devDependencies": {},
   "engines": {

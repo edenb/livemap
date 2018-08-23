@@ -7,8 +7,7 @@ var usr = require('./user.js');
 var dev = require('./device.js');
 var livesvr = require('./liveserver.js');
 
-var client;
-var MQTTvalidator = ajv({allErrors: true, coerceTypes: true});
+var MQTTvalidator = ajv({allErrors: true, coerceTypes: true, meta: false});
 
 var MQTTschema = {
     "title": "MQTT Schema",
@@ -46,18 +45,14 @@ var MQTTschema = {
         "lat": {
             "description": "Latitude of the location",
             "type": "number",
-            "minimum": -90.0,
-            "exclusiveMinimum": true,
-            "maximum": 90.0,
-            "exclusiveMaximum": true
+            "minimum": -90,
+            "maximum": 90
         },
         "lon": {
             "description": "Longitude of the location",
             "type": "number",
-            "minimum": -180.0,
-            "exclusiveMinimum": true,
-            "maximum": 180.0,
-            "exclusiveMaximum": true
+            "minimum": -180,
+            "maximum": 180
         },
         "attr": {
             "description": "Other attributes",
@@ -89,10 +84,8 @@ var MQTTschema = {
                 "mopacity": {
                     "description": "Opacity of the marker",
                     "type": "number",
-                    "minimum": 0.0,
-                    "exclusiveMinimum": false,
-                    "maximum": 1.0,
-                    "exclusiveMaximum": false
+                    "minimum": 0,
+                    "maximum": 1
                 },
                 "labelshowalias": {
                     "description": "Show alias name on the marker label",
@@ -178,6 +171,7 @@ function processMessage(messageStr, callback) {
 //
 
 function start() {
+    var client;
     var brokerUrl = url.parse(config.get('mqtt.url'));
     client = mqtt.connect(brokerUrl, {keepalive: 10});
 
