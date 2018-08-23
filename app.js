@@ -12,7 +12,7 @@ var session = require('express-session');
 var db = require('./db.js');
 var usr = require('./user.js');
 var livesvr = require('./liveserver.js');
-var rest = require('./rest.js');
+var webhook = require('./webhook.js');
 var mqtt = require('./mqtt.js');
 
 var port = config.get('server.port');
@@ -42,11 +42,11 @@ app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 // Handle posted positions
 app.post('/location/gpx', function (req, res) {
-    rest.processLocation(req, res, 'gpx');
+    webhook.processLocation(req, res, 'gpx');
 });
 
 app.post('/location/geofancy', function (req, res) {
-    rest.processLocation(req, res, 'geofancy');
+    webhook.processLocation(req, res, 'geofancy');
 });
 
 // View engine set-up
