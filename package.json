@@ -6,7 +6,7 @@
   "dependencies": {
     "config": "~2.0.0",
     "express": "~4.13.0",
-    "body-parser": "~1.14.0",
+    "body-parser": "~1.18.0",
     "cookie-parser": "~1.4.0",
     "morgan": "~1.6.0",
     "express-session": "~1.13.0",
