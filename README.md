@@ -13,7 +13,7 @@ A simple [Node.js](https://nodejs.org) server that ingests location updates and 
 * Server side storage with PostgreSQL
 
 ## Getting started
-The easiest way to get started is to deploy the application on [Heroku](https://heroku.com). Use the [Deploy to Heroku](https://heroku.com/deploy) button and follow instructions to create an account. On Heroku press the Deploy for Free button at the bottom and your server is up and running!
+The easiest way to get started is to deploy the application on [Heroku](https://heroku.com). Use the [Deploy to Heroku](https://heroku.com/deploy?template=https://github.com/edenb/livemap) button and follow instructions to create an account. On Heroku press the Deploy for Free button at the bottom and your server is up and running!
 
 On a local NodeJS setup you first need to install some packages.
 * Download and install the newest Node 4.x version from [Node.js](https://nodejs.org)
