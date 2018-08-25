@@ -113,39 +113,32 @@ function processGeofancy(srcData, callback) {
 //
 
 function processLocation(request, response, type) {
-    var form_data = '';
     var srcData = {};
-
-    request.on('data', function (chunk) {
-        form_data += chunk.toString();
-    });
-
-    request.on('end', function () {
-        srcData = qs.parse(form_data);
-        dev.loadDevicesFromDB(function (err) {
-            if (err === null) {
-                usr.loadUsersFromDB(function (err) {
-                    if (err === null) {
-                        switch (type) {
-                        case 'gpx':
-                            processGpx(srcData, function (destData) {
-                                livesvr.sendToClient(destData);
-                            });
-                            break;
-                        case 'geofancy':
-                            processGeofancy(srcData, function (destData) {
-                                livesvr.sendToClient(destData);
-                            });
-                            break;
-                        }
+    
+    srcData = request.query;
+    dev.loadDevicesFromDB(function (err) {
+        if (err === null) {
+            usr.loadUsersFromDB(function (err) {
+                if (err === null) {
+                    switch (type) {
+                    case 'gpx':
+                        processGpx(srcData, function (destData) {
+                            livesvr.sendToClient(destData);
+                        });
+                        break;
+                    case 'geofancy':
+                        processGeofancy(srcData, function (destData) {
+                            livesvr.sendToClient(destData);
+                        });
+                        break;
                     }
-                });
-            }
-        });
-        response.writeHead(200, {'Content-Type': 'text/plain'});
-        response.write('OK');
-        response.end();
+                }
+            });
+        }
     });
+    response.writeHead(200, {'Content-Type': 'text/plain'});
+    response.write('OK');
+    response.end();
 }
 
 module.exports.processLocation = processLocation;
