@@ -25,6 +25,6 @@
         "version": "9.6"
       }
     },
-    "cloudamqp"
+    "cloudmqtt"
   ]
 }

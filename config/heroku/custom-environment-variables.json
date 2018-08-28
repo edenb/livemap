@@ -4,7 +4,7 @@
     "forceSSL": "C_SERVER_FORCESSL"
   },
   "mqtt": {
-    "url": "CLOUDAMQP_URL",
+    "url": "CLOUDMQTT_URL",
     "topic": "C_MQTT_TOPIC"
   },
   "db": {
