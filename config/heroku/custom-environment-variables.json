@@ -1,14 +1,14 @@
 {
   "server": {
-    "port": "C_SERVER_PORT",
+    "port": "PORT",
     "forceSSL": "C_SERVER_FORCESSL"
   },
   "mqtt": {
-    "url": "C_MQTT_URL",
+    "url": "CLOUDAMQP_URL",
     "topic": "C_MQTT_TOPIC"
   },
   "db": {
-    "url": "C_DB_URL",
+    "url": "DATABASE_URL",
     "maintenanceInterval": "C_DB_MAINTENANCEINTERVAL"
   },
   "sessions": {

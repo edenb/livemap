@@ -1,20 +1,30 @@
 {
-  "name": "Live Map",
-  "description": "Live Map demo. Username: admin - Password: admin",
+  "name": "Live Map Demo",
+  "description": "Live Map demo. Username: demo - Password: demo",
   "repository": "https://github.com/edenb/livemap",
   "logo": "https://avatars0.githubusercontent.com/u/12279059?s=400&v=4",
-  "keywords": ["node", "postgres"],
+  "keywords": ["node", "postgres", "cloudamqp"],
   "env": {
-    "NODE_ENV": {
-      "description": "Production environment",
-      "value": "production"
+    "NODE_CONFIG_DIR": {
+      "description": "Use demo settings and environment variables from Heroku",
+      "value": "config/heroku"
     },
-    "C_FORCESSL": {
+    "NODE_ENV": {
+      "description": "Demo environment",
+      "value": "demo"
+    },
+    "C_SERVER_FORCESSL": {
       "description": "Force server to use HTTPS",
       "value": "true"
     }
   },
   "addons": [
-    "heroku-postgresql"
+    {
+      "plan": "heroku-postgresql",
+      "options": {
+        "version": "9.6"
+      }
+    },
+    "cloudamqp"
   ]
 }

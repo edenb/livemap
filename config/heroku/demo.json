@@ -1,0 +1,12 @@
+{
+  "server": {
+    "forceSSL": "true"
+  },
+  "sessions": {
+    "secret": "mydemocookiesecret"
+  },
+  "wclient": {
+    "name": "Live Map Demo",
+    "about": "This is the demo version of Live Map."
+  }
+}
