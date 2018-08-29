@@ -25,6 +25,7 @@
   "wclient": {
     "name": "Live Map (Dev)",
     "license": "MIT",
-    "about": "This is the development version of the Live Map demo.<br><br>Use at your own risk."
+    "about": "This is the development version of the Live Map demo.",
+    "broker": ""
   }
 }

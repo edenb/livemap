@@ -25,6 +25,7 @@
   "wclient": {
     "name": "C_WCLIENT_NAME",
     "license": "C_WCLIENT_LICENSE",
-    "about": "C_WCLIENT_ABOUT"
+    "about": "C_WCLIENT_ABOUT",
+    "broker": "C_WCLIENT_BROKER"
   }
 }
