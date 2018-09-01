@@ -13,7 +13,7 @@ function postMessage(destinationUrl, data) {
     var options = {
         host: url.parse(destinationUrl).hostname,
         port: url.parse(destinationUrl).port,
-        path: url.parse(destinationUrl).pathname,
+        path: url.parse(destinationUrl).pathname + '?' + data,
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
