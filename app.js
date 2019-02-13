@@ -51,7 +51,7 @@ app.post('/location/geofancy', function (req, res) {
 
 // View engine set-up
 app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
 app.use(morgan('dev')); // log every request to the console
