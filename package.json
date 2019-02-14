@@ -4,7 +4,7 @@
   "description": "Web server for live map viewing",
   "main": "app.js",
   "dependencies": {
-    "config": "~2.0.0",
+    "config": "~3.0.0",
     "express": "~4.16.0",
     "body-parser": "~1.18.0",
     "cookie-parser": "~1.4.0",
@@ -12,8 +12,8 @@
     "express-session": "~1.15.0",
     "serve-favicon": "~2.5.0",
     "pug": "~2.0.0",
-    "socket.io": "~2.1.0",
-    "pg": "~7.4.0",
+    "socket.io": "~2.2.0",
+    "pg": "~7.8.0",
     "gpx-parse": "~0.10.0",
     "passport": "~0.4.0",
     "passport-local": "~1.0.0",
@@ -23,7 +23,7 @@
     "shortid": "~2.2.0",
     "mqtt": "~2.18.0",
     "url": "~0.11.0",
-    "ajv": "~6.5.0"
+    "ajv": "~6.9.0"
   },
   "devDependencies": {},
   "engines": {
