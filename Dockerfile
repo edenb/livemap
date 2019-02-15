@@ -5,7 +5,7 @@ RUN mkdir /src
 WORKDIR /src
 
 # Get latest version of the Livemap app
-copy . .
+COPY . .
 
 # Install dependencies
 RUN npm install
