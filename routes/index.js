@@ -38,7 +38,7 @@ module.exports = function (passport) {
         // Save the remote IP address in the session store
         req.session.remoteIP = req.ip;
         req.session.save(function (err) {
-            res.render('landing', {wclient: config.get('wclient'), flash: req.flash()});
+            res.render('landing', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash()});
         });
     });
 
@@ -51,7 +51,7 @@ module.exports = function (passport) {
 
     // GET Registration Page
     router.get('/signup', function (req, res) {
-        res.render('register', {wclient: config.get('wclient'), flash: req.flash()});
+        res.render('register', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash()});
     });
 
     // Handle Registration POST
@@ -78,10 +78,10 @@ module.exports = function (passport) {
     router.get('/changedetails', ensureAuthenticated, function (req, res) {
         if (req.user.role === 'admin') {
             usr.getAllUsers(function (allUsers) {
-                res.render('changedetails', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, users: allUsers});
+                res.render('changedetails', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user, users: allUsers});
             });
         } else {
-            res.render('changedetails', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, users: null});
+            res.render('changedetails', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user, users: null});
         }
     });
 
@@ -139,7 +139,7 @@ module.exports = function (passport) {
     router.get('/changedevices', ensureAuthenticated, function (req, res) {
         dev.getDevicesByUser(req.user.user_id, function (err, userdevices) {
             if (err === null) {
-                res.render('changedevices', {wclient: config.get('wclient'), flash: req.flash(), user: req.user, userdevices: userdevices});
+                res.render('changedevices', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user, userdevices: userdevices});
             } else {
                 req.flash('error', err);
                 req.session.save(function (err) {
@@ -235,7 +235,7 @@ module.exports = function (passport) {
 
     // GET Change Password Page
     router.get('/changepassword', ensureAuthenticated, function (req, res) {
-        res.render('changepassword', {wclient: config.get('wclient'), flash: req.flash(), user: req.user});
+        res.render('changepassword', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user});
     });
 
     // Handle change password POST
