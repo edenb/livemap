@@ -13,6 +13,10 @@
       "description": "Demo environment",
       "value": "demo"
     },
+    "C_WCLIENT_SHOWBROKER": {
+      "description": "Show MQTT broker details in About box",
+      "value": "true"
+    },
     "C_SERVER_FORCESSL": {
       "description": "Force server to use HTTPS",
       "value": "true"
