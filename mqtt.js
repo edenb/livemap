@@ -1,7 +1,6 @@
 "use strict";
 var config = require('config');
 var mqtt = require('mqtt');
-var url = require('url');
 var ajv = require('ajv');
 var usr = require('./user.js');
 var dev = require('./device.js');
@@ -206,7 +205,6 @@ function start() {
 }
 
 function getBrokerUrl() {
-    //return url.parse(config.get('mqtt.url'));
     return new URL(config.get('mqtt.url'));
 }
 
