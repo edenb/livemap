@@ -26,6 +26,6 @@
     "name": "Live Map (Dev)",
     "license": "MIT",
     "about": "This is the development version of the Live Map demo.",
-    "broker": ""
+    "showBroker": "false"
   }
 }

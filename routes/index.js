@@ -3,6 +3,7 @@ var express = require('express');
 var flash = require('connect-flash');
 var usr = require('../user.js');
 var dev = require('../device.js');
+var mqtt = require('../mqtt.js');
 
 var router = express.Router();
 
@@ -62,7 +63,7 @@ module.exports = function (passport) {
 
     // GET Start Page
     router.get('/main', ensureAuthenticated, function (req, res) {
-        res.render('main', {wclient: config.get('wclient'), flash: req.flash(), user: req.user});
+        res.render('main', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user});
     });
 
     // Handle Logout

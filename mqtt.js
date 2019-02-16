@@ -172,11 +172,10 @@ function processMessage(messageStr, callback) {
 
 function start() {
     var client;
-    var brokerUrl = url.parse(config.get('mqtt.url'));
-    client = mqtt.connect(brokerUrl, {keepalive: 10});
+    client = mqtt.connect(getBrokerUrl().href, {keepalive: 10});
 
     client.on('connect', function () {
-        console.log('Connected to MQTT broker: ' + config.get('mqtt.url'));
+        console.log('Connected to MQTT broker: ' + getBrokerUrl().href);
         client.subscribe(config.get('mqtt.topic'));
         console.log('MQTT client started');
         // Test
@@ -206,4 +205,10 @@ function start() {
     });
 }
 
+function getBrokerUrl() {
+    //return url.parse(config.get('mqtt.url'));
+    return new URL(config.get('mqtt.url'));
+}
+
 module.exports.start = start;
+module.exports.getBrokerUrl = getBrokerUrl;
