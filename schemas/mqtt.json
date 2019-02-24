@@ -1,0 +1,97 @@
+{
+    "title": "MQTT Schema",
+    "type": "object",
+    "properties": {
+        "id": {
+            "description": "The unique identifier for a device",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+        },
+        "apikey": {
+            "description": "The unique key of the owner of the device",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20
+        },
+        "tagid": {
+            "description": "The unique identifier for a tag",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 50
+        },
+        "tagapikey": {
+            "description": "The unique key of the owner of the tag",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 20
+        },
+        "timestamp": {
+            "description": "Date and time of the location",
+            "type": "string",
+            "format": "date-time"
+        },
+        "lat": {
+            "description": "Latitude of the location",
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+        },
+        "lon": {
+            "description": "Longitude of the location",
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+        },
+        "attr": {
+            "description": "Other attributes",
+            "type": "object",
+            "properties": {
+                "miconname": {
+                    "description": "Name of the icon",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "miconlib": {
+                    "description": "Name of the icon library",
+                    "type": "string",
+                    "enum": ["glyphicon", "fa", "ion"]
+                },
+                "mcolor": {
+                    "description": "Color of the marker",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "miconcolor": {
+                    "description": "Color of the icon",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 20
+                },
+                "mopacity": {
+                    "description": "Opacity of the marker",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "labelshowalias": {
+                    "description": "Show alias name on the marker label",
+                    "type": "boolean"
+                },
+                "labelshowtime": {
+                    "description": "Show date and time on the marker label",
+                    "type": "boolean"
+                },
+                "labelcustomhtml": {
+                    "description": "Custom HTML text on the marker label",
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 200
+                }
+            }
+        }
+    },
+    "required": ["id", "apikey", "timestamp", "lat", "lon"]
+}

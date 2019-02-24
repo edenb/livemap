@@ -1,112 +1,12 @@
 "use strict";
 var config = require('config');
 var mqtt = require('mqtt');
-var ajv = require('ajv');
 var usr = require('./user.js');
 var dev = require('./device.js');
 var livesvr = require('./liveserver.js');
+var JSONValidator = require('./validator.js');
 
-var MQTTvalidator = ajv({allErrors: true, coerceTypes: true, meta: false});
-
-var MQTTschema = {
-    "title": "MQTT Schema",
-    "type": "object",
-    "properties": {
-        "id": {
-            "description": "The unique identifier for a device",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 50
-        },
-        "apikey": {
-            "description": "The unique key of the owner of the device",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 20
-        },
-        "tagid": {
-            "description": "The unique identifier for a tag",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 50
-        },
-        "tagapikey": {
-            "description": "The unique key of the owner of the tag",
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 20
-        },
-        "timestamp": {
-            "description": "Date and time of the location",
-            "type": "string",
-            "format": "date-time"
-        },
-        "lat": {
-            "description": "Latitude of the location",
-            "type": "number",
-            "minimum": -90,
-            "maximum": 90
-        },
-        "lon": {
-            "description": "Longitude of the location",
-            "type": "number",
-            "minimum": -180,
-            "maximum": 180
-        },
-        "attr": {
-            "description": "Other attributes",
-            "type": "object",
-            "properties": {
-                "miconname": {
-                    "description": "Name of the icon",
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 20
-                },
-                "miconlib": {
-                    "description": "Name of the icon library",
-                    "type": "string",
-                    "enum": ["glyphicon", "fa", "ion"]
-                },
-                "mcolor": {
-                    "description": "Color of the marker",
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 20
-                },
-                "miconcolor": {
-                    "description": "Color of the icon",
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 20
-                },
-                "mopacity": {
-                    "description": "Opacity of the marker",
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1
-                },
-                "labelshowalias": {
-                    "description": "Show alias name on the marker label",
-                    "type": "boolean"
-                },
-                "labelshowtime": {
-                    "description": "Show date and time on the marker label",
-                    "type": "boolean"
-                },
-                "labelcustomhtml": {
-                    "description": "Custom HTML text on the marker label",
-                    "type": "string",
-                    "minLength": 0,
-                    "maxLength": 200
-                }
-            }
-        }
-    },
-    "required": ["id", "apikey", "timestamp", "lat", "lon"]
-};
-
-var validate = MQTTvalidator.compile(MQTTschema);
+var MQTTvalidator = new JSONValidator('mqtt');
 
 function processMessage(messageStr, callback) {
     var srcData, destData = {};
@@ -121,12 +21,12 @@ function processMessage(messageStr, callback) {
     }
 
     if (srcData !== null) {
-        if (validate(srcData)) {
+        if (MQTTvalidator.validate(srcData)) {
             // For now lat and lon are expected to be strings
             srcData.lon = srcData.lon.toString();
             srcData.lat = srcData.lat.toString();
         } else {
-            console.log('Invalid: ' + MQTTvalidator.errorsText(validate.errors));
+            console.log('Invalid: ' + MQTTvalidator.errorsText());
             // Invalidate MQTT message
             srcData = null;
         }
