@@ -1,4 +1,5 @@
-[![Dependencies](https://david-dm.org/edenb/livemap.png)](https://david-dm.org/edenb/livemap)
+[![Dependencies](https://img.shields.io/david/edenb/livemap.svg)](https://david-dm.org/edenb/livemap)
+[![DevDependencies](https://img.shields.io/david/dev/edenb/livemap.svg)](https://david-dm.org/edenb/livemap?type=dev)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/edenb/livemap)
 
