@@ -1,9 +1,9 @@
 var config = require('config');
 var express = require('express');
 var flash = require('connect-flash');
-var usr = require('../user.js');
-var dev = require('../device.js');
-var mqtt = require('../mqtt.js');
+var usr = require('../src/user.js');
+var dev = require('../src/device.js');
+var mqtt = require('../src/mqtt.js');
 
 var router = express.Router();
 

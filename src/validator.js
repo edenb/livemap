@@ -7,7 +7,7 @@ class Validator {
         this._schemaValid = false;
         this._schemaName = schemaName;
         this.ajvValidator = ajv({schemaId: 'auto', allErrors: true, coerceTypes: true});
-        this.ajvValidator.addMetaSchema(require('./schemas/json-schema-draft-06.json'));
+        this.ajvValidator.addMetaSchema(require('../schemas/json-schema-draft-06.json'));
         this.loadSchema(schemaName);
     }
 

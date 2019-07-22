@@ -36,9 +36,9 @@ if (config.get('server.forceSSL') === 'true') {
 }
 
 // Static route for JavaScript libraries, css files, etc.
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/../public'));
 
-app.use(favicon(__dirname + '/public/images/favicon.ico'));
+app.use(favicon(__dirname + '/../public/images/favicon.ico'));
 
 // Handle posted positions
 app.post('/location/gpx', function (req, res) {
@@ -50,7 +50,7 @@ app.post('/location/geofancy', function (req, res) {
 });
 
 // View engine set-up
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/../views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
@@ -114,7 +114,7 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
     })
 );
 
-var routes = require('./routes/index')(passport);
+var routes = require('../routes/index')(passport);
 app.use('/', routes);
 
 function allUp() {
