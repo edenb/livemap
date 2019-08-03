@@ -29,6 +29,11 @@ jobs:
             psql -h localhost -p 5432 -U postgres < initdb/10_init-user-db.sql
 
       - run:
+          name: Create tables
+          command: |
+            psql -h localhost -p 5432 -U livemap < setup/schema.sql
+
+      - run:
           name: Install packages
           command: npm install
 
