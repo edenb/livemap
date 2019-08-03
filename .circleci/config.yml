@@ -26,7 +26,7 @@ jobs:
       - run:
           name: Initialise DB
           command: |
-            psql -h localhost -p 5432 < livemap/initdb/10_init-user-db.sql
+            psql -h localhost -p 5432 < initdb/10_init-user-db.sql
 
       - run:
           name: Install packages
