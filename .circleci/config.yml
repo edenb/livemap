@@ -14,7 +14,25 @@ jobs:
 
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install postgresql
-      - run: sudo -u postgres psql -p 5432 < initdb/10_init-user-db.sql
-      - run: npm install
-      - run: npm test
+
+      - run:
+          name: Wait for DB
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+
+      - run:
+          name: Install PostgreSQL client
+          command: |
+            sudo apt-get install postgresql-client
+
+      - run:
+          name: Initialise DB
+          command: |
+            psql -h localhost -p 5432 -c "create database livemapdb" -U livemap
+
+      - run:
+          name: Install packages
+          command: npm install
+
+      - run:
+          name: Run tests
+          command: npm test
