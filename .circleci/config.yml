@@ -8,7 +8,7 @@ jobs:
 
       - image: circleci/postgres:9.6
         environment:
-          POSTGRES_USER: livemap
+          POSTGRES_USER: postgres
     working_directory: ~/repo
 
     steps:
@@ -26,7 +26,7 @@ jobs:
       - run:
           name: Initialise DB
           command: |
-            psql -h localhost -p 5432 -c "create database livemapdb" -U livemap
+            psql -h localhost -p 5432 < livemap/initdb/10_init-db-user.sql
 
       - run:
           name: Install packages
