@@ -31,7 +31,7 @@ jobs:
       - run:
           name: Create tables
           command: |
-            psql -h localhost -p 5432 -U livemap < setup/schema.sql
+            psql -h localhost -p 5432 -U livemap -d livemapdb < setup/schema.sql
 
       - run:
           name: Install packages
