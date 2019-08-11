@@ -6,7 +6,7 @@ const webhook = require('../src/webhook.js');
 
 chai.use(chaihttp);
 
-var app = express();
+const app = express();
 
 app.post('/location/gpx', (req, res) => {
     webhook.processLocation(req, res, 'gpx');

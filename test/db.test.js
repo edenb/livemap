@@ -2,7 +2,7 @@
 require('chai').should();
 const db = require('../src/db.js');
 
-var testUser = {
+const testUser = {
     username: 'testuser1',
     fullName: 'Test User1',
     email: 'test@user1',
@@ -10,7 +10,7 @@ var testUser = {
     api_key: '1234'
 };
 
-var testUser_Id = null;
+let testUser_Id = null;
 
 describe('Database', () => {
     describe('#getNumberOfTables', () => {
