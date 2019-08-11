@@ -1,8 +1,8 @@
 "use strict";
-const should = require('chai').should();
+require('chai').should();
 const db = require('../src/db.js');
 
-var testUser = {
+const testUser = {
     username: 'testuser1',
     fullName: 'Test User1',
     email: 'test@user1',
@@ -10,19 +10,19 @@ var testUser = {
     api_key: '1234'
 };
 
-var testUser_Id = null;
+let testUser_Id = null;
 
-describe('Database', function() {
-    describe('#getNumberOfTables', function() {
-      it('respond with 1 row', function(done) {
-        db.queryDb('getNumberOfTables', [], function (err, rows, result) {
+describe('Database', () => {
+    describe('#getNumberOfTables', () => {
+      it('should respond with 1 row', (done) => {
+        db.queryDb('getNumberOfTables', [], (err, rows, result) => {
           if (err) return done(err);
           result.rowCount.should.equal(1);
           done();
         });
       });
-      it('all 5 tables present', function(done) {
-        db.queryDb('getNumberOfTables', [], function (err, rows, result) {
+      it('should respond with 5 as the number of tables', (done) => {
+        db.queryDb('getNumberOfTables', [], (err, rows, result) => {
           if (err) return done(err);
            result.rows[0].count.should.equal('5');
           done();
@@ -30,9 +30,9 @@ describe('Database', function() {
       });
     });
 
-    describe('#findUserByUsername', function() {
-        it('respond with no errors', function(done) {
-          db.queryDb('findUserByUsername', [testUser.username], function (err, rows, result) {
+    describe('#findUserByUsername', () => {
+        it('should respond with no errors', (done) => {
+          db.queryDb('findUserByUsername', [testUser.username], (err, rows, result) => {
             if (err) return done(err);
             if (result.rowCount > 0) {
                 testUser_Id = rows[0].user_id;
@@ -44,18 +44,18 @@ describe('Database', function() {
         });   
     });
 
-    describe('#deleteUser', function() {
-        it('respond with no error', function(done) {
-          db.queryDb('deleteUser', [testUser_Id], function (err, rows, result) {
+    describe('#deleteUser', () => {
+        it('should respond with no errors', (done) => {
+          db.queryDb('deleteUser', [testUser_Id], (err) => {
             if (err) return done(err);
             done();
           });
         });   
     });
 
-    describe('#insertUser', function() {
-        it('respond with 1 created user', function(done) {
-          db.queryDb('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key], function (err, rows, result) {
+    describe('#insertUser', () => {
+        it('should create 1 user', (done) => {
+          db.queryDb('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key], (err, rows, result) => {
             if (err) return done(err);
             result.rowCount.should.equal(1);
             done();
@@ -63,9 +63,9 @@ describe('Database', function() {
         });   
     });
 
-    describe('#findUserByUsername', function() {
-        it('respond with 1 found user', function(done) {
-          db.queryDb('findUserByUsername', [testUser.username], function (err, rows, result) {
+    describe('#findUserByUsername', () => {
+        it('should return 1 user', (done) => {
+          db.queryDb('findUserByUsername', [testUser.username], (err, rows, result) => {
             if (err) return done(err);
             if (result.rowCount > 0) {
                 testUser_Id = rows[0].user_id;
@@ -78,9 +78,9 @@ describe('Database', function() {
         });   
     });
 
-    describe('#deleteUser', function() {
-        it('respond with 1 deleted user', function(done) {
-          db.queryDb('deleteUser', [testUser_Id], function (err, rows, result) {
+    describe('#deleteUser', () => {
+        it('should delete 1 user', (done) => {
+          db.queryDb('deleteUser', [testUser_Id], (err, rows, result) => {
             if (err) return done(err);
             result.rowCount.should.equal(1);
             done();
