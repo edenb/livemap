@@ -6,7 +6,6 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var flash = require('connect-flash');
 var morgan = require('morgan');
-var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var db = require('./db.js');
@@ -56,7 +55,6 @@ app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
 app.use(morgan('combined', { "stream": logger.stream })); // log every request to the logger
-app.use(cookieParser(config.get('sessions.secret'))); // read cookies (needed for auth)
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({extended: true}));
 app.enable('trust proxy');
