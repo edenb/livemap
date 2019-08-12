@@ -5,6 +5,7 @@ var url = require('url');
 var qs = require('querystring');
 var fs = require('fs');
 var gpxParse = require("gpx-parse");
+var logger = require('./logger.js');
 
 var port = config.get('server.port');
 var gpxTracks = [];
@@ -87,11 +88,11 @@ gpxPlayer.prototype.start = function start() {
                         self.index = 0;
                         setTimeout(self.sendGpxPoint.bind(self), 0);
                     } else {
-                        console.error('Wrong format of GPX file.', error);
+                        logger.error('Wrong format of GPX file.', error);
                     }
                 });
             } else {
-                console.error('Unable to open GPX file.', fileError);
+                logger.error('Unable to open GPX file.', fileError);
             }
         });
     }
@@ -124,7 +125,7 @@ function startAll() {
                 if (gpxFiles.hasOwnProperty(key)) {
                     if (typeof gpxTracks[key] === 'undefined') {
                         gpxTracks[key] = new gpxPlayer(gpxFiles[key], './tracks/' +  gpxFiles[key] + '.gpx', 'http://localhost:' + port + '/location/gpx');
-                        console.log('Added track: ' + gpxTracks[key].fileName);
+                        logger.info('Added track: ' + gpxTracks[key].fileName);
                     }
                 }
             }
@@ -133,7 +134,7 @@ function startAll() {
             for (key in gpxTracks) {
                 if (gpxTracks.hasOwnProperty(key)) {
                     if (typeof gpxFiles[key] === 'undefined') {
-                        console.log('Removed track: ' + gpxTracks[key].fileName);
+                        logger.info('Removed track: ' + gpxTracks[key].fileName);
                         delete gpxTracks[key];
                     } else {
                         gpxTracks[key].start();
@@ -141,7 +142,7 @@ function startAll() {
                 }
             }
         } else {
-            console.error('Missing tracks directory.', err);
+            logger.error('Missing tracks directory.', err);
         }
     });
 }

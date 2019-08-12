@@ -5,6 +5,7 @@ var usr = require('./user.js');
 var dev = require('./device.js');
 var livesvr = require('./liveserver.js');
 var JSONValidator = require('./validator.js');
+var logger = require('./logger.js');
 
 var MQTTvalidator = new JSONValidator('mqtt');
 
@@ -26,7 +27,7 @@ function processMessage(messageStr, callback) {
             srcData.lon = srcData.lon.toString();
             srcData.lat = srcData.lat.toString();
         } else {
-            console.log('Invalid: ' + MQTTvalidator.errorsText());
+            logger.info('Invalid: ' + MQTTvalidator.errorsText());
             // Invalidate MQTT message
             srcData = null;
         }
@@ -35,7 +36,7 @@ function processMessage(messageStr, callback) {
     if (srcData !== null) {
         if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
             dev.getDeviceByIdentity(srcData.apikey, srcData.id, function (destDevice) {
-                //console.log('MQTT message: ' + JSON.stringify(srcData));
+                logger.info('MQTT message: ' + JSON.stringify(srcData));
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
                     destData.identifier = srcData.id;
@@ -48,19 +49,19 @@ function processMessage(messageStr, callback) {
                     destData.loc_lon = srcData.lon;
                     destData.loc_type = null; // Deprecated for MQTT
                     destData.loc_attr = srcData.attr;
-                    //console.log('Converted message: ' + JSON.stringify(destData));
+                    logger.debug('Converted message: ' + JSON.stringify(destData));
                     return callback(destData);
                 } else {
-                    //console.log('Unable to find device');
+                    logger.debug('Unable to find device');
                     return callback(null);
                 }
             });
         } else {
-            //console.log('Unknown API key: ' + srcData.apikey);
+            logger.debug('Unknown API key: ' + srcData.apikey);
             return callback(null);
         }
     } else {
-        //console.log('Invalid MQTT message: ' + messageStr);
+        logger.debug('Invalid MQTT message: ' + messageStr);
         return callback(null);
     }
 }
@@ -74,16 +75,16 @@ function start() {
     client = mqtt.connect(getBrokerUrl().href, {keepalive: 10});
 
     client.on('connect', function () {
-        console.log('Connected to MQTT broker: ' + getBrokerUrl().href);
+        logger.info('Connected to MQTT broker: ' + getBrokerUrl().href);
         client.subscribe(config.get('mqtt.topic'));
-        console.log('MQTT client started');
+        logger.info('MQTT client started');
         // Test
         //var timeStamp = new Date().toISOString();
         //client.publish(config.get('mqtt.topic'), '{"id":"test2", "apikey":"apikey1", "timestamp":"' + timeStamp + '", "lat":"52.123", "lon":"5.123"}');
     });
 
     client.on('message', function (topic, message) {
-        //console.log('MQTT message (topic=' + topic + '): ' + message.toString());
+        logger.debug('MQTT message (topic=' + topic + '): ' + message.toString());
         dev.loadDevicesFromDB(function (err) {
             if (err === null) {
                 usr.loadUsersFromDB(function (err) {
@@ -100,7 +101,7 @@ function start() {
     });
 
     client.on('error', function (error) {
-        console.log('MQTT broker error: ' + error);
+        logger.info('MQTT broker error: ' + error);
     });
 }
 
