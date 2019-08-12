@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 const pgStore = require('connect-pg-simple');
 const dbcache = require('./dbcache');
 const fs = require('fs');
+const logger = require('./logger.js');
 
 var sessionStore;
 var queryDef = [];
@@ -42,7 +43,7 @@ const pgPool = new Pool({
 // The pool emits an error if a backend or network error occurs
 // on any idle client. This is fatal so exit
 pgPool.on('error', function (err, client) {
-    console.error('Unexpected error on idle client', err);
+    logger.error('Unexpected error on idle client', err);
     process.exit(1);
 });
 
@@ -58,7 +59,7 @@ function queryDb(key, sqlParams, callback) {
             // Try to get the result from cache
             cachedQryOut = dbcache.load(queryDef[key], sqlParams);
             if (cachedQryOut !== null && typeof callback === 'function') {
-                // console.log('queryDb - cached: ' + key);
+                logger.debug('queryDb - cached: ' + key);
                 callback(null, cachedQryOut.rows, cachedQryOut.result);
             }
         }
@@ -66,7 +67,7 @@ function queryDb(key, sqlParams, callback) {
         if (cachedQryOut === null) {
             pgPool.connect(function (err, client, release) {
                 if (err) {
-                    console.error('Database connection error: ', err);
+                    logger.error('Database connection error: ', err);
                     if (typeof callback === 'function') {
                         callback(err, [], null);
                     }
@@ -74,7 +75,7 @@ function queryDb(key, sqlParams, callback) {
                     client.query(queryDef[key].qstr, sqlParams || [], function (err, res) {
                         release();
                         if (err) {
-                            console.error('Database query error(' + key + '): ', err);
+                            logger.error('Database query error(' + key + '): ', err);
                             if (typeof callback === 'function') {
                                 callback(err, [], null);
                             }
@@ -84,7 +85,7 @@ function queryDb(key, sqlParams, callback) {
                                 dbcache.save(queryDef[key], sqlParams, res.rows, res);
                             }
                             if (typeof callback === 'function') {
-                                // console.log('queryDb - **** from DB ****: ' + key);
+                                logger.debug('queryDb - **** from DB ****: ' + key);
                                 callback(null, res.rows, res);
                             }
                         }
@@ -93,7 +94,7 @@ function queryDb(key, sqlParams, callback) {
             });
         }
     } else {
-        console.error('No query for key: ', key);
+        logger.error('No query for key: ', key);
         if (typeof callback === 'function') {
             callback(null, null, null);
         }
@@ -109,7 +110,7 @@ function queryDbFromFile(fileName, callback) {
         if (fileError === null) {
             pgPool.connect(function (err, client, release) {
                 if (err) {
-                    console.error('Database connection error: ', err);
+                    logger.error('Database connection error: ', err);
                     if (typeof callback === 'function') {
                         callback(err, [], null);
                     }
@@ -117,13 +118,13 @@ function queryDbFromFile(fileName, callback) {
                     client.query(fileData.toString(), function (err, res) {
                         release();
                         if (err) {
-                            console.error('Database query error: ', err);
+                            logger.error('Database query error: ', err);
                             if (typeof callback === 'function') {
                                 callback(err, [], null);
                             }
                         } else {
                             if (typeof callback === 'function') {
-                                //console.log('queryDbFromFile: ' + fileName);
+                                logger.debug('queryDbFromFile: ' + fileName);
                                 callback(null, res.rows, res);
                             }
                         }
@@ -131,7 +132,7 @@ function queryDbFromFile(fileName, callback) {
                 }
             });
         } else {
-            console.error('Unable to open SQL file.', fileError);
+            logger.error('Unable to open SQL file.', fileError);
         }
     });
 }
@@ -155,14 +156,14 @@ function getStore() {
 function checkDbUp() {
     queryDb('getNumberOfTables', [], function (err, rows, result) {
         if (err === null && rows !== null) {
-            console.log('Current number of tables in the database: ' + rows[0].count);
+            logger.info('Current number of tables in the database: ' + rows[0].count);
             if (rows[0].count === '0') {
                 queryDbFromFile('./setup/schema.sql', function (err, rows, result) {
                     if (err === null) {
-                        console.log('New database created.');
+                        logger.info('New database created.');
                         databaseUp = true;
                     } else {
-                        console.error('Database creation failed.', err);
+                        logger.error('Database creation failed.', err);
                         databaseUp = false;
                     }
                 });
@@ -170,7 +171,7 @@ function checkDbUp() {
                 databaseUp = true;
             }
         } else {
-            console.error('Database error retrieving the number of tables.', err);
+            logger.error('Database error retrieving the number of tables.', err);
             databaseUp = false;
         }
     });
@@ -180,9 +181,9 @@ function checkDbUp() {
 function removeOldestPositions() {
     queryDbFromFile('./setup/cleanup.sql', function (err, rows, result) {
         if (err === null) {
-            console.log('Oldest locations deleted from the database.');
+            logger.info('Oldest locations deleted from the database.');
         } else {
-            console.error('Database error deleting oldest locations.', err);
+            logger.error('Database error deleting oldest locations.', err);
         }
     });
 }

@@ -6,6 +6,7 @@ var fs = require('fs');
 var gp = require('./gpxplayer.js');
 var db = require('./db.js');
 var usr = require('./user.js');
+var logger = require('./logger.js');
 
 var socketClients = [];
 
@@ -49,7 +50,7 @@ function isInputDataValid(gpsData) {
     }
 
     if (!isValid) {
-        console.log('Invalid location: ' + JSON.stringify(gpsData));
+        logger.info('Invalid location: ' + JSON.stringify(gpsData));
     }
     return isValid;
 }
@@ -84,7 +85,7 @@ function start(server) {
                     usr.findUser('id', rows[0].sess.passport.user, function (err, user) {
                         socket.user = user;
                         socketClients.push(socket);
-                        console.log('Client connected (' + socketClients.length + '): ' + socket.user.fullname);
+                        logger.info('Client connected (' + socketClients.length + '): ' + socket.user.fullname);
                         socket.emit('loginSuccess', {numClients: socketClients.length, fullName: socket.user.fullname});
                     });
                 }

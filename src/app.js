@@ -14,6 +14,7 @@ var usr = require('./user.js');
 var livesvr = require('./liveserver.js');
 var webhook = require('./webhook.js');
 var mqtt = require('./mqtt.js');
+var logger = require('./logger.js');
 
 var port = config.get('server.port');
 
@@ -54,7 +55,7 @@ app.set('views', __dirname + '/../views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
-app.use(morgan('dev')); // log every request to the console
+app.use(morgan('combined', { "stream": logger.stream })); // log every request to the logger
 app.use(cookieParser(config.get('sessions.secret'))); // read cookies (needed for auth)
 app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({extended: true}));
@@ -125,9 +126,9 @@ function allUp() {
         livesvr.start(server);
         mqtt.start();
 
-        console.log('Server started on port ' + port);
+        logger.info('Server started on port ' + port);
     } else {
-        console.log('Waiting for the database...');
+        logger.info('Waiting for the database...');
         setTimeout(allUp, 5000);
     }
 }

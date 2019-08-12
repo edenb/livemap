@@ -1,6 +1,7 @@
 "use strict";
 var ajv = require('ajv');
 var fs = require('fs');
+var logger = require('./logger.js');
 
 class Validator {
     constructor(schemaName) {
@@ -18,13 +19,13 @@ class Validator {
         fs.readFile('./schemas/' + schemaName + '.json', function (err,data) {
             if (err) {
                 self._schemaValid = false;
-                console.error('Validator <' + self._schemaName + '>: ' + err);
+                logger.error('Validator <' + self._schemaName + '>: ' + err);
                 return;
             }
             try {
                 var schema = JSON.parse(data);
             } catch (e) {
-                console.error('Validator <' + self._schemaName + '>: Unexpected token in schema');
+                logger.error('Validator <' + self._schemaName + '>: Unexpected token in schema');
                 return;
             }
             self.ajvValidate = self.ajvValidator.compile(schema);
@@ -36,7 +37,7 @@ class Validator {
         if (this._schemaValid) {
             return this.ajvValidate(JSONSource);
         } else {
-            console.error('Validator <' + this._schemaName + '>: Schema not valid. Unable to validate');
+            logger.error('Validator <' + this._schemaName + '>: Schema not valid. Unable to validate');
             return false;
         }
    

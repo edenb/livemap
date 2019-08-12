@@ -1,5 +1,6 @@
 "use strict";
 var db = require('./db.js');
+var logger = require('./logger.js');
 
 var devices = [];
 
@@ -30,17 +31,17 @@ function getDeviceByIdentity(apiKey, identifier, callback) {
         i++;
     }
     if (i !== devices.length) {
-//        console.log('findDeviceByIdentity - from memory: ' + JSON.stringify(devices[i]));
+        logger.debug('findDeviceByIdentity - from memory: ' + JSON.stringify(devices[i]));
         return callback(devices[i]);
     } else {
-//        console.log('findDeviceByIdentity - from DB: ' + apiKey);
+        logger.debug('findDeviceByIdentity - from DB: ' + apiKey);
         db.queryDb('insertDevice', [apiKey, identifier, identifier], function (err, rows, result) {
             if (err === null && rows !== null) {
-//                console.log('findDeviceByIdentity - new: ' + JSON.stringify(rows[0]));
+                logger.debug('findDeviceByIdentity - new: ' + JSON.stringify(rows[0]));
                 devices.push(rows[0]);
                 return callback(rows[0]);
             } else {
-//                console.log('findDeviceByIdentity - insert failed: ' + err);
+                logger.debug('findDeviceByIdentity - insert failed: ' + err);
                 return callback(null);
             }
         });
@@ -115,7 +116,7 @@ function splitDeviceIdentity(devIdent, dividerChar) {
             identityObj.identifier = devIdent.slice(dividerIdx + 1);
         }
     }
-//    console.log('splitDeviceIdentity: ' + identityObj.err + ' ' + identityObj.apiKey + ' ' + identityObj.identifier + ' ');
+    logger.debug('splitDeviceIdentity: ' + identityObj.err + ' ' + identityObj.apiKey + ' ' + identityObj.identifier + ' ');
     return identityObj;
 }
 
