@@ -64,7 +64,6 @@ function getDevicesByUser(userid, callback) {
 }
 
 function changeDevice(modDevice, callback) {
-    var err;
     if (modDevice.device_id === 0) {
         db.queryDb('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias], function (err, rows, result) {
             if (err !== null) {

@@ -99,7 +99,7 @@ gpxPlayer.prototype.start = function start() {
 };
 
 function startAll() {
-    var allFiles, gpxFiles = {}, fileSplit, i, fileExt, fileName, key;
+    var gpxFiles = {}, fileSplit, i, fileExt, fileName, key;
 
     fs.readdir('./tracks/', function (err, allFiles) {
         if (err === null) {
@@ -122,7 +122,7 @@ function startAll() {
 
             // Check for added track files
             for (key in gpxFiles) {
-                if (gpxFiles.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(gpxFiles, key)) {
                     if (typeof gpxTracks[key] === 'undefined') {
                         gpxTracks[key] = new gpxPlayer(gpxFiles[key], './tracks/' +  gpxFiles[key] + '.gpx', 'http://localhost:' + port + '/location/gpx');
                         logger.info('Added track: ' + gpxTracks[key].fileName);
@@ -132,7 +132,7 @@ function startAll() {
 
             // Check for removed track files and start all players (if not already started)
             for (key in gpxTracks) {
-                if (gpxTracks.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(gpxFiles, key)) {
                     if (typeof gpxFiles[key] === 'undefined') {
                         logger.info('Removed track: ' + gpxTracks[key].fileName);
                         delete gpxTracks[key];

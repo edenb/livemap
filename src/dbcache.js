@@ -37,7 +37,7 @@ function save(qry, param, rows, result) {
 }
 
 function load(qry, param) {
-    var idx, qryOut = {}, rows = null, result = null;
+    var idx, qryOut = {};
 
     idx = getIndexOf(qry, param);
     if (idx !== null) {
