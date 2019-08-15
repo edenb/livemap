@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/edenb/livemap.svg?style=svg)](https://circleci.com/gh/edenb/livemap)
+[![CircleCI](https://circleci.com/gh/edenb/livemap.svg?style=shield)](https://circleci.com/gh/edenb/livemap)
 [![Dependencies](https://img.shields.io/david/edenb/livemap.svg)](https://david-dm.org/edenb/livemap)
 [![DevDependencies](https://img.shields.io/david/dev/edenb/livemap.svg)](https://david-dm.org/edenb/livemap?type=dev)
 
