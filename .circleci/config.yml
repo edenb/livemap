@@ -79,6 +79,3 @@ workflows:
   heroku_deploy:
     jobs:
       - deploy
-          filters:
-            branches:
-              only: development
