@@ -1,5 +1,4 @@
 "use strict";
-var qs = require('querystring');
 var usr = require('./user.js');
 var dev = require('./device.js');
 var livesvr = require('./liveserver.js');

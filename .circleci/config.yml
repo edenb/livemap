@@ -21,7 +21,7 @@ jobs:
       - run:
           name: Install PostgreSQL client
           command: |
-            sudo apt-get install postgresql-client
+            sudo apt-get update && sudo apt-get install postgresql-client
 
       - run:
           name: Initialise DB
