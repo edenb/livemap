@@ -1,6 +1,6 @@
 version: 2.1
-orbs:
-  heroku: circleci/heroku@0.0.8
+#orbs:
+#  heroku: circleci/heroku@0.0.8
 
 jobs:
   build:
@@ -44,38 +44,36 @@ jobs:
           name: Run tests
           command: npm test
 
-#  deploy:
-#    docker:
-#      - image: buildpack-deps:trusty
-#    steps:
-#      - checkout
-#      - run:
-#          name: Deploy Development to Heroku
-#          command: |
-#            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_TEST.git development
-
   deploy:
-    executor: heroku/default # Uses the basic buildpack-deps image, which has the prerequisites for installing heroku's CLI.
+    docker:
+      - image: buildpack-deps:trusty
     steps:
       - checkout
-      - heroku/install # Runs the heroku install command, if necessary.
-      - heroku/deploy-via-git: # Deploys branch to Heroku via git push.
-          only-branch: development # If you specify an only-branch, the deploy will not occur for any other branch.
+      - run:
+          name: Deploy Development to Heroku
+          command: |
+            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git development
 
-#workflows:
-#  version: 2
-#  build-deploy:
-#    jobs:
-#      - build
-#      - deploy:
-#          requires:
-#            - build
-#          filters:
-#            branches:
-#              only: development
-#
+#  deploy:
+#    executor: heroku/default # Uses the basic buildpack-deps image, which has the prerequisites for installing heroku's CLI.
+#    steps:
+#      - checkout
+#      - heroku/install # Runs the heroku install command, if necessary.
+#      - heroku/deploy-via-git: # Deploys branch to Heroku via git push.
+#          only-branch: development # If you specify an only-branch, the deploy will not occur for any other branch.
 
 workflows:
-  heroku_deploy:
+  build-deploy:
     jobs:
-      - deploy
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: development
+
+#workflows:
+#  heroku_deploy:
+#    jobs:
+#      - deploy
