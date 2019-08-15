@@ -60,7 +60,7 @@ jobs:
       - checkout
       - heroku/install # Runs the heroku install command, if necessary.
       - heroku/deploy-via-git: # Deploys branch to Heroku via git push.
-          only-branch: master # If you specify an only-branch, the deploy will not occur for any other branch.
+          only-branch: development # If you specify an only-branch, the deploy will not occur for any other branch.
 
 #workflows:
 #  version: 2
@@ -79,3 +79,6 @@ workflows:
   heroku_deploy:
     jobs:
       - deploy
+          filters:
+            branches:
+              only: development
