@@ -1,6 +1,18 @@
-version: 2
+version: 2.1
+
 jobs:
   build:
+    docker:
+      - image: circleci/node:10.15
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install packages
+          command: npm install
+
+  test:
     docker:
       - image: circleci/node:10.15
         environment:
@@ -9,19 +21,22 @@ jobs:
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_USER: postgres
-    working_directory: ~/repo
 
     steps:
       - checkout
 
       - run:
-          name: Wait for DB
-          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+          name: Install packages
+          command: npm install -D
 
       - run:
           name: Install PostgreSQL client
           command: |
             sudo apt-get update && sudo apt-get install postgresql-client
+
+      - run:
+          name: Wait for DB
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
 
       - run:
           name: Initialise DB
@@ -34,9 +49,51 @@ jobs:
             psql -h localhost -p 5432 -U livemap -d livemapdb < setup/schema.sql
 
       - run:
-          name: Install packages
-          command: npm install
-
-      - run:
           name: Run tests
           command: npm test
+
+  deploy-staging:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+      - checkout
+
+      - run:
+          name: Deploy staging to Heroku
+          command: |
+            git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_STAGING.git master
+
+  deploy-production:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+      - checkout
+
+      - run:
+          name: Deploy production to Heroku
+          command: |
+            git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_PRODUCTION.git master
+
+workflows:
+  version: 2.1
+  build-test-deploy:
+    jobs:
+      - build
+
+      - test:
+          requires:
+            - build
+
+      - deploy-staging:
+          requires:
+            - test
+          filters:
+            branches:
+              ignore: master
+
+      - deploy-production:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
