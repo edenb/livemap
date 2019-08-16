@@ -15,12 +15,12 @@ jobs:
   test:
     docker:
       - image: circleci/node:10.15
-      environment: |
-        C_DB_URL: postgres://livemap@localhost:5432/livemapdb
+        environment: |
+          C_DB_URL: postgres://livemap@localhost:5432/livemapdb
 
       - image: circleci/postgres:9.6
-      environment: |
-        POSTGRES_USER: postgres
+        environment: |
+          POSTGRES_USER: postgres
 
     steps:
       - checkout
