@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Deploy staging to Heroku
           command: |
-            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_STAGING.git master
+            git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_STAGING.git master
 
   deploy-production:
     docker:
@@ -72,7 +72,7 @@ jobs:
       - run:
           name: Deploy production to Heroku
           command: |
-            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_PRODUCTION.git master
+            git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_PRODUCTION.git master
 
 workflows:
   version: 2.1
@@ -86,14 +86,14 @@ workflows:
 
       - deploy-staging:
           requires:
-            - build
+            - test
           filters:
             branches:
               ignore: master
 
       - deploy-production:
           requires:
-            - build
+            - test
           filters:
             branches:
               only: master
