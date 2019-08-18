@@ -3,6 +3,10 @@
     "port": "C_SERVER_PORT",
     "forceSSL": "C_SERVER_FORCESSL"
   },
+  "logger": {
+    "level": "C_LOGGER_LEVEL",
+    "colorize": "C_LOGGER_COLORIZE"
+  },
   "mqtt": {
     "url": "C_MQTT_URL",
     "topic": "C_MQTT_TOPIC"
