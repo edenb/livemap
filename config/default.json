@@ -3,6 +3,10 @@
     "port": 3000,
     "forceSSL": "false"
   },
+  "logger": {
+    "level": "info",
+    "colorize": true
+  },
   "mqtt": {
     "url": "mqtt://test.mosquitto.org:1883",
     "topic": "livemap/#"
