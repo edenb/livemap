@@ -99,6 +99,10 @@ function splitDeviceIdentity(devIdent, dividerChar) {
     identityObj.identifier = null;
     identityObj.err = null;
 
+    // Be sure that identity is defined and a string
+    if (typeof devIdent !== 'string') {
+        devIdent = '';
+    }
     dividerIdx = devIdent.indexOf(dividerChar);
     if (dividerIdx < 7) {
         if (dividerIdx < 0) {
