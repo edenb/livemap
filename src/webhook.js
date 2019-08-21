@@ -37,16 +37,16 @@ function processGpx(rawLocationData, callback) {
     }
 }
 
-// Geofancy
-// device: uuid of the device Geofancy is running on (xxxxxxxx-xxxx-xxxx-...)
-// id: name of the iBeacon or geofence (should be set in Geofancy)
+// Locative
+// device: uuid of the device Locative is running on (xxxxxxxx-xxxx-xxxx-...)
+// id: name of the iBeacon or geofence (should be set in Locative)
 // latitude: center of the geofence or zero if iBeacon found
 // longitude: center of the geofence or zero if iBeacon found
 // timestamp: date/time in seconds after 1970
 // trigger: exit, enter or test
 // identity geofence - id:device
 // identity iBeacon - id1:device  id1:id2
-function processGeofancy(rawLocationData, callback) {
+function processLocative(rawLocationData, callback) {
     let srcData = {}, destData = {}, identObj = '', identity = '';
 
     if (Object.keys(rawLocationData.query).length !== 0) {
@@ -135,8 +135,8 @@ function processLocation(request, response, type) {
     });
 
     request.on('end', () => {
-        logger.debug('HTTP POST/GET query: ' + qs.stringify(rawLocationData.query));
-        logger.debug('HTTP POST/GET body: ' + rawLocationData.body);
+        logger.debug('HTTP ' +  request.method + ' query: ' + qs.stringify(rawLocationData.query));
+        logger.debug('HTTP ' +  request.method + ' body: ' + rawLocationData.body);
         dev.loadDevicesFromDB((err) => {
             if (err === null) {
                 usr.loadUsersFromDB((err) => {
@@ -147,8 +147,8 @@ function processLocation(request, response, type) {
                                     livesvr.sendToClient(destData);
                                 });
                                 break;
-                            case 'geofancy':
-                                processGeofancy(rawLocationData, (destData) => {
+                            case 'locative':
+                                processLocative(rawLocationData, (destData) => {
                                     livesvr.sendToClient(destData);
                                 });
                                 break;

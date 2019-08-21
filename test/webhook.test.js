@@ -12,8 +12,8 @@ app.post('/location/gpx', (req, res) => {
     webhook.processLocation(req, res, 'gpx');
 });
 
-app.post('/location/geofancy', (req, res) => {
-    webhook.processLocation(req, res, 'geofancy');
+app.post('/location/locative', (req, res) => {
+    webhook.processLocation(req, res, 'locative');
 });
 
 describe('Webhook', () => {
