@@ -52,4 +52,28 @@ describe('Webhook', () => {
             done();
         });
     });
+    describe('/post locative with valid location data in query string parameters', () => {
+        it('should respond with HTTP status 200', (done) => {
+            let testQueryString = 'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iPad&id=testkey1&latitude=40.7579747&longitude=-73.9855426&timestamp=1566387516&trigger=enter';
+            chai.request(app)
+            .post('/location/locative?' + testQueryString)
+            .send('')
+            .end((err, res) => {
+                res.should.have.status(200);
+            });
+            done();
+        });
+    });
+    describe('/post locative with valid location data in body', () => {
+        it('should respond with HTTP status 200', (done) => {
+            let testQueryString = 'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iPad&id=testkey1&latitude=40.7579747&longitude=-73.9855426&timestamp=1566387516&trigger=enter';
+            chai.request(app)
+            .post('/location/locative')
+            .send(testQueryString)
+            .end((err, res) => {
+                res.should.have.status(200);
+            });
+            done();
+        });
+    });
 });
