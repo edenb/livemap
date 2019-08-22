@@ -111,9 +111,9 @@ function splitDeviceIdentity(devIdent, dividerChar) {
             identityObj.err = 'API key too short';
         }
     } else {
-        // Check if identifier is 2 - 20 characters long
-        if (devIdent.length - dividerIdx - 1 < 2 || devIdent.length - dividerIdx - 1 > 20) {
-            identityObj.err = 'Identifier should be between 2 - 20 characters';
+        // Check if identifier is 2 - 50 characters long
+        if (devIdent.length - dividerIdx - 1 < 2 || devIdent.length - dividerIdx - 1 > 50) {
+            identityObj.err = 'Identifier should be between 2 - 50 characters';
         } else {
             identityObj.apiKey = devIdent.slice(0, dividerIdx);
             identityObj.identifier = devIdent.slice(dividerIdx + 1);
