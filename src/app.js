@@ -45,8 +45,8 @@ app.post('/location/gpx', function (req, res) {
     webhook.processLocation(req, res, 'gpx');
 });
 
-app.post('/location/geofancy', function (req, res) {
-    webhook.processLocation(req, res, 'geofancy');
+app.post('/location/locative', function (req, res) {
+    webhook.processLocation(req, res, 'locative');
 });
 
 // View engine set-up

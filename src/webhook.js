@@ -1,14 +1,22 @@
 "use strict";
-var usr = require('./user.js');
-var dev = require('./device.js');
-var livesvr = require('./liveserver.js');
+const qs = require('querystring');
+const usr = require('./user.js');
+const dev = require('./device.js');
+const livesvr = require('./liveserver.js');
+const logger = require('./logger.js');
 
-function processGpx(srcData, callback) {
-    var destData = {}, identObj;
+function processGpx(rawLocationData, callback) {
+    let srcData = {}, destData = {}, identObj = '';
+
+    if (Object.keys(rawLocationData.query).length !== 0) {
+        srcData = rawLocationData.query;
+    } else if (rawLocationData.body !== '') {
+        srcData = qs.parse(rawLocationData.body);
+    }
 
     identObj = dev.splitDeviceIdentity(srcData.device_id, '_');
     if ((identObj.err === null) && usr.isKnownAPIkey(identObj.apiKey, null)) {
-        dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function (destDevice) {    // Todo: check device_id existance
+        dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, (destDevice) => {    // Todo: check device_id existance
             if (destDevice !== null) {
                 destData.device_id = destDevice.device_id;
                 destData.identifier = destDevice.identifier;
@@ -29,27 +37,33 @@ function processGpx(srcData, callback) {
     }
 }
 
-// Geofancy
-// device: uuid of the device Geofancy is running on (xxxxxxxx-xxxx-xxxx-...)
-// id: name of the iBeacon or geofence (should be set in Geofancy)
+// Locative
+// device: uuid of the device Locative is running on (xxxxxxxx-xxxx-xxxx-...)
+// id: name of the iBeacon or geofence (should be set in Locative)
 // latitude: center of the geofence or zero if iBeacon found
 // longitude: center of the geofence or zero if iBeacon found
 // timestamp: date/time in seconds after 1970
 // trigger: exit, enter or test
 // identity geofence - id:device
 // identity iBeacon - id1:device  id1:id2
-function processGeofancy(srcData, callback) {
-    var destData = {}, identity, identObj;
+function processLocative(rawLocationData, callback) {
+    let srcData = {}, destData = {}, identObj = '', identity = '';
+
+    if (Object.keys(rawLocationData.query).length !== 0) {
+        srcData = rawLocationData.query;
+    } else if (rawLocationData.body !== '') {
+        srcData = qs.parse(rawLocationData.body);
+    }
 
     // Determine if it's a detection of an iBeacon (lon and lat are '0') or the location of a device
     if (srcData.latitude === '0' && srcData.longitude === '0') {
         identObj = dev.splitDeviceIdentity(srcData.id, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function (destDevice) {    // Todo: check device_id existance
+            dev.getDeviceByIdentity(identObj.apiKey, srcData.device, (destDevice) => {    // Todo: check device_id existance
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
                     destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
-                    dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, function (destDevice) {    // Todo: check id existance
+                    dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier, (destDevice) => {    // Todo: check id existance
                         if (destDevice !== null) {
                             destData.device_id_tag = destDevice.device_id;
                             destData.alias = destDevice.alias;
@@ -80,7 +94,7 @@ function processGeofancy(srcData, callback) {
         identity = srcData.id + ':' + srcData.device;
         identObj = dev.splitDeviceIdentity(identity, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            dev.getDeviceByIdentity(identObj.apiKey, srcData.device, function (destDevice) {
+            dev.getDeviceByIdentity(identObj.apiKey, srcData.device, (destDevice) => {
                 if (destDevice !== null) {
                     destData.device_id = destDevice.device_id;
                     destData.device_id_tag = null;
@@ -112,32 +126,41 @@ function processGeofancy(srcData, callback) {
 //
 
 function processLocation(request, response, type) {
-    var srcData = {};
-    
-    srcData = request.query;
-    dev.loadDevicesFromDB(function (err) {
-        if (err === null) {
-            usr.loadUsersFromDB(function (err) {
-                if (err === null) {
-                    switch (type) {
-                    case 'gpx':
-                        processGpx(srcData, function (destData) {
-                            livesvr.sendToClient(destData);
-                        });
-                        break;
-                    case 'geofancy':
-                        processGeofancy(srcData, function (destData) {
-                            livesvr.sendToClient(destData);
-                        });
-                        break;
-                    }
-                }
-            });
-        }
+    let rawLocationData = {};
+    rawLocationData.body = '';
+    rawLocationData.query = request.query;
+
+    request.on('data', (chunk) => {
+        rawLocationData.body += chunk.toString();
     });
-    response.writeHead(200, {'Content-Type': 'text/plain'});
-    response.write('OK');
-    response.end();
+
+    request.on('end', () => {
+        logger.debug('HTTP ' +  request.method + ' query: ' + qs.stringify(rawLocationData.query));
+        logger.debug('HTTP ' +  request.method + ' body: ' + rawLocationData.body);
+        dev.loadDevicesFromDB((err) => {
+            if (err === null) {
+                usr.loadUsersFromDB((err) => {
+                    if (err === null) {
+                        switch (type) {
+                            case 'gpx':
+                                processGpx(rawLocationData, (destData) => {
+                                    livesvr.sendToClient(destData);
+                                });
+                                break;
+                            case 'locative':
+                                processLocative(rawLocationData, (destData) => {
+                                    livesvr.sendToClient(destData);
+                                });
+                                break;
+                        }
+                    }
+                });
+            }
+        });
+        response.writeHead(200, {'Content-Type': 'text/plain'});
+        response.write('OK');
+        response.end();
+    });
 }
 
 module.exports.processLocation = processLocation;
