@@ -7,7 +7,7 @@ const testUser = {
     fullName: 'Test User1',
     email: 'test@user1',
     role: 'user',
-    api_key: '1234'
+    api_key: '12345678'
 };
 
 let testUser_Id = null;

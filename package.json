@@ -45,7 +45,8 @@
   },
   "scripts": {
     "test": "nyc mocha --recursive test",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "lint": "eslint src/*.js"
   },
   "author": "edenb",
   "license": "MIT"
