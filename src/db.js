@@ -8,7 +8,6 @@ const logger = require('./logger.js');
 
 var sessionStore;
 var queryDef = [];
-var databaseUp = false;
 
 queryDef.getAllUsers = {'qstr': 'SELECT user_id, username, fullname, email, role, api_key FROM users', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.findUserById = {'qstr': 'SELECT * FROM users WHERE user_id = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
@@ -30,6 +29,11 @@ queryDef.insertPosition = {'qstr': 'INSERT INTO locations(device_id, device_id_t
 queryDef.findSessionById = {'qstr': 'SELECT sess FROM sessions WHERE sid = $1', 'readTables': ['sessions'], 'writeTables': [], 'cached': false};
 queryDef.getNumberOfTables = {'qstr': 'SELECT count(*) FROM information_schema.tables WHERE table_schema = \'public\'', 'readTables': [], 'writeTables': [], 'cached': false};
 
+const emptyQueryRes = {
+    rows: [],
+    rowCount: 0
+}
+
 // Initialize the pool
 // Get the PostgreSQL login details from the config.
 // Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
@@ -42,14 +46,54 @@ const pgPool = new Pool({
 
 // The pool emits an error if a backend or network error occurs
 // on any idle client. This is fatal so exit
-pgPool.on('error', function (err, client) {
-    logger.error('Unexpected error on idle client', err);
+pgPool.on('error', (err) => {
+    logger.error(`Unexpected error on idle client. ${err.message}`);
     process.exit(1);
 });
 
 //
 // Database operations with predefined queries
 //
+
+async function queryDbAsync(key, sqlParams) {
+    let dbQueryRes = emptyQueryRes;
+
+    if (typeof queryDef[key] !== 'undefined') {
+        // Try to get the query result from cache
+        if (queryDef[key].cached) {
+            const cachedQueryRes = dbcache.load(queryDef[key], sqlParams);
+            if (cachedQueryRes !== null) {
+                logger.debug(`queryDb - cached: ${key}`);
+                return cachedQueryRes.result;
+            }
+        }
+
+        // Query the database
+        const pgClient = await pgPool.connect();
+        try {
+            dbQueryRes = await pgClient.query({
+                text: queryDef[key].qstr,
+                values: sqlParams || []
+            });
+        } catch(err) {
+            logger.error(`Database access failed. ${err}`);
+            throw new Error(`Database access failed. ${err}`);
+        } finally {
+            pgClient.release();
+        }
+
+        // Update cache
+        dbcache.invalidate(queryDef[key]);
+        if (queryDef[key].cached) {
+            dbcache.save(queryDef[key], sqlParams, dbQueryRes.rows, dbQueryRes);
+        }
+    } else {
+        logger.error(`Database query failed. No query for key: ${key}`);
+        throw new Error(`Database query failed. No query for key: ${key}`);
+    }
+
+    return dbQueryRes;
+}
 
 function queryDb(key, sqlParams, callback) {
     var cachedQryOut = null;
@@ -59,7 +103,7 @@ function queryDb(key, sqlParams, callback) {
             // Try to get the result from cache
             cachedQryOut = dbcache.load(queryDef[key], sqlParams);
             if (cachedQryOut !== null && typeof callback === 'function') {
-                logger.debug('queryDb - cached: ' + key);
+                logger.debug(`queryDb - cached: ${key}`);
                 callback(null, cachedQryOut.rows, cachedQryOut.result);
             }
         }
@@ -105,36 +149,31 @@ function queryDb(key, sqlParams, callback) {
 // Database operations with queries from file
 //
 
-function queryDbFromFile(fileName, callback) {
-    fs.readFile(fileName, function (fileError, fileData) {
-        if (fileError === null) {
-            pgPool.connect(function (err, client, release) {
-                if (err) {
-                    logger.error('Database connection error: ', err);
-                    if (typeof callback === 'function') {
-                        callback(err, [], null);
-                    }
-                } else {
-                    client.query(fileData.toString(), function (err, res) {
-                        release();
-                        if (err) {
-                            logger.error('Database query error: ', err);
-                            if (typeof callback === 'function') {
-                                callback(err, [], null);
-                            }
-                        } else {
-                            if (typeof callback === 'function') {
-                                logger.debug('queryDbFromFile: ' + fileName);
-                                callback(null, res.rows, res);
-                            }
-                        }
-                    });
-                }
-            });
-        } else {
-            logger.error('Unable to open SQL file.', fileError);
-        }
+function readQueryFromFile(fileName) {
+    return new Promise ((resolve, reject) => {
+        fs.readFile(fileName, (fileError, fileData) => {
+            if (fileError === null) {
+                resolve(fileData);
+            } else {
+                reject(fileError);
+            }
+        });
     });
+}
+
+async function queryDbFromFile(fileName) {
+    const fileData = await readQueryFromFile(fileName);
+    const pgClient = await pgPool.connect();
+    let result;
+    try {
+        result = await pgClient.query({
+            text: fileData.toString()
+        });
+    } finally {
+        pgClient.release();
+    }
+    logger.debug(`queryDbFromFile: ${fileName}`);
+    return result;
 }
 
 //
@@ -153,39 +192,28 @@ function getStore() {
 // Database maintenance
 //
 
-function checkDbUp() {
-    queryDb('getNumberOfTables', [], function (err, rows, result) {
-        if (err === null && rows !== null) {
-            logger.info('Current number of tables in the database: ' + rows[0].count);
-            if (rows[0].count === '0') {
-                queryDbFromFile('./setup/schema.sql', function (err, rows, result) {
-                    if (err === null) {
-                        logger.info('New database created.');
-                        databaseUp = true;
-                    } else {
-                        logger.error('Database creation failed.', err);
-                        databaseUp = false;
-                    }
-                });
-            } else {
-                databaseUp = true;
-            }
-        } else {
-            logger.error('Database error retrieving the number of tables.', err);
-            databaseUp = false;
+async function checkDbUp() {
+    try {
+        let queryRes = await queryDbAsync('getNumberOfTables', []);
+        logger.info(`Current number of tables in the database: ${queryRes.rows[0].count}`);
+        if (queryRes.rows[0].count === '0') {
+            queryRes = await queryDbFromFile('./setup/schema.sql');
+            logger.info(`New database created.`);
         }
-    });
-    return databaseUp;
+    } catch(err) {
+        logger.error(`Unable to check database status. ${err}`);
+        return false;
+    }
+    return true;
 }
 
-function removeOldestPositions() {
-    queryDbFromFile('./setup/cleanup.sql', function (err, rows, result) {
-        if (err === null) {
-            logger.info('Oldest locations deleted from the database.');
-        } else {
-            logger.error('Database error deleting oldest locations.', err);
-        }
-    });
+async function removeOldestPositions() {
+    try {
+        await queryDbFromFile('./setup/cleanup.sql');
+        logger.info(`Oldest locations deleted from the database.`);
+    } catch (err) {
+        logger.error(`Unable to delete oldest locations. ${err.message}`);
+    }
 }
 
 function startMaintenance() {
@@ -193,7 +221,9 @@ function startMaintenance() {
     setInterval(removeOldestPositions, config.get('db.maintenanceInterval'));
 }
 
+module.exports.emptyQueryRes = emptyQueryRes;
 module.exports.queryDb = queryDb;
+module.exports.queryDbAsync = queryDbAsync;
 module.exports.bindStore = bindStore;
 module.exports.getStore = getStore;
 module.exports.checkDbUp = checkDbUp;

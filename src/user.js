@@ -1,8 +1,8 @@
 "use strict";
-var config = require('config');
-var db = require('./db.js');
-var bcrypt = require('bcrypt');
-var shortid = require('shortid');
+const config = require('config');
+const db = require('./db.js');
+const bcrypt = require('bcrypt');
+const shortid = require('shortid');
 
 // In memory list of all users with their attributes
 var users = [];
@@ -44,33 +44,20 @@ function validateChanges(user, modUser) {
 // Exported modules
 //
 
-function loadUsersFromDB(callback) {
-    db.queryDb('getAllUsers', [], function (err, rows, result) {
-        if (err === null) {
-            if (rows === null) {
-                users = [];
-            } else {
-                users = rows;
-            }
-            return callback(null);
-        } else {
-            return callback(err);
-        }
-    });
+async function getAllUsers() {
+    let queryRes = db.emptyQueryRes;
+    try {
+        queryRes = await db.queryDbAsync('getAllUsers', []);
+        users = queryRes.rows;
+        return queryRes;
+    } catch(err) {
+        return queryRes;
+    }
 }
 
-function getAllUsers(callback) {
-    loadUsersFromDB(function (err) {
-        if (err === null) {
-            callback(users);
-        } else {
-            callback([]);
-        }
-    });
-}
-
-function findUser(field, val, callback) {
-    var queryDefinition = null;
+async function findUser(field, val) {
+    let queryRes = db.emptyQueryRes;
+    let queryDefinition = null;
     if (field === 'id') {
         queryDefinition = 'findUserById';
     }
@@ -78,123 +65,113 @@ function findUser(field, val, callback) {
         queryDefinition = 'findUserByUsername';
     }
     if (queryDefinition !== null) {
-        db.queryDb(queryDefinition, [val], function (err, rows, result) {
-            if (typeof callback === 'function') {
-                if (result.rowCount === 0) {
-                    return callback(err, null);
-                } else {
-                    return callback(err, rows[0]);
-                }
-            }
-        });
+        try {
+            queryRes = await db.queryDbAsync(queryDefinition, [val]);
+        } catch(err) {
+            return queryRes;
+        }
     }
+    return queryRes;
 }
 
-function changeDetails(user, modUser, callback) {
-    var err;
-
+async function changeDetails(user, modUser) {
+    let queryRes = db.emptyQueryRes;
+    let userMessage;
     // If the API key is empty generate one
     if (modUser.api_key === '') {
         modUser.api_key = generateAPIkey();
     }
-    err = checkChangesAllowed(user, modUser);
-    if (err !== null) {
-        return callback(err);
+    userMessage = checkChangesAllowed(user, modUser);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        return queryRes;
     }
-    err = validateChanges(user, modUser);
-    if (err !== null) {
-        return callback(err);
+    userMessage = validateChanges(user, modUser);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        return queryRes;
     }
     if (modUser.user_id === 0) {
-        db.queryDb('insertUser', [modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key], function (err, rows, result) {
-            if (err !== null) {
-                return callback(err);
-            } else {
-                if (result.rowCount === 0) {
-                    return callback('Unable to add user');
-                } else {
-                    return callback(null);
-                }
-            }
-        });
+        try {
+            queryRes = await db.queryDbAsync('insertUser', [modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
+        } catch(err) {
+            queryRes.userMessage = 'Unable to add user';
+        }
     } else {
-        db.queryDb('changeDetailsById', [modUser.user_id, modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key], function (err, rows, result) {
-            if (err !== null) {
-                return callback(err);
-            } else {
-                if (result.rowCount === 0) {
-                    return callback('Unable to change details');
-                } else {
-                    return callback(null);
-                }
-            }
-        });
+        try {
+            queryRes = await db.queryDbAsync('changeDetailsById', [modUser.user_id, modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
+        } catch(err) {
+            queryRes.userMessage = 'Unable to change details';
+        }
     }
+    return queryRes;
 }
 
-function changePassword(user, curPwd, newPwd, confirmPwd, callback) {
-    // The new password should have a minimal length
+async function changePassword(user, curPwd, newPwd, confirmPwd) {
+    let queryRes = db.emptyQueryRes;
+     // The new password should have a minimal length
     if (newPwd.length < config.get('user.pwdMinLength')) {
-        return callback('New password too short');
+        queryRes.userMessage = 'New password too short';
+        return queryRes;
     }
     if (newPwd !== confirmPwd) {
-        return callback('New passwords mismatch');
+        queryRes.userMessage = 'New passwords mismatch';
+        return queryRes;
     }
-    checkPassword(user, curPwd, function (authOK) {
-        // If a user has no password yet, any current password will work
-        if ((user.password === null) || authOK) {
-            bcrypt.hash(newPwd, config.get('user.pwdSaltRounds'), function (err, newHash) {
-                if (err) {
-                    return callback('Hashing failed');
-                }
-                db.queryDb('changePwdByUsername', [user.username, newHash], function (err, rows, result) {
-                    if (err !== null) {
-                        return callback(err);
-                    } else {
-                        if (result.rowCount === 0) {
-                            return callback('User not found');
-                        } else {
-                            return callback(null);
-                        }
-                    }
-                });
-            });
-        } else {
-            return callback('Old password incorrect');
+    const authOK = await checkPassword(user, curPwd);
+    // If a user has no password yet, any current password will work
+    if ((user.password === null) || authOK) {
+        let newHash;
+        try {
+            newHash = await bcrypt.hash(newPwd, config.get('user.pwdSaltRounds'));
+        } catch(err) {
+            queryRes.userMessage = 'Hashing failed';
+            return queryRes;
         }
-    });
+        try {
+            queryRes = await db.queryDbAsync('changePwdByUsername', [user.username, newHash]);
+            if (queryRes.rowCount === 0) {
+                queryRes.userMessage = 'User not found';
+            }
+        } catch(err) {
+            queryRes.userMessage = 'Failed to change password';
+            return queryRes;
+        }
+    } else {
+        queryRes.userMessage = 'Old password incorrect';
+    }
+    return queryRes;
 }
 
-function checkPassword(user, password, callback) {
+async function checkPassword(user, password) {
     if (user !== null) {
         if (user.password === null) {
-            callback(true);
+            return true;
         } else {
-            bcrypt.compare(password, user.password, function (err, res) {
-                if (res) {
-                    callback(true);
-                } else {
-                    callback(false);
-                }
-            });
+            const match = await bcrypt.compare(password, user.password);
+            if (match) {
+                return true;
+            } else {
+                return false;
+            }
         }
     } else {
-        callback(false);
+        return false;
     }
 }
 
-function deleteUser(user, modUser, callback) {
+async function deleteUser(user, modUser) {
+    let queryRes = db.emptyQueryRes;
     if (user.user_id === modUser.user_id) {
-        callback('You can not delete your own account');
+        queryRes.userMessage = 'You can not delete your own account';
     } else {
-        db.queryDb('deleteUser', [modUser.user_id], function (err, rows, result) {
-            if (err === null && rows !== null) {
-                return callback(null);
-            } else {
-                return callback('Failed to delete user');
-            }
-        });
+        try {
+            queryRes = await db.queryDbAsync('deleteUser', [modUser.user_id]);
+        } catch(err) {
+            queryRes.userMessage = 'Failed to delete user';
+        }
     }
+    return queryRes;
 }
 
 function isKnownAPIkey(apiKey, ignoreUser) {
@@ -217,7 +194,6 @@ function isKnownAPIkey(apiKey, ignoreUser) {
     }
 }
 
-module.exports.loadUsersFromDB = loadUsersFromDB;
 module.exports.getAllUsers = getAllUsers;
 module.exports.findUser = findUser;
 module.exports.changeDetails = changeDetails;

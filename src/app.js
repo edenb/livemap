@@ -83,33 +83,34 @@ passport.serializeUser(function (user, done) {
     done(null, user.user_id);
 });
 
-passport.deserializeUser(function (req, id, done) {
-    usr.findUser('id', id, function (err, user) {
-        done(null, user);
-    });
+passport.deserializeUser(async function (req, id, done) {
+    const queryRes = await usr.findUser('id', id);
+    if (queryRes.rowCount === 0) {
+        done(null, {});
+    } else {
+        done(null, queryRes.rows[0]);
+    }
 });
 
 passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'password', passReqToCallback: true},
-    function (req, username, password, done) {
-        usr.findUser('username', username, function (err, user) {
-            if (user === null) {
-                req.flash('error', 'No such user');
+    async function (req, username, password, done) {
+        const queryRes = await usr.findUser('username', username);
+        if (queryRes.rowCount === 0) {
+            req.flash('error', 'No such user');
+            req.session.save(function (err) {
+                return done(null, false);
+            });
+        } else {
+            const authOK = await usr.checkPassword(queryRes.rows[0], password);
+            if (authOK) {
+                return done(null, queryRes.rows[0]);
+            } else {
+                req.flash('error', 'Wrong password');
                 req.session.save(function (err) {
                     return done(null, false);
                 });
-            } else {
-                usr.checkPassword(user, password, function (authOK) {
-                    if (authOK) {
-                        return done(null, user);
-                    } else {
-                        req.flash('error', 'Wrong password');
-                        req.session.save(function (err) {
-                            return done(null, false);
-                        });
-                    }
-                });
             }
-        });
+        }
     })
 );
 

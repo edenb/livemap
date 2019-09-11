@@ -1,6 +1,6 @@
 "use strict";
-var db = require('./db.js');
-var logger = require('./logger.js');
+const db = require('./db.js');
+const logger = require('./logger.js');
 
 var devices = [];
 
@@ -8,87 +8,75 @@ var devices = [];
 // Exported modules
 //
 
-function loadDevicesFromDB(callback) {
-    db.queryDb('getAllDevices', [], function (err, rows, result) {
-        if (err === null) {
-            if (rows === null) {
-                devices = [];
-            } else {
-                devices = rows;
-            }
-            return callback(null);
-        } else {
-            return callback(err);
-        }
-    });
+async function getAllDevices() {
+    let queryRes = db.emptyQueryRes;
+    try {
+        queryRes = await db.queryDbAsync('getAllDevices', []);
+        devices = queryRes.rows;
+        return queryRes;
+    } catch(err) {
+        return queryRes;
+    }
 }
 
-function getDeviceByIdentity(apiKey, identifier, callback) {
-    var i = 0;
-
+async function getDeviceByIdentity(apiKey, identifier) {
+    let queryRes = db.emptyQueryRes;
     // Check if the device is already loaded in memory
+    let i = 0;
     while ((i < devices.length) && (devices[i].api_key !== apiKey || devices[i].identifier !== identifier)) {
         i++;
     }
     if (i !== devices.length) {
         logger.debug('findDeviceByIdentity - from memory: ' + JSON.stringify(devices[i]));
-        return callback(devices[i]);
+        queryRes.rowCount = 1;
+        queryRes.rows = [devices[i]];
     } else {
         logger.debug('findDeviceByIdentity - from DB: ' + apiKey);
-        db.queryDb('insertDevice', [apiKey, identifier, identifier], function (err, rows, result) {
-            if (err === null && rows !== null) {
-                logger.debug('findDeviceByIdentity - new: ' + JSON.stringify(rows[0]));
-                devices.push(rows[0]);
-                return callback(rows[0]);
-            } else {
-                logger.debug('findDeviceByIdentity - insert failed: ' + err);
-                return callback(null);
-            }
-        });
-    }
-}
-
-function getDevicesByUser(userid, callback) {
-    var userdevices = [];
-
-    db.queryDb('findDevicesByUser', [userid], function (err, rows, result) {
-        if (err === null) {
-            if (rows !== null) {
-                userdevices = rows;
-            }
-            return callback(null, userdevices);
-        } else {
-            return callback(err, null);
+        try {
+            queryRes = await db.queryDbAsync('insertDevice', [apiKey, identifier, identifier]);
+        } catch(err) {
+            logger.debug('findDeviceByIdentity - insert failed');
         }
-    });
+        if (queryRes.rowCount === 1) {
+            logger.debug('findDeviceByIdentity - new: ' + JSON.stringify(queryRes.rows[0]));
+            devices.push(queryRes.rows[0]);
+        }
+    }
+    return queryRes;
 }
 
-function changeDevice(modDevice, callback) {
-    if (modDevice.device_id === 0) {
-        db.queryDb('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias], function (err, rows, result) {
-            if (err !== null) {
-                return callback(err);
-            } else {
-                if (result.rowCount === 0) {
-                    return callback('Unable to add device');
-                } else {
-                    return callback(null);
-                }
-            }
-        });
-    } else {
-        db.queryDb('changeDeviceById', [modDevice.device_id, modDevice.alias, modDevice.fixed_loc_lat, modDevice.fixed_loc_lon], function (err, rows, result) {
-            if (err !== null) {
-                return callback(err);
-            } else {
-                if (result.rowCount === 0) {
-                    return callback('Unable to change device');
-                } else {
-                    return callback(null);
-                }
-            }
-        });
+async function getDevicesByUser(userid) {
+    let queryRes = db.emptyQueryRes;
+    try {
+        queryRes = await db.queryDbAsync('findDevicesByUser', [userid]);
+    } catch(err) {
+        queryRes.userMessage = 'Unable to find devices.';
     }
+    return queryRes;
+}
+
+async function changeDevice(modDevice) {
+    let queryRes = db.emptyQueryRes;
+    if (modDevice.device_id === 0) {
+        try {
+            queryRes = await db.queryDbAsync('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias]);
+            if (queryRes.rowCount === 0) {
+                queryRes.userMessage = 'Unable to add device';
+            }
+        } catch(err) {
+            queryRes.userMessage = 'Unable to add device';
+        }
+    } else {
+        try {
+            queryRes = await db.queryDbAsync('changeDeviceById', [modDevice.device_id, modDevice.alias, modDevice.fixed_loc_lat, modDevice.fixed_loc_lon]);
+            if (queryRes.rowCount === 0) {
+                queryRes.userMessage = 'Unable to change device';
+            }
+        } catch(err) {
+            queryRes.userMessage = 'Unable to change device';
+        }
+    }
+    return queryRes;
 }
 
 function splitDeviceIdentity(devIdent, dividerChar) {
@@ -123,50 +111,47 @@ function splitDeviceIdentity(devIdent, dividerChar) {
     return identityObj;
 }
 
-function addSharedUser(sharedUser, ids, callback) {
+async function addSharedUser(sharedUser, ids) {
     // ToDo: check for valid sharedUser and ids ?
-    db.queryDb('addSharedUser', [sharedUser, ids], function (err, rows, result) {
-        if (err !== null) {
-            return callback(err);
-        } else {
-            if (result.rowCount === 0) {
-                return callback('No shared users were added');
-            } else {
-                return callback(null);
-            }
+    let queryRes = db.emptyQueryRes;
+    try {
+        queryRes = await db.queryDbAsync('addSharedUser', [sharedUser, ids]);
+        if (queryRes.rowCount === 0) {
+            queryRes.userMessage = 'No shared users were added';
         }
-    });
+    } catch(err) {
+        queryRes.userMessage = 'No shared users were added';
+    }
+    return queryRes;
 }
 
-function deleteSharedUser(sharedUser, ids, callback) {
-    db.queryDb('deleteSharedUser', [sharedUser, ids], function (err, rows, result) {
-        if (err !== null) {
-            return callback(err);
-        } else {
-            if (result.rowCount === 0) {
-                return callback('No shared users were deleted');
-            } else {
-                return callback(null);
-            }
+async function deleteSharedUser(sharedUser, ids) {
+    let queryRes = db.emptyQueryRes;
+    try {
+        queryRes = await db.queryDbAsync('deleteSharedUser', [sharedUser, ids]);
+        if (queryRes.rowCount === 0) {
+            queryRes.userMessage = 'No shared users were deleted';
         }
-    });
+    } catch(err) {
+        queryRes.userMessage = 'No shared users were deleted';
+    }
+    return queryRes;
 }
 
-function deleteDevicesById(ids, callback) {
-    db.queryDb('deleteDevices', [ids], function (err, rows, result) {
-        if (err !== null) {
-            return callback(err);
-        } else {
-            if (result.rowCount === 0) {
-                return callback('No devices were deleted');
-            } else {
-                return callback(null);
-            }
+async function deleteDevicesById(ids) {
+    let queryRes = db.emptyQueryRes;
+    try {
+        queryRes = await db.queryDbAsync('deleteDevices', [ids]);
+        if (queryRes.rowCount === 0) {
+            queryRes.userMessage = 'No devices were deleted';
         }
-    });
+    } catch(err) {
+        queryRes.userMessage = 'No devices were deleted';
+    }
+    return queryRes;
 }
 
-module.exports.loadDevicesFromDB = loadDevicesFromDB;
+module.exports.getAllDevices = getAllDevices;
 module.exports.getDeviceByIdentity = getDeviceByIdentity;
 module.exports.getDevicesByUser = getDevicesByUser;
 module.exports.changeDevice = changeDevice;

@@ -9,7 +9,7 @@ var logger = require('./logger.js');
 
 var MQTTvalidator = new JSONValidator('mqtt');
 
-function processMessage(messageStr, callback) {
+async function processMessage(messageStr) {
     var srcData, destData = {};
 
     // Convert JSON string to object
@@ -17,7 +17,7 @@ function processMessage(messageStr, callback) {
     // Optional: tagid, tagapikey, type, attr
     try {
         srcData = JSON.parse(messageStr);
-    } catch (e) {
+    } catch(e) {
         srcData = null;
     }
 
@@ -35,34 +35,35 @@ function processMessage(messageStr, callback) {
 
     if (srcData !== null) {
         if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
-            dev.getDeviceByIdentity(srcData.apikey, srcData.id, function (destDevice) {
-                logger.info('MQTT message: ' + JSON.stringify(srcData));
-                if (destDevice !== null) {
-                    destData.device_id = destDevice.device_id;
-                    destData.identifier = srcData.id;
-                    destData.device_id_tag = null;
-                    destData.identifier_tag = null;
-                    destData.api_key_tag = null;
-                    destData.alias = destDevice.alias;
-                    destData.loc_timestamp = srcData.timestamp;
-                    destData.loc_lat = srcData.lat;
-                    destData.loc_lon = srcData.lon;
-                    destData.loc_type = null; // Deprecated for MQTT
-                    destData.loc_attr = srcData.attr;
-                    logger.debug('Converted message: ' + JSON.stringify(destData));
-                    return callback(destData);
-                } else {
-                    logger.debug('Unable to find device');
-                    return callback(null);
-                }
-            });
+            const queryRes = await dev.getDeviceByIdentity(srcData.apikey, srcData.id);
+            logger.info('MQTT message: ' + JSON.stringify(srcData));
+            if (queryRes.rowCount === 1) {
+                const destDevice = queryRes.rows[0];
+                destData.device_id = destDevice.device_id;
+                destData.identifier = srcData.id;
+                destData.device_id_tag = null;
+                destData.identifier_tag = null;
+                destData.api_key_tag = null;
+                destData.alias = destDevice.alias;
+                destData.loc_timestamp = srcData.timestamp;
+                destData.loc_lat = srcData.lat;
+                destData.loc_lon = srcData.lon;
+                destData.loc_type = null; // Deprecated for MQTT
+                destData.loc_attr = srcData.attr;
+                logger.debug('Converted message: ' + JSON.stringify(destData));
+                return destData;
+            } else {
+                logger.debug('Unable to find device');
+                return null;
+            }
+            
         } else {
             logger.debug('Unknown API key: ' + srcData.apikey);
-            return callback(null);
+            return null;
         }
     } else {
         logger.debug('Invalid MQTT message: ' + messageStr);
-        return callback(null);
+        return null;
     }
 }
 
@@ -83,21 +84,14 @@ function start() {
         //client.publish(config.get('mqtt.topic'), '{"id":"test2", "apikey":"apikey1", "timestamp":"' + timeStamp + '", "lat":"52.123", "lon":"5.123"}');
     });
 
-    client.on('message', function (topic, message) {
+    client.on('message', async (topic, message) => {
         logger.debug('MQTT message (topic=' + topic + '): ' + message.toString());
-        dev.loadDevicesFromDB(function (err) {
-            if (err === null) {
-                usr.loadUsersFromDB(function (err) {
-                    if (err === null) {
-                        processMessage(message.toString(), function (destData) {
-                            if (destData !== null) {
-                                livesvr.sendToClient(destData);
-                            }
-                        });
-                    }
-                });
-            }
-        });
+        await dev.getAllDevices();
+        await usr.getAllUsers();
+        const destData = await processMessage(message.toString());
+        if (destData !== null) {
+            await livesvr.sendToClient(destData);
+        }
     });
 
     client.on('error', function (error) {
