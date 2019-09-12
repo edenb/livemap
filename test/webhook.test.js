@@ -32,12 +32,13 @@ let testDevice_Id = [];
 
 describe('Setup test user for database', () => {
     describe('#insertUser', () => {
-        it('should create 1 user', (done) => {
-            db.queryDb('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key], (err, rows, result) => {
-                if (err) return done(err);
-                result.rowCount.should.equal(1);
-                done();
-            });
+        it('should create 1 user', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key]);
+                queryRes.rowCount.should.equal(1);
+            } catch(err) {
+                throw new Error(err.message);
+            }
         });   
     });
 });
@@ -53,7 +54,6 @@ describe('Webhook', () => {
                 res.should.have.status(200);
                 done();
             });
-            //done();
         });
     });
     describe('/post gpx with valid location data in body', () => {
@@ -66,7 +66,6 @@ describe('Webhook', () => {
                 res.should.have.status(200);
                 done();
             });
-            //done();
         });
     });
     describe('/post gpx without location data', () => {
@@ -78,7 +77,6 @@ describe('Webhook', () => {
                 res.should.have.status(200);
                 done();
             });
-            //done();
         });
     });
     describe('/post locative with valid location data in query string parameters', () => {
@@ -91,7 +89,6 @@ describe('Webhook', () => {
                 res.should.have.status(200);
                 done();
             });
-            //done();
         });
     });
     describe('/post locative with valid location data in body', () => {
@@ -104,58 +101,64 @@ describe('Webhook', () => {
                 res.should.have.status(200);
                 done();
             });
-            //done();
         });
     });
 });
 
 describe('Remove test user from database', () => {
     describe('#findUserByUsername', () => {
-        it('should return 1 user', (done) => {
-            db.queryDb('findUserByUsername', [testUser.username], (err, rows, result) => {
-                if (err) return done(err);
-                if (result.rowCount > 0) {
-                    testUser_Id = rows[0].user_id;
+        it('should return 1 user', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('findUserByUsername', [testUser.username]);
+                if (queryRes.rowCount > 0) {
+                    testUser_Id = queryRes.rows[0].user_id;
                 } else {
                     testUser_Id = null;
                 }
-                result.rowCount.should.equal(1);
-                done();
-            });
+                queryRes.rowCount.should.equal(1);
+            } catch(err) {
+                throw new Error(err.message);
+            }
         });   
     });
+
     describe('#findDevicesByUser', () => {
-        it('should return 4 devices', (done) => {
-            db.queryDb('findDevicesByUser', [testUser_Id], (err, rows, result) => {
-                if (err) return done(err);
-                if (result.rowCount > 0) {
-                    rows.forEach(element => {
+        it('should return 4 devices', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('findDevicesByUser', [testUser_Id]);
+                if (queryRes.rowCount > 0) {
+                    queryRes.rows.forEach((element) => {
                         testDevice_Id.push(element.device_id);
                     });
                 } else {
                     testDevice_Id = [];
                 }
-                result.rowCount.should.equal(4);
-                done();
-            });
+                queryRes.rowCount.should.equal(4);
+            } catch(err) {
+                throw new Error(err.message);
+            }
         });   
     });
+
     describe('#deleteDevices', () => {
-        it('should delete 4 devices', (done) => {
-            db.queryDb('deleteDevices', [testDevice_Id], (err, rows, result) => {
-                if (err) return done(err);
-                result.rowCount.should.equal(4);
-                done();
-            });
-        });   
+        it('should delete 4 devices', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('deleteDevices', [testDevice_Id]);
+                queryRes.rowCount.should.equal(4);
+            } catch(err) {
+                throw new Error(err.message);
+            }
+        });  
     });
+
     describe('#deleteUser', () => {
-        it('should delete 1 user', (done) => {
-            db.queryDb('deleteUser', [testUser_Id], (err, rows, result) => {
-                if (err) return done(err);
-                result.rowCount.should.equal(1);
-                done();
-            });
+        it('should delete 1 user', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('deleteUser', [testUser_Id]);
+                queryRes.rowCount.should.equal(1);
+            } catch(err) {
+                throw new Error(err.message);
+            }
         });   
     });
 });

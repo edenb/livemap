@@ -95,56 +95,6 @@ async function queryDbAsync(key, sqlParams) {
     return dbQueryRes;
 }
 
-function queryDb(key, sqlParams, callback) {
-    var cachedQryOut = null;
-
-    if (typeof queryDef[key].qstr !== 'undefined') {
-        if (queryDef[key].cached) {
-            // Try to get the result from cache
-            cachedQryOut = dbcache.load(queryDef[key], sqlParams);
-            if (cachedQryOut !== null && typeof callback === 'function') {
-                logger.debug(`queryDb - cached: ${key}`);
-                callback(null, cachedQryOut.rows, cachedQryOut.result);
-            }
-        }
-
-        if (cachedQryOut === null) {
-            pgPool.connect(function (err, client, release) {
-                if (err) {
-                    logger.error('Database connection error: ', err);
-                    if (typeof callback === 'function') {
-                        callback(err, [], null);
-                    }
-                } else {
-                    client.query(queryDef[key].qstr, sqlParams || [], function (err, res) {
-                        release();
-                        if (err) {
-                            logger.error('Database query error(' + key + '): ', err);
-                            if (typeof callback === 'function') {
-                                callback(err, [], null);
-                            }
-                        } else {
-                            dbcache.invalidate(queryDef[key]);
-                            if (queryDef[key].cached) {
-                                dbcache.save(queryDef[key], sqlParams, res.rows, res);
-                            }
-                            if (typeof callback === 'function') {
-                                logger.debug('queryDb - **** from DB ****: ' + key);
-                                callback(null, res.rows, res);
-                            }
-                        }
-                    });
-                }
-            });
-        }
-    } else {
-        logger.error('No query for key: ', key);
-        if (typeof callback === 'function') {
-            callback(null, null, null);
-        }
-    }
-}
-
 //
 // Database operations with queries from file
 //
@@ -222,7 +172,6 @@ function startMaintenance() {
 }
 
 module.exports.emptyQueryRes = emptyQueryRes;
-module.exports.queryDb = queryDb;
 module.exports.queryDbAsync = queryDbAsync;
 module.exports.bindStore = bindStore;
 module.exports.getStore = getStore;
