@@ -7,84 +7,89 @@ const testUser = {
     fullName: 'Test User1',
     email: 'test@user1',
     role: 'user',
-    api_key: '1234'
+    api_key: '12345678'
 };
 
 let testUser_Id = null;
 
 describe('Database', () => {
     describe('#getNumberOfTables', () => {
-      it('should respond with 1 row', (done) => {
-        db.queryDb('getNumberOfTables', [], (err, rows, result) => {
-          if (err) return done(err);
-          result.rowCount.should.equal(1);
-          done();
+        it('should respond with 5 as the number of tables', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('getNumberOfTables', []);
+                queryRes.rowCount.should.equal(1);
+                queryRes.rows[0].count.should.equal('5');
+            } catch(err) {
+                throw new Error(err.message);
+            }
         });
-      });
-      it('should respond with 5 as the number of tables', (done) => {
-        db.queryDb('getNumberOfTables', [], (err, rows, result) => {
-          if (err) return done(err);
-           result.rows[0].count.should.equal('5');
-          done();
-        });
-      });
     });
 
     describe('#findUserByUsername', () => {
-        it('should respond with no errors', (done) => {
-          db.queryDb('findUserByUsername', [testUser.username], (err, rows, result) => {
-            if (err) return done(err);
-            if (result.rowCount > 0) {
-                testUser_Id = rows[0].user_id;
-            } else {
-                testUser_Id = null;
+        it('should respond with no errors', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('findUserByUsername', [testUser.username]);
+                if (queryRes.rowCount > 0) {
+                    testUser_Id = queryRes.rows[0].user_id;
+                } else {
+                    testUser_Id = null;
+                }
+            } catch(err) {
+                throw new Error(err.message);
             }
-            done();
-          });
-        });   
+        });
     });
 
     describe('#deleteUser', () => {
-        it('should respond with no errors', (done) => {
-          db.queryDb('deleteUser', [testUser_Id], (err) => {
-            if (err) return done(err);
-            done();
-          });
-        });   
+        it('should respond with no errors', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('deleteUser', [testUser_Id]);
+                if (testUser_Id === null) {
+                    queryRes.rowCount.should.equal(0);
+                } else {
+                    queryRes.rowCount.should.equal(1);
+                }
+            } catch(err) {
+                throw new Error(err.message);
+            }
+        });
     });
 
     describe('#insertUser', () => {
-        it('should create 1 user', (done) => {
-          db.queryDb('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key], (err, rows, result) => {
-            if (err) return done(err);
-            result.rowCount.should.equal(1);
-            done();
-          });
-        });   
+        it('should create 1 user', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key]);
+                queryRes.rowCount.should.equal(1);
+            } catch(err) {
+                throw new Error(err.message);
+            }
+        });
     });
 
     describe('#findUserByUsername', () => {
-        it('should return 1 user', (done) => {
-          db.queryDb('findUserByUsername', [testUser.username], (err, rows, result) => {
-            if (err) return done(err);
-            if (result.rowCount > 0) {
-                testUser_Id = rows[0].user_id;
-            } else {
-                testUser_Id = null;
+        it('should return 1 user', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('findUserByUsername', [testUser.username]);
+                if (queryRes.rowCount > 0) {
+                    testUser_Id = queryRes.rows[0].user_id;
+                } else {
+                    testUser_Id = null;
+                }
+                queryRes.rowCount.should.equal(1);
+            } catch(err) {
+                throw new Error(err.message);
             }
-            result.rowCount.should.equal(1);
-            done();
-          });
-        });   
+        });
     });
 
     describe('#deleteUser', () => {
-        it('should delete 1 user', (done) => {
-          db.queryDb('deleteUser', [testUser_Id], (err, rows, result) => {
-            if (err) return done(err);
-            result.rowCount.should.equal(1);
-            done();
-          });
-        });   
+        it('should delete 1 user', async () => {
+            try {
+                const queryRes = await db.queryDbAsync('deleteUser', [testUser_Id]);
+                queryRes.rowCount.should.equal(1);
+            } catch(err) {
+                throw new Error(err.message);
+            }
+        });
     });
 });

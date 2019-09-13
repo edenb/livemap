@@ -78,41 +78,47 @@ function start(server) {
     });
 
     // On a new socket connection add the user information to the socket
-    io.sockets.on('connection', function (socket) {
-        db.queryDb('findSessionById', [socket.sessionID], function (err, rows, result) {
-            if (err === null && (typeof rows[0] !== 'undefined')) {
-                if (typeof rows[0].sess.passport.user !== 'undefined') {
-                    usr.findUser('id', rows[0].sess.passport.user, function (err, user) {
-                        socket.user = user;
-                        socketClients.push(socket);
-                        logger.info('Client connected (' + socketClients.length + '): ' + socket.user.fullname);
-                        socket.emit('loginSuccess', {numClients: socketClients.length, fullName: socket.user.fullname});
-                    });
+    io.sockets.on('connection', async (socket) => {
+        let queryRes1
+        try {
+            queryRes1 = await db.queryDbAsync('findSessionById', [socket.sessionID]);
+        } catch(err) {
+            logger.error(`Unable to connect a socket.`);
+        }
+        if (queryRes1.rowCount !== 0 && typeof queryRes1.rows[0].sess.passport.user !== 'undefined') {
+            const queryRes2 = await usr.findUser('id', queryRes1.rows[0].sess.passport.user);
+            if (queryRes2.rowCount !== 0) {
+                socket.user = queryRes2.rows[0];
+                socketClients.push(socket);
+                logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
+                socket.emit('loginSuccess', {numClients: socketClients.length, fullName: socket.user.fullname});
+            }
+        }
+
+        socket.on('startPosStream', async () => {
+            let queryRes;
+            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
+                try {
+                    queryRes = await db.queryDbAsync('getAllowedDevices', [socket.user.user_id]);
+                } catch(err) {
+                    logger.error(`Unable to start a socket stream.`);
+                }
+                socket.devices = [];
+                for (let i = 0; i < queryRes.rowCount; i += 1) {
+                    socket.devices.push(queryRes.rows[i].device_id);
                 }
             }
         });
 
-        socket.on('startPosStream', function () {
-            var i;
+        socket.on('getLastPositions', async function () {
             if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
-                db.queryDb('getAllowedDevices', [socket.user.user_id], function (err, rows, result) {
-                    if (err === null && rows !== null) {
-                        socket.devices = [];
-                        for (i = 0; i < rows.length; i += 1) {
-                            socket.devices.push(rows[i].device_id);
-                        }
-                    }
-                });
-            }
-        });
-
-        socket.on('getLastPositions', function () {
-            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
-                db.queryDb('getLastPositions', [socket.user.user_id], function (err, rows, result) {
-                    if (err === null && rows !== null) {
-                        socket.emit('lastPositions', rows);
-                    }
-                });
+                let queryRes;
+                try {
+                    queryRes = await db.queryDbAsync('getLastPositions', [socket.user.user_id]);
+                } catch(err) {
+                    logger.error(`Unable to send last positions.`);
+                }
+                socket.emit('lastPositions', queryRes.rows);
             }
         });
 
@@ -149,29 +155,34 @@ function start(server) {
     });
 }
 
-function sendToClient(destData) {
-    var i;
+async function sendToClient(destData) {
     // On a valid location reception:
     // 1. Store the location in the database
     // 2. Send a location update to every client that is authorized for this device
     if (isInputDataValid(destData)) {
-        for (i = 0; i < socketClients.length; i += 1) {
-            var client = socketClients[i];
+        for (let i = 0; i < socketClients.length; i += 1) {
+            let client = socketClients[i];
             if (typeof client.user.username !== 'undefined' && client.user.username !== null) {
-                db.queryDb('getAllowedDevices', [client.user.user_id], function (err, rows, result) {
-                    if (err === null && rows !== null) {
-                        client.devices = [];
-                        for (i = 0; i < rows.length; i += 1) {
-                            client.devices.push(rows[i].device_id);
-                            if (rows[i].device_id === destData.device_id) {
-                                client.emit('positionUpdate', JSON.stringify({type: 'gps', data: destData}));
-                            }
-                        }
+                let queryRes;
+                try {
+                    queryRes = await db.queryDbAsync('getAllowedDevices', [client.user.user_id]);
+                } catch(err) {
+                    logger.error(`Unable to get allowed devices. ${err.message}`);
+                }
+                client.devices = [];
+                for (let j = 0; j < queryRes.rows.length; j += 1) {
+                    client.devices.push(queryRes.rows[j].device_id);
+                    if (queryRes.rows[j].device_id === destData.device_id) {
+                        client.emit('positionUpdate', JSON.stringify({type: 'gps', data: destData}));
                     }
-                });
+                }
             }
         }
-        db.queryDb('insertPosition', [destData.device_id, destData.device_id_tag, destData.loc_timestamp, destData.loc_lat, destData.loc_lon, destData.loc_type, destData.loc_attr], function (){});
+        try {
+            await db.queryDbAsync('insertPosition', [destData.device_id, destData.device_id_tag, destData.loc_timestamp, destData.loc_lat, destData.loc_lon, destData.loc_type, destData.loc_attr]);
+        } catch(err) {
+            logger.error(`Unable to store position.`);
+        }
     }
 }
 
