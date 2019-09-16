@@ -79,7 +79,7 @@ function start(server) {
 
     // On a new socket connection add the user information to the socket
     io.sockets.on('connection', async (socket) => {
-        let queryRes1
+        let queryRes1;
         try {
             queryRes1 = await db.queryDbAsync('findSessionById', [socket.sessionID]);
         } catch(err) {
@@ -95,20 +95,20 @@ function start(server) {
             }
         }
 
-        socket.on('startPosStream', async () => {
-            let queryRes;
-            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
-                try {
-                    queryRes = await db.queryDbAsync('getAllowedDevices', [socket.user.user_id]);
-                } catch(err) {
-                    logger.error(`Unable to start a socket stream.`);
-                }
-                socket.devices = [];
-                for (let i = 0; i < queryRes.rowCount; i += 1) {
-                    socket.devices.push(queryRes.rows[i].device_id);
-                }
-            }
-        });
+//        socket.on('startPosStream', async () => {
+//            let queryRes;
+//            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
+//                try {
+//                    queryRes = await db.queryDbAsync('getAllowedDevices', [socket.user.user_id]);
+//                } catch(err) {
+//                    logger.error(`Unable to start a socket stream.`);
+//                }
+//                socket.devices = [];
+//                for (let i = 0; i < queryRes.rowCount; i += 1) {
+//                    socket.devices.push(queryRes.rows[i].device_id);
+//                }
+//            }
+//        });
 
         socket.on('getLastPositions', async function () {
             if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
