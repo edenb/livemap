@@ -29,9 +29,12 @@ queryDef.insertPosition = {'qstr': 'INSERT INTO locations(device_id, device_id_t
 queryDef.findSessionById = {'qstr': 'SELECT sess FROM sessions WHERE sid = $1', 'readTables': ['sessions'], 'writeTables': [], 'cached': false};
 queryDef.getNumberOfTables = {'qstr': 'SELECT count(*) FROM information_schema.tables WHERE table_schema = \'public\'', 'readTables': [], 'writeTables': [], 'cached': false};
 
-const emptyQueryRes = {
-    rows: [],
-    rowCount: 0
+function getEmptyQueryRes() {
+    const emptyQueryRes = {
+        rows: [],
+        rowCount: 0
+    };
+    return emptyQueryRes;
 }
 
 // Initialize the pool
@@ -56,7 +59,7 @@ pgPool.on('error', (err) => {
 //
 
 async function queryDbAsync(key, sqlParams) {
-    let dbQueryRes = emptyQueryRes;
+    let dbQueryRes = getEmptyQueryRes();
 
     if (typeof queryDef[key] !== 'undefined') {
         // Try to get the query result from cache
@@ -171,7 +174,7 @@ function startMaintenance() {
     setInterval(removeOldestPositions, config.get('db.maintenanceInterval'));
 }
 
-module.exports.emptyQueryRes = emptyQueryRes;
+module.exports.getEmptyQueryRes = getEmptyQueryRes;
 module.exports.queryDbAsync = queryDbAsync;
 module.exports.bindStore = bindStore;
 module.exports.getStore = getStore;

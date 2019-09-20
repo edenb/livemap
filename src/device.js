@@ -9,7 +9,7 @@ var devices = [];
 //
 
 async function getAllDevices() {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('getAllDevices', []);
         devices = queryRes.rows;
@@ -20,7 +20,7 @@ async function getAllDevices() {
 }
 
 async function getDeviceByIdentity(apiKey, identifier) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     // Check if the device is already loaded in memory
     let i = 0;
     while ((i < devices.length) && (devices[i].api_key !== apiKey || devices[i].identifier !== identifier)) {
@@ -46,7 +46,7 @@ async function getDeviceByIdentity(apiKey, identifier) {
 }
 
 async function getDevicesByUser(userid) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('findDevicesByUser', [userid]);
     } catch(err) {
@@ -56,7 +56,7 @@ async function getDevicesByUser(userid) {
 }
 
 async function changeDevice(modDevice) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     if (modDevice.device_id === 0) {
         try {
             queryRes = await db.queryDbAsync('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias]);
@@ -113,7 +113,7 @@ function splitDeviceIdentity(devIdent, dividerChar) {
 
 async function addSharedUser(sharedUser, ids) {
     // ToDo: check for valid sharedUser and ids ?
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('addSharedUser', [sharedUser, ids]);
         if (queryRes.rowCount === 0) {
@@ -126,7 +126,7 @@ async function addSharedUser(sharedUser, ids) {
 }
 
 async function deleteSharedUser(sharedUser, ids) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('deleteSharedUser', [sharedUser, ids]);
         if (queryRes.rowCount === 0) {
@@ -139,7 +139,7 @@ async function deleteSharedUser(sharedUser, ids) {
 }
 
 async function deleteDevicesById(ids) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('deleteDevices', [ids]);
         if (queryRes.rowCount === 0) {

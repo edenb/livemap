@@ -45,7 +45,7 @@ function validateChanges(user, modUser) {
 //
 
 async function getAllUsers() {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('getAllUsers', []);
         users = queryRes.rows;
@@ -56,7 +56,7 @@ async function getAllUsers() {
 }
 
 async function findUser(field, val) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     let queryDefinition = null;
     if (field === 'id') {
         queryDefinition = 'findUserById';
@@ -75,7 +75,7 @@ async function findUser(field, val) {
 }
 
 async function changeDetails(user, modUser) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     let userMessage;
     // If the API key is empty generate one
     if (modUser.api_key === '') {
@@ -108,7 +108,7 @@ async function changeDetails(user, modUser) {
 }
 
 async function changePassword(user, curPwd, newPwd, confirmPwd) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
      // The new password should have a minimal length
     if (newPwd.length < config.get('user.pwdMinLength')) {
         queryRes.userMessage = 'New password too short';
@@ -161,7 +161,7 @@ async function checkPassword(user, password) {
 }
 
 async function deleteUser(user, modUser) {
-    let queryRes = db.emptyQueryRes;
+    let queryRes = db.getEmptyQueryRes();
     if (user.user_id === modUser.user_id) {
         queryRes.userMessage = 'You can not delete your own account';
     } else {

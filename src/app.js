@@ -114,8 +114,10 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
     })
 );
 
-var routes = require('../routes/index')(passport);
-app.use('/', routes);
+let indexRoutes = require('../routes/index')(passport);
+let apiRoutes = require('../routes/api')();
+app.use('/', indexRoutes);
+app.use('/api/v1', apiRoutes);
 
 function allUp() {
     if (db.checkDbUp()) {

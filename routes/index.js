@@ -1,9 +1,10 @@
-var config = require('config');
-var express = require('express');
+const config = require('config');
+const express = require('express');
 require('connect-flash');
-var usr = require('../src/user.js');
-var dev = require('../src/device.js');
-var mqtt = require('../src/mqtt.js');
+const jwt = require('jsonwebtoken');
+const usr = require('../src/user.js');
+const dev = require('../src/device.js');
+const mqtt = require('../src/mqtt.js');
 
 var router = express.Router();
 
@@ -14,6 +15,25 @@ function isNumber(num) {
     else {
         return false;
     }
+}
+
+function getScopes(user) {
+    let scopesByRole = new Array();
+    scopesByRole['viewer'] = [];
+    scopesByRole['manager'] = [];
+    scopesByRole['admin'] = ['users', 'devices'];
+    if (user.role in scopesByRole) {
+        return scopesByRole[user.role];
+    } else {
+        return [];
+    }
+}
+
+function getToken(user) {
+    let options = {algorithm: 'HS512'};
+    let scopes = getScopes(user);
+    let token = jwt.sign({user: user.username, scopes: scopes}, 'replacebysecretfromconfig', options);
+    return token;
 }
 
 function ensureAuthenticated(req, res, next) {
@@ -43,9 +63,16 @@ module.exports = function (passport) {
     });
 
     router.post('/login', passport.authenticate('local', {failureRedirect: '/'}), function (req, res) {
+        let token = getToken(req.user);
         // Wait for the authentication result is stored in the session, otherwise ensureAuthenticated() may fail
         req.session.save(function (err) {
-            res.redirect('/main');
+            res
+                .location('/main')
+                .status(302)
+                .json({
+                    access_token: token,
+                    token_type: 'Bearer'
+                });
         });
     });
 
