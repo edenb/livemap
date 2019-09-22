@@ -79,8 +79,8 @@ async function queryDbAsync(key, sqlParams) {
                 values: sqlParams || []
             });
         } catch(err) {
-            logger.error(`Database access failed. ${err}`);
-            throw new Error(`Database access failed. ${err}`);
+            logger.error(`Database access failed: ${err.message}`);
+            throw new Error(`Database access failed: ${err.message}`);
         } finally {
             pgClient.release();
         }

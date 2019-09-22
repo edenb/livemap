@@ -51,6 +51,7 @@ async function getAllUsers() {
         users = queryRes.rows;
         return queryRes;
     } catch(err) {
+        queryRes.userMessage = 'Unable to get users';
         return queryRes;
     }
 }
@@ -68,6 +69,7 @@ async function findUser(field, val) {
         try {
             queryRes = await db.queryDbAsync(queryDefinition, [val]);
         } catch(err) {
+            queryRes.userMessage = 'Unable to get user';
             return queryRes;
         }
     }

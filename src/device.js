@@ -15,6 +15,7 @@ async function getAllDevices() {
         devices = queryRes.rows;
         return queryRes;
     } catch(err) {
+        queryRes.userMessage = 'Unable to get devices';
         return queryRes;
     }
 }

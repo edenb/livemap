@@ -36,25 +36,30 @@ module.exports = function () {
     router.get ('/users', checkScopes(['users']), async (req, res) => {
         const queryRes = await usr.getAllUsers();
         if (typeof queryRes.userMessage !== 'undefined') {
-            res.status(404).send(`Not found. ${queryRes.userMessage}`);
+            res.status(500).send(`Internal Server Error`);
         } else {
             res.status(200).send(queryRes.rows);
         }
     });
 
     router.get ('/users/:userId', checkScopes(['users']), async (req, res) => {
-        const queryRes = await usr.findUser('id', req.params.userId);
-        if (typeof queryRes.userMessage !== 'undefined') {
-            res.status(404).send(`Not found. ${queryRes.userMessage}`);
+        const userId = parseInt(req.params.userId);
+        if (!Number.isInteger(userId)) {
+            res.status(400).send(`Bad Request`);
         } else {
-            res.status(200).send(queryRes.rows);
+            const queryRes = await usr.findUser('id', userId);
+            if (typeof queryRes.userMessage !== 'undefined') {
+                res.status(500).send(`Internal Server Error`);
+            } else {
+                res.status(200).send(queryRes.rows);
+            }
         }
     });
 
     router.get ('/devices', checkScopes(['devices']), async (req, res) => {
         const queryRes = await dev.getAllDevices();
         if (typeof queryRes.userMessage !== 'undefined') {
-            res.status(404).send(`Not found. ${queryRes.userMessage}`);
+            res.status(500).send(`Internal Server Error`);
         } else {
             res.status(200).send(queryRes.rows);
         }
