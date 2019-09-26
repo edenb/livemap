@@ -7,15 +7,12 @@
 var cache = [];
 
 function getIndexOf(qry, param) {
-    var i, index = null;
-
-    param = param.map(String);
-    for (i = 0; i < cache.length; i += 1) {
-        if ((cache[i].qry === qry) && (JSON.stringify(cache[i].param) === JSON.stringify(param))) {
-            index = i;
+    for (let i = 0; i < cache.length; i += 1) {
+        if ((cache[i].qry.qstr === qry.qstr) && (JSON.stringify(cache[i].param) === JSON.stringify(param))) {
+            return i;
         }
     }
-    return index;
+    return null;
 }
 
 function save(qry, param, rows, result) {
