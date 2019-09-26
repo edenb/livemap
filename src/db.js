@@ -67,7 +67,7 @@ async function queryDbAsync(key, sqlParams) {
             const cachedQueryRes = dbcache.load(queryDef[key], sqlParams);
             if (cachedQueryRes !== null) {
                 logger.debug(`queryDb - cached: ${key}`);
-                return cachedQueryRes.result;
+                return cachedQueryRes;
             }
         }
 
@@ -88,7 +88,7 @@ async function queryDbAsync(key, sqlParams) {
         // Update cache
         dbcache.invalidate(queryDef[key]);
         if (queryDef[key].cached) {
-            dbcache.save(queryDef[key], sqlParams, dbQueryRes.rows, dbQueryRes);
+            dbcache.save(queryDef[key], sqlParams, dbQueryRes);
         }
     } else {
         logger.error(`Database query failed. No query for key: ${key}`);
