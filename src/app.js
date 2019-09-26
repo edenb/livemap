@@ -84,7 +84,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(async function (req, id, done) {
-    const queryRes = await usr.findUser('id', id);
+    const queryRes = await usr.getUserByField('user_id', id);
     if (queryRes.rowCount === 0) {
         done(null, {});
     } else {
@@ -94,7 +94,7 @@ passport.deserializeUser(async function (req, id, done) {
 
 passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'password', passReqToCallback: true},
     async function (req, username, password, done) {
-        const queryRes = await usr.findUser('username', username);
+        const queryRes = await usr.getUserByField('username', username);
         if (queryRes.rowCount === 0) {
             req.flash('error', 'No such user');
             req.session.save(function (err) {

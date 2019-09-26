@@ -47,7 +47,7 @@ module.exports = function () {
         if (!Number.isInteger(userId)) {
             res.status(400).send(`Bad Request`);
         } else {
-            const queryRes = await usr.findUser('id', userId);
+            const queryRes = await usr.getUserByField('user_id', userId);
             if (typeof queryRes.userMessage !== 'undefined') {
                 res.status(500).send(`Internal Server Error`);
             } else {

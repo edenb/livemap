@@ -25,10 +25,10 @@ describe('Database', () => {
         });
     });
 
-    describe('#findUserByUsername', () => {
+    describe('#getUserByUsername', () => {
         it('should respond with no errors', async () => {
             try {
-                const queryRes = await db.queryDbAsync('findUserByUsername', [testUser.username]);
+                const queryRes = await db.queryDbAsync('getUserByUsername', [testUser.username]);
                 if (queryRes.rowCount > 0) {
                     testUser_Id = queryRes.rows[0].user_id;
                 } else {
@@ -66,10 +66,10 @@ describe('Database', () => {
         });
     });
 
-    describe('#findUserByUsername', () => {
+    describe('#getUserByUsername', () => {
         it('should return 1 user', async () => {
             try {
-                const queryRes = await db.queryDbAsync('findUserByUsername', [testUser.username]);
+                const queryRes = await db.queryDbAsync('getUserByUsername', [testUser.username]);
                 if (queryRes.rowCount > 0) {
                     testUser_Id = queryRes.rows[0].user_id;
                 } else {

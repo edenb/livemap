@@ -86,7 +86,7 @@ function start(server) {
             logger.error(`Unable to connect a socket.`);
         }
         if (queryRes1.rowCount !== 0 && typeof queryRes1.rows[0].sess.passport.user !== 'undefined') {
-            const queryRes2 = await usr.findUser('id', queryRes1.rows[0].sess.passport.user);
+            const queryRes2 = await usr.getUserByField('user_id', queryRes1.rows[0].sess.passport.user);
             if (queryRes2.rowCount !== 0) {
                 socket.user = queryRes2.rows[0];
                 socketClients.push(socket);

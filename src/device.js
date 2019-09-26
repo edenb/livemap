@@ -46,12 +46,18 @@ async function getDeviceByIdentity(apiKey, identifier) {
     return queryRes;
 }
 
-async function getDevicesByUser(userid) {
+async function getDevicesByField(field, value) {
     let queryRes = db.getEmptyQueryRes();
-    try {
-        queryRes = await db.queryDbAsync('findDevicesByUser', [userid]);
-    } catch(err) {
-        queryRes.userMessage = 'Unable to find devices.';
+    let queryDefinition = '';
+    if (field === 'user_id') {
+        queryDefinition = 'getDevicesByUserId';
+    }
+    if (queryDefinition !== '') {
+        try {
+            queryRes = await db.queryDbAsync(queryDefinition, [value]);
+        } catch(err) {
+            queryRes.userMessage = 'Unable to find devices.';
+        }
     }
     return queryRes;
 }
@@ -154,7 +160,7 @@ async function deleteDevicesById(ids) {
 
 module.exports.getAllDevices = getAllDevices;
 module.exports.getDeviceByIdentity = getDeviceByIdentity;
-module.exports.getDevicesByUser = getDevicesByUser;
+module.exports.getDevicesByField = getDevicesByField;
 module.exports.changeDevice = changeDevice;
 module.exports.splitDeviceIdentity = splitDeviceIdentity;
 module.exports.addSharedUser = addSharedUser;

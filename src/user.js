@@ -56,18 +56,18 @@ async function getAllUsers() {
     }
 }
 
-async function findUser(field, val) {
+async function getUserByField(field, value) {
     let queryRes = db.getEmptyQueryRes();
-    let queryDefinition = null;
-    if (field === 'id') {
-        queryDefinition = 'findUserById';
+    let queryDefinition = '';
+    if (field === 'user_id') {
+        queryDefinition = 'getUserByUserId';
     }
     if (field === 'username') {
-        queryDefinition = 'findUserByUsername';
+        queryDefinition = 'getUserByUsername';
     }
-    if (queryDefinition !== null) {
+    if (queryDefinition !== '') {
         try {
-            queryRes = await db.queryDbAsync(queryDefinition, [val]);
+            queryRes = await db.queryDbAsync(queryDefinition, [value]);
         } catch(err) {
             queryRes.userMessage = 'Unable to get user';
             return queryRes;
@@ -197,7 +197,7 @@ function isKnownAPIkey(apiKey, ignoreUser) {
 }
 
 module.exports.getAllUsers = getAllUsers;
-module.exports.findUser = findUser;
+module.exports.getUserByField = getUserByField;
 module.exports.changeDetails = changeDetails;
 module.exports.changePassword = changePassword;
 module.exports.checkPassword = checkPassword;
