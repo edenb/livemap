@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const usr = require('../src/user.js');
 const dev = require('../src/device.js');
 
-var router = express.Router();
+const router = express.Router();
 
 function checkScopes(scopes) {
     return (req, res, next) => {
@@ -28,7 +28,7 @@ function checkScopes(scopes) {
     }
 }
 
-module.exports = function () {
+module.exports = () => {
     router.get('/', (req, res) => {
         res.status(200).send('API is up');
     });
@@ -66,7 +66,7 @@ module.exports = function () {
     });
 
     // This middleware always at the end to catch undefined endpoints
-    router.use('*', function(req, res) {
+    router.use('*', (req, res) => {
         res.status(404).send('Invalid endpoint');
     });
 

@@ -1,32 +1,32 @@
 "use strict";
-var config = require('config');
-var express = require('express');
-var favicon = require('serve-favicon');
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var flash = require('connect-flash');
-var morgan = require('morgan');
-var bodyParser = require('body-parser');
-var session = require('express-session');
-var db = require('./db.js');
-var usr = require('./user.js');
-var livesvr = require('./liveserver.js');
-var webhook = require('./webhook.js');
-var mqtt = require('./mqtt.js');
-var logger = require('./logger.js');
+const config = require('config');
+const express = require('express');
+const favicon = require('serve-favicon');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const flash = require('connect-flash');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const db = require('./db.js');
+const usr = require('./user.js');
+const livesvr = require('./liveserver.js');
+const webhook = require('./webhook.js');
+const mqtt = require('./mqtt.js');
+const logger = require('./logger.js');
 
-var port = config.get('server.port');
+const port = config.get('server.port');
 
 //
 // Application
 //
 
 // Express set-up
-var app = express();
+const app = express();
 
 // Force HTTPS
 if (config.get('server.forceSSL') === 'true') {
-    app.use(function (req, res, next) {
+    app.use((req, res, next) => {
         if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
             res.redirect('https://' + req.headers.host + req.url);
         } else {
@@ -41,11 +41,11 @@ app.use(express.static(__dirname + '/../public'));
 app.use(favicon(__dirname + '/../public/images/favicon.ico'));
 
 // Handle posted positions
-app.post('/location/gpx', function (req, res) {
+app.post('/location/gpx', (req, res) => {
     webhook.processLocation(req, res, 'gpx');
 });
 
-app.post('/location/locative', function (req, res) {
+app.post('/location/locative', (req, res) => {
     webhook.processLocation(req, res, 'locative');
 });
 
@@ -88,11 +88,11 @@ app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 
 // Passport session set-up
-passport.serializeUser(function (user, done) {
+passport.serializeUser((user, done) => {
     done(null, user.user_id);
 });
 
-passport.deserializeUser(async function (req, id, done) {
+passport.deserializeUser(async (req, id, done) => {
     const queryRes = await usr.getUserByField('user_id', id);
     if (queryRes.rowCount === 0) {
         done(null, {});
@@ -102,11 +102,11 @@ passport.deserializeUser(async function (req, id, done) {
 });
 
 passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'password', passReqToCallback: true},
-    async function (req, username, password, done) {
+    async (req, username, password, done) => {
         const queryRes = await usr.getUserByField('username', username);
         if (queryRes.rowCount === 0) {
             req.flash('error', 'No such user');
-            req.session.save(function (err) {
+            req.session.save(() => {
                 return done(null, false);
             });
         } else {
@@ -115,7 +115,7 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
                 return done(null, queryRes.rows[0]);
             } else {
                 req.flash('error', 'Wrong password');
-                req.session.save(function (err) {
+                req.session.save(() => {
                     return done(null, false);
                 });
             }
@@ -130,7 +130,7 @@ app.use('/api/v1', apiRoutes);
 
 function allUp() {
     if (db.checkDbUp()) {
-        var server = app.listen(port);
+        let server = app.listen(port);
 
         db.startMaintenance();
         livesvr.start(server);
@@ -144,4 +144,3 @@ function allUp() {
 }
 
 allUp();
-

@@ -6,7 +6,7 @@ const usr = require('../src/user.js');
 const dev = require('../src/device.js');
 const mqtt = require('../src/mqtt.js');
 
-var router = express.Router();
+const router = express.Router();
 
 function isNumber(num) {
     if(parseInt(num) == num || parseFloat(num) == num) {
@@ -45,27 +45,27 @@ function ensureAuthenticated(req, res, next) {
     } else {
         // if the user is not authenticated then redirect him to the login page
         req.flash('error', 'Login required');
-        req.session.save(function (err) {
+        req.session.save(() => {
             res.redirect('/');
         });
     }
 }
 
-module.exports = function (passport) {
+module.exports = (passport) => {
 
     // GET login page
-    router.get('/', function (req, res) {
+    router.get('/', (req, res) => {
         // Save the remote IP address in the session store
         req.session.remoteIP = req.ip;
-        req.session.save(function (err) {
+        req.session.save(() => {
             res.render('landing', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash()});
         });
     });
 
-    router.post('/login', passport.authenticate('local', {failureRedirect: '/'}), function (req, res) {
+    router.post('/login', passport.authenticate('local', {failureRedirect: '/'}), (req, res) => {
         let token = getToken(req.user);
         // Wait for the authentication result is stored in the session, otherwise ensureAuthenticated() may fail
-        req.session.save(function (err) {
+        req.session.save(() => {
             res
                 .location('/main')
                 .status(302)
@@ -77,7 +77,7 @@ module.exports = function (passport) {
     });
 
     // GET Registration Page
-    router.get('/signup', function (req, res) {
+    router.get('/signup', (req, res) => {
         res.render('register', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash()});
     });
 
@@ -89,13 +89,13 @@ module.exports = function (passport) {
     }));
 
     // GET Start Page
-    router.get('/main', ensureAuthenticated, function (req, res) {
+    router.get('/main', ensureAuthenticated, (req, res) => {
         res.render('main', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user});
     });
 
     // Handle Logout
-    router.get('/signout', function (req, res) {
-        req.session.destroy(function (err) {
+    router.get('/signout', (req, res) => {
+        req.session.destroy(() => {
             req.logOut();
             res.redirect('/');
         });
@@ -114,7 +114,7 @@ module.exports = function (passport) {
 
     // Handle change details POST
     router.post('/changedetails', ensureAuthenticated, async (req, res) => {
-        var modUser = {};
+        let modUser = {};
         modUser.user_id = parseInt(req.body.user_id);
         modUser.username = req.body.username;
         modUser.fullname = req.body.fullname;
@@ -177,7 +177,7 @@ module.exports = function (passport) {
 
     // Handle change devices POST
     router.post('/changedevices', ensureAuthenticated, async (req, res) => {
-        var modDevice = {};
+        let modDevice = {};
         modDevice.device_id = parseInt(req.body.device_id);
         modDevice.api_key = req.user.api_key;
         modDevice.identifier = req.body.identifier;
@@ -258,7 +258,7 @@ module.exports = function (passport) {
     });
 
     // GET Change Password Page
-    router.get('/changepassword', ensureAuthenticated, function (req, res) {
+    router.get('/changepassword', ensureAuthenticated, (req, res) => {
         res.render('changepassword', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user});
     });
 

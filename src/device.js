@@ -87,7 +87,7 @@ async function changeDevice(modDevice) {
 }
 
 function splitDeviceIdentity(devIdent, dividerChar) {
-    var dividerIdx, identityObj = {};
+    let dividerIdx, identityObj = {};
 
     // Return object with API key and identifier. A valid identity returns err = null, otherwise err = <error string>
     identityObj.apiKey = null;
