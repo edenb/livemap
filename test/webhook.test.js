@@ -106,10 +106,10 @@ describe('Webhook', () => {
 });
 
 describe('Remove test user from database', () => {
-    describe('#findUserByUsername', () => {
+    describe('#getUserByUsername', () => {
         it('should return 1 user', async () => {
             try {
-                const queryRes = await db.queryDbAsync('findUserByUsername', [testUser.username]);
+                const queryRes = await db.queryDbAsync('getUserByUsername', [testUser.username]);
                 if (queryRes.rowCount > 0) {
                     testUser_Id = queryRes.rows[0].user_id;
                 } else {
@@ -122,10 +122,10 @@ describe('Remove test user from database', () => {
         });   
     });
 
-    describe('#findDevicesByUser', () => {
+    describe('#getDevicesByUserId', () => {
         it('should return 4 devices', async () => {
             try {
-                const queryRes = await db.queryDbAsync('findDevicesByUser', [testUser_Id]);
+                const queryRes = await db.queryDbAsync('getDevicesByUserId', [testUser_Id]);
                 if (queryRes.rowCount > 0) {
                     queryRes.rows.forEach((element) => {
                         testDevice_Id.push(element.device_id);

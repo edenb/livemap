@@ -16,7 +16,7 @@ class Validator {
         // Save the scope for later use.
         let self = this;
         this._schemaName = schemaName;
-        fs.readFile('./schemas/' + schemaName + '.json', function (err,data) {
+        fs.readFile('./schemas/' + schemaName + '.json', (err,data) => {
             if (err) {
                 self._schemaValid = false;
                 logger.error('Validator <' + self._schemaName + '>: ' + err);

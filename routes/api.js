@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const usr = require('../src/user.js');
 const dev = require('../src/device.js');
 
-var router = express.Router();
+const router = express.Router();
 
 function checkScopes(scopes) {
     return (req, res, next) => {
@@ -28,7 +28,7 @@ function checkScopes(scopes) {
     }
 }
 
-module.exports = function () {
+module.exports = () => {
     router.get('/', (req, res) => {
         res.status(200).send('API is up');
     });
@@ -36,32 +36,37 @@ module.exports = function () {
     router.get ('/users', checkScopes(['users']), async (req, res) => {
         const queryRes = await usr.getAllUsers();
         if (typeof queryRes.userMessage !== 'undefined') {
-            res.status(404).send(`Not found. ${queryRes.userMessage}`);
+            res.status(500).send(`Internal Server Error`);
         } else {
             res.status(200).send(queryRes.rows);
         }
     });
 
     router.get ('/users/:userId', checkScopes(['users']), async (req, res) => {
-        const queryRes = await usr.findUser('id', req.params.userId);
-        if (typeof queryRes.userMessage !== 'undefined') {
-            res.status(404).send(`Not found. ${queryRes.userMessage}`);
+        const userId = parseInt(req.params.userId);
+        if (!Number.isInteger(userId)) {
+            res.status(400).send(`Bad Request`);
         } else {
-            res.status(200).send(queryRes.rows);
+            const queryRes = await usr.getUserByField('user_id', userId);
+            if (typeof queryRes.userMessage !== 'undefined') {
+                res.status(500).send(`Internal Server Error`);
+            } else {
+                res.status(200).send(queryRes.rows);
+            }
         }
     });
 
     router.get ('/devices', checkScopes(['devices']), async (req, res) => {
         const queryRes = await dev.getAllDevices();
         if (typeof queryRes.userMessage !== 'undefined') {
-            res.status(404).send(`Not found. ${queryRes.userMessage}`);
+            res.status(500).send(`Internal Server Error`);
         } else {
             res.status(200).send(queryRes.rows);
         }
     });
 
     // This middleware always at the end to catch undefined endpoints
-    router.use('*', function(req, res) {
+    router.use('*', (req, res) => {
         res.status(404).send('Invalid endpoint');
     });
 
