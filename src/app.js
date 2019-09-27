@@ -61,7 +61,9 @@ app.enable('trust proxy');
 
 // Sessions stored in database
 db.bindStore(session);
-app.use(session({
+// Don't use sessions for API calls,
+// i.e. a token is given in the header (Authorization: <some_token>)
+const sessionMiddleware = session({
     name: config.get('sessions.name'),
     store: db.getStore(),
     secret: config.get('sessions.secret'),
@@ -69,7 +71,14 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     unset: 'keep'     // Or destroy?
-}));
+});
+
+app.use((req, res, next) => {
+    if (req.headers.authorization) {
+        return next();
+    }
+    return sessionMiddleware(req, res, next);
+});
 
 // Set-up flash messages stored in session
 app.use(flash());
