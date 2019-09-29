@@ -93,7 +93,7 @@ async function changeDetails(user, modUser) {
         queryRes.userMessage = userMessage;
         return queryRes;
     }
-    if (modUser.user_id === 0) {
+    if (typeof modUser.user_id === 'undefined' || modUser.user_id === 0) {
         try {
             queryRes = await db.queryDbAsync('insertUser', [modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
         } catch(err) {
