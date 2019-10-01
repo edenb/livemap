@@ -55,6 +55,18 @@ function isInputDataValid(gpsData) {
     return isValid;
 }
 
+function getUserIdFromSession(sid) {
+    return new Promise ((resolve, reject) => {
+        db.getStore().get(sid, (error, session) => {
+            if (session && session.passport && typeof session.passport.user !== 'undefined') {
+                resolve(session.passport.user);
+            } else {
+                reject();
+            }
+        });
+    });
+}
+
 //
 // Exported modules
 //
@@ -79,36 +91,19 @@ function start(server) {
 
     // On a new socket connection add the user information to the socket
     io.sockets.on('connection', async (socket) => {
-        let queryRes1;
         try {
-            queryRes1 = await db.queryDbAsync('findSessionById', [socket.sessionID]);
-        } catch(err) {
-            logger.error(`Unable to connect a socket.`);
-        }
-        if (queryRes1.rowCount !== 0 && typeof queryRes1.rows[0].sess.passport.user !== 'undefined') {
-            const queryRes2 = await usr.getUserByField('user_id', queryRes1.rows[0].sess.passport.user);
-            if (queryRes2.rowCount !== 0) {
-                socket.user = queryRes2.rows[0];
-                socketClients.push(socket);
-                logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
-                socket.emit('loginSuccess', {numClients: socketClients.length, fullName: socket.user.fullname});
+            const userId = await getUserIdFromSession(socket.sessionID);
+            const queryRes = await usr.getUserByField('user_id', userId);
+            if (queryRes.rowCount === 0) {
+                throw new Error();
             }
+            socket.user = queryRes.rows[0];
+            socketClients.push(socket);
+            logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
+            socket.emit('loginSuccess', {numClients: socketClients.length, fullName: socket.user.fullname});
+        } catch(error) {
+            // Ignore socket connections with unknown/invalid session ID
         }
-
-//        socket.on('startPosStream', async () => {
-//            let queryRes;
-//            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
-//                try {
-//                    queryRes = await db.queryDbAsync('getAllowedDevices', [socket.user.user_id]);
-//                } catch(err) {
-//                    logger.error(`Unable to start a socket stream.`);
-//                }
-//                socket.devices = [];
-//                for (let i = 0; i < queryRes.rowCount; i += 1) {
-//                    socket.devices.push(queryRes.rows[i].device_id);
-//                }
-//            }
-//        });
 
         socket.on('getLastPositions', async function () {
             if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
