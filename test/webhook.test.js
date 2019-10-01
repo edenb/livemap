@@ -2,7 +2,8 @@
 const chai = require('chai');
 const chaihttp = require('chai-http');
 const express = require('express');
-const db = require('../src/db.js');
+const usr = require('../src/user.js');
+const dev = require('../src/device.js');
 const webhook = require('../src/webhook.js');
 
 chai.use(chaihttp);
@@ -18,23 +19,22 @@ app.post('/location/locative', (req, res) => {
     webhook.processLocation(req, res, 'locative');
 });
 
-// Setup database
-const testUser = {
+// Setup user
+let testUser = {
     username: 'testuser_webhook',
-    fullName: 'User Webhook',
+    fullname: 'User Webhook',
     email: 'test@user1',
     role: 'user',
     api_key: 'testkey'
 };
 
-let testUser_Id = null;
-let testDevice_Id = [];
+let testDevices = [];
 
-describe('Setup test user for database', () => {
-    describe('#insertUser', () => {
+describe('Setup test user', () => {
+    describe('#changeDetails', () => {
         it('should create 1 user', async () => {
             try {
-                const queryRes = await db.queryDbAsync('insertUser', [testUser.username, testUser.fullName, testUser.email, testUser.role, testUser.api_key]);
+                const queryRes = await usr.changeDetails(0, testUser);
                 queryRes.rowCount.should.equal(1);
             } catch(err) {
                 throw new Error(err.message);
@@ -46,7 +46,7 @@ describe('Setup test user for database', () => {
 describe('Webhook', () => {
     describe('/post gpx with valid location data in query string parameters', () => {
         it('should respond with HTTP status 200', (done) => {
-            let testQueryString = 'device_id=testkey_testdevice1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
+            const testQueryString = 'device_id=testkey_testdevice1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
             chai.request(app)
             .post('/location/gpx?' + testQueryString)
             .send('')
@@ -58,7 +58,7 @@ describe('Webhook', () => {
     });
     describe('/post gpx with valid location data in body', () => {
         it('should respond with HTTP status 200', (done) => {
-            let testQueryString = 'device_id=testkey_testdevice2&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
+            const testQueryString = 'device_id=testkey_testdevice2&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
             chai.request(app)
             .post('/location/gpx')
             .send(testQueryString)
@@ -81,7 +81,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with valid location data in query string parameters', () => {
         it('should respond with HTTP status 200', (done) => {
-            let testQueryString = 'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=testkey&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
+            const testQueryString = 'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=testkey&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
             chai.request(app)
             .post('/location/locative?' + testQueryString)
             .send('')
@@ -93,7 +93,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with valid location data in body', () => {
         it('should respond with HTTP status 200', (done) => {
-            let testQueryString = 'device=12345678-ABCD-1234-ABCD-123456789ABD&device_model=iPad5%2C4&device_type=iOS&id=testkey&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
+            const testQueryString = 'device=12345678-ABCD-1234-ABCD-123456789ABD&device_model=iPad5%2C4&device_type=iOS&id=testkey&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
             chai.request(app)
             .post('/location/locative')
             .send(testQueryString)
@@ -105,15 +105,13 @@ describe('Webhook', () => {
     });
 });
 
-describe('Remove test user from database', () => {
-    describe('#getUserByUsername', () => {
+describe('Remove test user including owned devices', () => {
+    describe('#getUserByField', () => {
         it('should return 1 user', async () => {
             try {
-                const queryRes = await db.queryDbAsync('getUserByUsername', [testUser.username]);
+                const queryRes = await usr.getUserByField('username', testUser.username);
                 if (queryRes.rowCount > 0) {
-                    testUser_Id = queryRes.rows[0].user_id;
-                } else {
-                    testUser_Id = null;
+                    testUser = queryRes.rows[0];
                 }
                 queryRes.rowCount.should.equal(1);
             } catch(err) {
@@ -122,17 +120,11 @@ describe('Remove test user from database', () => {
         });   
     });
 
-    describe('#getDevicesByUserId', () => {
+    describe('#getDevicesByField', () => {
         it('should return 4 devices', async () => {
             try {
-                const queryRes = await db.queryDbAsync('getDevicesByUserId', [testUser_Id]);
-                if (queryRes.rowCount > 0) {
-                    queryRes.rows.forEach((element) => {
-                        testDevice_Id.push(element.device_id);
-                    });
-                } else {
-                    testDevice_Id = [];
-                }
+                const queryRes = await dev.getDevicesByField('user_id', testUser.user_id);
+                testDevices = queryRes.rows;
                 queryRes.rowCount.should.equal(4);
             } catch(err) {
                 throw new Error(err.message);
@@ -140,10 +132,14 @@ describe('Remove test user from database', () => {
         });   
     });
 
-    describe('#deleteDevices', () => {
+    describe('#deleteDevicesById', () => {
         it('should delete 4 devices', async () => {
             try {
-                const queryRes = await db.queryDbAsync('deleteDevices', [testDevice_Id]);
+                let ids = [];
+                testDevices.forEach((element) => {
+                    ids.push(element.device_id);
+                });
+                const queryRes = await dev.deleteDevicesById(ids);
                 queryRes.rowCount.should.equal(4);
             } catch(err) {
                 throw new Error(err.message);
@@ -154,7 +150,7 @@ describe('Remove test user from database', () => {
     describe('#deleteUser', () => {
         it('should delete 1 user', async () => {
             try {
-                const queryRes = await db.queryDbAsync('deleteUser', [testUser_Id]);
+                const queryRes = await usr.deleteUser(0, testUser);
                 queryRes.rowCount.should.equal(1);
             } catch(err) {
                 throw new Error(err.message);

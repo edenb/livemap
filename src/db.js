@@ -2,6 +2,7 @@
 const config = require('config');
 const { Pool } = require('pg');
 const pgStore = require('connect-pg-simple');
+const memoryStore = require('memorystore');
 const dbcache = require('./dbcache');
 const fs = require('fs');
 const logger = require('./logger.js');
@@ -133,8 +134,18 @@ async function queryDbFromFile(fileName) {
 // Sessions
 //
 
-function bindStore(session) {
-    sessionStore = new(pgStore(session))({tableName: config.get('sessions.tableName'), pool: pgPool});
+function bindStore(session, type) {
+    switch (type) {
+        case 'memory':
+            sessionStore = new(memoryStore(session))({checkPeriod: 2*86400000});
+            break;
+        case 'pg':
+            sessionStore = new(pgStore(session))({tableName: config.get('sessions.tableName'), pool: pgPool});
+            break;
+        default:
+            sessionStore = new(memoryStore(session))({checkPeriod: 2*86400000});
+            break;
+    }
 }
 
 function getStore() {

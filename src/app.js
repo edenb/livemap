@@ -59,8 +59,8 @@ app.use(bodyParser.json()); // get information from html forms
 app.use(bodyParser.urlencoded({extended: true}));
 app.enable('trust proxy');
 
-// Sessions stored in database
-db.bindStore(session);
+// Sessions stored in 'memory' or 'pg' (database)
+db.bindStore(session, 'memory');
 // Don't use sessions for API calls,
 // i.e. a token is given in the header (Authorization: <some_token>)
 const sessionMiddleware = session({
