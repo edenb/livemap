@@ -8,8 +8,15 @@ const router = express.Router();
 
 function checkScopes(scopes) {
     return (req, res, next) => {
+        // Get the token from the header (API requests) or from the session (web client requests)
+        let token = '';
         if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-            let token = req.headers.authorization.split(' ')[1];
+            token = req.headers.authorization.split(' ')[1];
+        }
+        if (req.isAuthenticated() && req.session && req.session.token) {
+            token = req.session.token;
+        }
+        if (token !== '') {
             try {
                 let options = {algorithm: 'HS512'};
                 let decoded = jwt.verify(token, 'replacebysecretfromconfig', options);

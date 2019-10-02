@@ -64,6 +64,7 @@ module.exports = (passport) => {
 
     router.post('/login', passport.authenticate('local', {failureRedirect: '/'}), (req, res) => {
         let token = getToken(req.user);
+        req.session.token = token;
         // Wait for the authentication result is stored in the session, otherwise ensureAuthenticated() may fail
         req.session.save(() => {
             res
