@@ -4,7 +4,7 @@ var socket_protocol = location.protocol;
 var socket_url = socket_protocol + '//' + socket_host + ':' + socket_port;
 var socket;
 
-var map, hash, devices = [], markerLayer, overlayList = [];
+var map, devices = [], markerLayer, overlayList = [], controlLayerSwitch = {};
 var mapAttr = {};
 var loc_type_str = {
     'rec': 'Recorded',
@@ -197,7 +197,7 @@ function initMap() {
         attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     // Add hash with zoom level and coordinates to URL
-    hash = new L.Hash(map);
+    new L.Hash(map);
     map.on('moveend', onMapChange);
     // Add a layer to show the locations of the devices
     markerLayer = new L.FeatureGroup();
@@ -216,7 +216,8 @@ function initSocket() {
 
     socket.on('loginSuccess', function (obj) {
         socket.emit('getLastPositions');
-        socket.emit('getStaticLayers');
+        // Loading of static layers with socketIO replaced by REST API request
+        //socket.emit('getStaticLayers');
         socket.emit('startGpxPlayer');
     });
 
@@ -239,7 +240,7 @@ function initSocket() {
     });
 
     socket.on('staticLayers', function (geojsonString) {
-        geojsonData = JSON.parse(geojsonString)
+        geojsonData = JSON.parse(geojsonString);
         staticLayer = L.geoJson(geojsonData, {
             pointToLayer: function (feature, latlng) {
                 var staticMarker = L.marker(latlng, {zIndexOffset:-1000});
@@ -295,7 +296,70 @@ function initSocket() {
     });
 }
 
+function getStaticLayerData(callback) {
+    var url = "/api/v1/staticlayers";
+    $.ajax({
+        url: url,
+        method: "GET"
+    }).done(function(staticLayerData){
+        callback(staticLayerData);
+    }).fail(function(){
+        callback([]);
+    });
+}
+
+function loadStaticLayers() {
+    getStaticLayerData((staticLayerData) => {
+        let staticLayer = L.geoJson(staticLayerData, {
+            pointToLayer: function (feature, latlng) {
+                var staticMarker = L.marker(latlng, {zIndexOffset:-1000});
+                var customIcon = L.AwesomeMarkers.icon({icon: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.icon) || 'star',
+                                                        prefix: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.prefix) || 'fa',
+                                                        markerColor: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.markercolor) || 'green',
+                                                        iconColor: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.iconcolor) || 'white',
+                                                        spin: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.spin) || false});
+                staticMarker.setIcon(customIcon);
+                staticMarker.setOpacity((staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.opacity) || 0.8);
+                return staticMarker;
+            },
+            style: function(feature) {
+                // Only apply style to (multi)lines and polygons
+                if (feature.geometry.type !== 'Point') {
+                    var customStyle = {color: (staticLayerData.properties && staticLayerData.properties.line && staticLayerData.properties.line.color) || 'red', //'#ff7800',
+                                      weight: (staticLayerData.properties && staticLayerData.properties.line && staticLayerData.properties.line.weight) || 5,
+                                      opacity: (staticLayerData.properties && staticLayerData.properties.line && staticLayerData.properties.line.opacity) || 0.65};
+                    return customStyle;
+                } else {
+                    return {};
+                }
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.popup) {
+                    layer.bindPopup(feature.properties.popup);
+                }
+            }
+        });
+
+        let oName = (staticLayerData.properties && staticLayerData.properties.name) || 'Overlay';
+		let oChecked = false;
+		// If the received overlay is already in the list than remove the previous one first
+		if (typeof overlayList[oName] !== 'undefined') {
+			// Save visibility of the layer
+			oChecked = map.hasLayer(overlayList[oName]);
+			controlLayerSwitch.removeLayer(overlayList[oName]);
+			overlayList[oName].remove();
+		}
+		overlayList[oName] = staticLayer;
+        controlLayerSwitch.addOverlay(staticLayer, oName);
+		// Keep visibility of the layer after a refresh
+		if (oChecked) {
+			staticLayer.addTo(map);
+		}
+    });
+}
+
 $(document).ready(function () {
     initMap();
     initSocket();
+    loadStaticLayers();
 });

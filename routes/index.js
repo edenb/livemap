@@ -19,9 +19,9 @@ function isNumber(num) {
 
 function getScopes(user) {
     let scopesByRole = new Array();
-    scopesByRole['viewer'] = [];
-    scopesByRole['manager'] = [];
-    scopesByRole['admin'] = ['users', 'devices'];
+    scopesByRole['viewer'] = ['staticlayers'];
+    scopesByRole['manager'] = ['staticlayers'];
+    scopesByRole['admin'] = ['users', 'devices', 'staticlayers'];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];
     } else {

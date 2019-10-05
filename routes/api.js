@@ -1,6 +1,7 @@
 "use strict";
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
 const usr = require('../src/user.js');
 const dev = require('../src/device.js');
 
@@ -40,7 +41,7 @@ module.exports = () => {
         res.status(200).send('API is up');
     });
 
-    router.get ('/users', checkScopes(['users']), async (req, res) => {
+    router.get('/users', checkScopes(['users']), async (req, res) => {
         const queryRes = await usr.getAllUsers();
         if (typeof queryRes.userMessage !== 'undefined') {
             res.status(500).send(`Internal Server Error`);
@@ -49,7 +50,7 @@ module.exports = () => {
         }
     });
 
-    router.get ('/users/:userId', checkScopes(['users']), async (req, res) => {
+    router.get('/users/:userId', checkScopes(['users']), async (req, res) => {
         const userId = parseInt(req.params.userId);
         if (!Number.isInteger(userId)) {
             res.status(400).send(`Bad Request`);
@@ -63,13 +64,34 @@ module.exports = () => {
         }
     });
 
-    router.get ('/devices', checkScopes(['devices']), async (req, res) => {
+    router.get('/devices', checkScopes(['devices']), async (req, res) => {
         const queryRes = await dev.getAllDevices();
         if (typeof queryRes.userMessage !== 'undefined') {
             res.status(500).send(`Internal Server Error`);
         } else {
             res.status(200).send(queryRes.rows);
         }
+    });
+
+    router.get('/staticlayers', checkScopes(['staticlayers']), async (req, res) => {
+        fs.readdir('./staticlayers/', (err, allFiles) => {
+            let fileNameParts = [], fileExt;
+            if (err === null) {
+                allFiles.sort((a, b) => {
+                    return a < b ? -1 : 1;
+                }).forEach((fileName) => {
+                    fileNameParts = fileName.split('.');
+                    fileExt = fileNameParts[fileNameParts.length - 1];
+                    if (fileNameParts.length > 1 && fileExt == 'geojson') {
+                        fs.readFile('./staticlayers/' + fileName, 'utf8', (fileError, fileData) => {
+                            if (fileError === null) {
+                                res.status(200).type('application/json').send(fileData);
+                            }
+                        });
+                    }
+                });
+            }
+        });
     });
 
     // This middleware always at the end to catch undefined endpoints
