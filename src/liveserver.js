@@ -23,7 +23,7 @@ function isInputDataValid(gpsData) {
     // Check latitude (allowed: null, -90 < lat < 90)
     if (typeof gpsData.loc_lat !== 'undefined') {
         if (gpsData.loc_lat !== null) {
-            if (gpsData.loc_lat.trim() === '' || +gpsData.loc_lat < -90.0 || +gpsData.loc_lat > 90.0 || isNaN(+gpsData.loc_lat)) {
+            if (gpsData.loc_lat < -90.0 || gpsData.loc_lat > 90.0) {
                 isValid = false;
             }
         }
@@ -33,7 +33,7 @@ function isInputDataValid(gpsData) {
     // Check longitude (allowed: null, -180 < lon < 180)
     if (typeof gpsData.loc_lon !== 'undefined') {
         if (gpsData.loc_lon !== null) {
-            if (gpsData.loc_lon.trim() === '' || +gpsData.loc_lon < -180.0 || +gpsData.loc_lon > 180.0 || isNaN(+gpsData.loc_lon)) {
+            if (gpsData.loc_lon < -180.0 || gpsData.loc_lon > 180.0) {
                 isValid = false;
             }
         }

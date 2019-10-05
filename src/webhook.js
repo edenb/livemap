@@ -26,8 +26,12 @@ async function processGpx(rawLocationData) {
             destData.api_key_tag = null;
             destData.identifier_tag = null;
             destData.loc_timestamp = srcData.gps_time;
-            destData.loc_lat = srcData.gps_latitude;
-            destData.loc_lon = srcData.gps_longitude;
+            try {
+                destData.loc_lat = parseFloat(srcData.gps_latitude);
+                destData.loc_lon = parseFloat(srcData.gps_longitude);
+            } catch(err) {
+                return null;
+            }
             destData.loc_type = 'rec';
             destData.loc_attr = null;
             return destData;
@@ -70,8 +74,8 @@ async function processLocative(rawLocationData) {
                 if (destDevice !== null) {
                     destData.device_id_tag = destDevice.device_id;
                     destData.alias = destDevice.alias;
-                    destData.loc_lat = destDevice.fixed_loc_lat.toString();
-                    destData.loc_lon = destDevice.fixed_loc_lon.toString();
+                    destData.loc_lat = destDevice.fixed_loc_lat;
+                    destData.loc_lon = destDevice.fixed_loc_lon;
                     destData.loc_attr = null;
                     destData.loc_type = null;
                     if ((srcData.trigger === 'enter') || (srcData.trigger === 'test')) {
@@ -101,8 +105,12 @@ async function processLocative(rawLocationData) {
                 destData.device_id_tag = null;
                 destData.alias = destDevice.alias;
                 destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
-                destData.loc_lat = srcData.latitude;
-                destData.loc_lon = srcData.longitude;
+                try {
+                    destData.loc_lat = parseFloat(srcData.latitude);
+                    destData.loc_lon = parseFloat(srcData.longitude);
+                } catch(err) {
+                    return null;
+                }
                 destData.loc_attr = null;
                 destData.loc_type = null;
                 if ((srcData.trigger === 'enter') || (srcData.trigger === 'test')) {

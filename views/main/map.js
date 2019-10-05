@@ -12,8 +12,7 @@ var loc_type_str = {
 };
 
 function getLatLngFromString(device) {
-    var lat = parseFloat(device.loc_lat), lon = parseFloat(device.loc_lon);
-    return new L.latLng(lat, lon);
+    return new L.latLng(device.loc_lat, device.loc_lon);
 }
 
 function getPopupText(dev) {
