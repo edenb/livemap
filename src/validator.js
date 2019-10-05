@@ -13,23 +13,21 @@ class Validator {
     }
 
     loadSchema(schemaName) {
-        // Save the scope for later use.
-        let self = this;
         this._schemaName = schemaName;
         fs.readFile('./schemas/' + schemaName + '.json', (err,data) => {
             if (err) {
-                self._schemaValid = false;
-                logger.error('Validator <' + self._schemaName + '>: ' + err);
+                this._schemaValid = false;
+                logger.error('Validator <' + this._schemaName + '>: ' + err);
                 return;
             }
             try {
                 var schema = JSON.parse(data);
             } catch (e) {
-                logger.error('Validator <' + self._schemaName + '>: Unexpected token in schema');
+                logger.error('Validator <' + this._schemaName + '>: Unexpected token in schema');
                 return;
             }
-            self.ajvValidate = self.ajvValidator.compile(schema);
-            self._schemaValid = true;
+            this.ajvValidate = this.ajvValidator.compile(schema);
+            this._schemaValid = true;
         });
     }
   
