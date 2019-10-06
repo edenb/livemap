@@ -8,6 +8,30 @@ const dev = require('../src/device.js');
 
 const router = express.Router();
 
+function readDir(dirName) {
+    return new Promise ((resolve, reject) => {
+        fs.readdir(dirName, (dirError, dirData) => {
+            if (dirError === null) {
+                resolve(dirData);
+            } else {
+                reject(dirError);
+            }
+        });
+    });
+}
+
+function readFile(fileName) {
+    return new Promise ((resolve, reject) => {
+        fs.readFile(fileName, 'utf8', (fileError, fileData) => {
+            if (fileError === null) {
+                resolve(fileData);
+            } else {
+                reject(fileError);
+            }
+        });
+    });
+}
+
 function checkScopes(scopes) {
     return (req, res, next) => {
         // Get the token from the header (API requests) or from the session (web client requests)
@@ -76,24 +100,25 @@ module.exports = () => {
     });
 
     router.get('/staticlayers', checkScopes(['staticlayers']), async (req, res) => {
-        fs.readdir('./staticlayers/', (err, allFiles) => {
-            let fileNameParts = [], fileExt;
-            if (err === null) {
-                allFiles.sort((a, b) => {
-                    return a < b ? -1 : 1;
-                }).forEach((fileName) => {
-                    fileNameParts = fileName.split('.');
-                    fileExt = fileNameParts[fileNameParts.length - 1];
-                    if (fileNameParts.length > 1 && fileExt == 'geojson') {
-                        fs.readFile('./staticlayers/' + fileName, 'utf8', (fileError, fileData) => {
-                            if (fileError === null) {
-                                res.status(200).type('application/json').send(fileData);
-                            }
-                        });
-                    }
-                });
+        let staticLayerList = [];
+        try {
+            let allFiles = await readDir('./staticlayers/');
+            // Sort filenames in alphabatical order
+            allFiles.sort((a, b) => {
+                return a < b ? -1 : 1;
+            });
+            for (let fileName of allFiles) {
+                let fileNameParts = fileName.split('.');
+                let fileExt = fileNameParts[fileNameParts.length - 1];
+                if (fileNameParts.length > 1 && fileExt == 'geojson') {
+                    let fileData = await readFile(`./staticlayers/${fileName}`);
+                    staticLayerList.push(fileData);
+                }
             }
-        });
+            res.status(200).type('application/json').send(staticLayerList);
+        } catch(err) {
+            res.status(200).type('application/json').send([]);
+        }
     });
 
     router.get('/positions', checkScopes(['positions']), async (req, res) => {
