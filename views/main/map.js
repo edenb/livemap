@@ -214,7 +214,8 @@ function initSocket() {
     socket = io.connect(socket_url);
 
     socket.on('loginSuccess', function (obj) {
-        socket.emit('getLastPositions');
+        // Loading of last positions with socketIO replaced by REST API request
+        //socket.emit('getLastPositions');
         // Loading of static layers with socketIO replaced by REST API request
         //socket.emit('getStaticLayers');
         socket.emit('startGpxPlayer');
@@ -295,14 +296,45 @@ function initSocket() {
     });
 }
 
+function getLastPositionsData(callback) {
+    var url = "/api/v1/positions";
+    $.ajax({
+        url: url,
+        method: "GET"
+    }).done((lastPositionsData) => {
+        callback(lastPositionsData);
+    }).fail(() => {
+        callback([]);
+    });
+}
+
+function loadLastPositions() {
+    getLastPositionsData((lastPositionData) => {
+        clearAllMarkers();
+        devices = lastPositionData;
+        for (let i = 0; i < devices.length; i += 1) {
+            if (devices[i].loc_lat !== 0 && devices[i].loc_lon !== 0) {
+                createMarker(devices[i]);
+            }
+        }
+        $('#table-locations').bootstrapTable('load', devices);
+        // Add the marker layer to the map
+        map.addLayer(markerLayer);
+        // Zoom to marker boundaries if any markers defined
+        if (markerLayer.getLayers().length > 0 && mapAttr === null) {
+            map.fitBounds(markerLayer.getBounds());
+        }
+    });
+}
+
 function getStaticLayerData(callback) {
     var url = "/api/v1/staticlayers";
     $.ajax({
         url: url,
         method: "GET"
-    }).done(function(staticLayerData){
+    }).done((staticLayerData) => {
         callback(staticLayerData);
-    }).fail(function(){
+    }).fail(() => {
         callback([]);
     });
 }
@@ -310,9 +342,9 @@ function getStaticLayerData(callback) {
 function loadStaticLayers() {
     getStaticLayerData((staticLayerData) => {
         let staticLayer = L.geoJson(staticLayerData, {
-            pointToLayer: function (feature, latlng) {
-                var staticMarker = L.marker(latlng, {zIndexOffset:-1000});
-                var customIcon = L.AwesomeMarkers.icon({icon: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.icon) || 'star',
+            pointToLayer: (feature, latlng) => {
+                let staticMarker = L.marker(latlng, {zIndexOffset:-1000});
+                let customIcon = L.AwesomeMarkers.icon({icon: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.icon) || 'star',
                                                         prefix: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.prefix) || 'fa',
                                                         markerColor: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.markercolor) || 'green',
                                                         iconColor: (staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.iconcolor) || 'white',
@@ -321,7 +353,7 @@ function loadStaticLayers() {
                 staticMarker.setOpacity((staticLayerData.properties && staticLayerData.properties.marker && staticLayerData.properties.marker.opacity) || 0.8);
                 return staticMarker;
             },
-            style: function(feature) {
+            style: (feature) => {
                 // Only apply style to (multi)lines and polygons
                 if (feature.geometry.type !== 'Point') {
                     var customStyle = {color: (staticLayerData.properties && staticLayerData.properties.line && staticLayerData.properties.line.color) || 'red', //'#ff7800',
@@ -332,7 +364,7 @@ function loadStaticLayers() {
                     return {};
                 }
             },
-            onEachFeature: function (feature, layer) {
+            onEachFeature: (feature, layer) => {
                 if (feature.properties && feature.properties.popup) {
                     layer.bindPopup(feature.properties.popup);
                 }
@@ -359,6 +391,7 @@ function loadStaticLayers() {
 
 $(document).ready(function () {
     initMap();
-    initSocket();
+    loadLastPositions();
     loadStaticLayers();
+    initSocket();
 });
