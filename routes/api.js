@@ -2,6 +2,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const db = require('../src/db.js');
 const usr = require('../src/user.js');
 const dev = require('../src/device.js');
 
@@ -21,6 +22,7 @@ function checkScopes(scopes) {
             try {
                 let options = {algorithm: 'HS512'};
                 let decoded = jwt.verify(token, 'replacebysecretfromconfig', options);
+                req.decodedToken = decoded;
                 for (let i=0; i<decoded.scopes.length; i++) {
                     for (let j=0; j<scopes.length; j++) {
                         if(scopes[j] === decoded.scopes[i]) return next();
@@ -92,6 +94,16 @@ module.exports = () => {
                 });
             }
         });
+    });
+
+    router.get('/positions', checkScopes(['positions']), async (req, res) => {
+        let queryRes = db.getEmptyQueryRes();
+        try {
+            queryRes = await db.queryDbAsync('getLastPositions', [req.decodedToken.userId]);
+        } catch(err) {
+            // On error return the initial (empty) array
+        }
+        res.status(200).type('application/json').send(queryRes.rows);
     });
 
     // This middleware always at the end to catch undefined endpoints
