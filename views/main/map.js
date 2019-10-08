@@ -342,7 +342,6 @@ function getStaticLayerData(callback) {
 function loadStaticLayers() {
     getStaticLayerData((staticLayerList) => {
         for (let staticLayerData of staticLayerList) {
-            staticLayerData = JSON.parse(staticLayerData);
             let staticLayer = L.geoJson(staticLayerData, {
                 pointToLayer: (feature, latlng) => {
                     let staticMarker = L.marker(latlng, {zIndexOffset:-1000});

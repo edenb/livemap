@@ -112,7 +112,7 @@ module.exports = () => {
                 let fileExt = fileNameParts[fileNameParts.length - 1];
                 if (fileNameParts.length > 1 && fileExt == 'geojson') {
                     let fileData = await readFile(`./staticlayers/${fileName}`);
-                    staticLayerList.push(fileData);
+                    staticLayerList.push(JSON.parse(fileData));
                 }
             }
             res.status(200).type('application/json').send(staticLayerList);
