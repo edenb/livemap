@@ -1,13 +1,13 @@
 "use strict";
-var config = require('config');
-var mqtt = require('mqtt');
-var usr = require('./user.js');
-var dev = require('./device.js');
-var livesvr = require('./liveserver.js');
-var JSONValidator = require('./validator.js');
-var logger = require('./logger.js');
+const config = require('config');
+const mqtt = require('mqtt');
+const usr = require('./user.js');
+const dev = require('./device.js');
+const livesvr = require('./liveserver.js');
+const JSONValidator = require('./validator.js');
+const logger = require('./logger.js');
 
-var MQTTvalidator = new JSONValidator('mqtt');
+const MQTTValidator = new JSONValidator('mqtt');
 
 async function processMessage(messageStr) {
     var srcData, destData = {};
@@ -22,12 +22,8 @@ async function processMessage(messageStr) {
     }
 
     if (srcData !== null) {
-        if (MQTTvalidator.validate(srcData)) {
-            // For now lat and lon are expected to be strings
-            srcData.lon = srcData.lon.toString();
-            srcData.lat = srcData.lat.toString();
-        } else {
-            logger.info('Invalid: ' + MQTTvalidator.errorsText());
+        if (!MQTTValidator.validate(srcData)) {
+            logger.info('Invalid: ' + MQTTValidator.errorsText());
             // Invalidate MQTT message
             srcData = null;
         }

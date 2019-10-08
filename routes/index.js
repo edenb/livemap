@@ -19,9 +19,9 @@ function isNumber(num) {
 
 function getScopes(user) {
     let scopesByRole = new Array();
-    scopesByRole['viewer'] = [];
-    scopesByRole['manager'] = [];
-    scopesByRole['admin'] = ['users', 'devices'];
+    scopesByRole['viewer'] = ['positions', 'staticlayers'];
+    scopesByRole['manager'] = ['positions', 'staticlayers'];
+    scopesByRole['admin'] = ['users', 'devices', 'positions', 'staticlayers'];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];
     } else {
@@ -32,7 +32,7 @@ function getScopes(user) {
 function getToken(user) {
     let options = {algorithm: 'HS512'};
     let scopes = getScopes(user);
-    let token = jwt.sign({user: user.username, scopes: scopes}, 'replacebysecretfromconfig', options);
+    let token = jwt.sign({userId: user.user_id, scopes: scopes}, 'replacebysecretfromconfig', options);
     return token;
 }
 
@@ -64,6 +64,7 @@ module.exports = (passport) => {
 
     router.post('/login', passport.authenticate('local', {failureRedirect: '/'}), (req, res) => {
         let token = getToken(req.user);
+        req.session.token = token;
         // Wait for the authentication result is stored in the session, otherwise ensureAuthenticated() may fail
         req.session.save(() => {
             res
