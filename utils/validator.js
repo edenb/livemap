@@ -1,7 +1,7 @@
 "use strict";
 var ajv = require('ajv');
 var fs = require('fs');
-var logger = require('./logger.js');
+var logger = require('./logger');
 
 class Validator {
     constructor(schemaName) {

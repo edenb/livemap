@@ -1,9 +1,9 @@
 "use strict";
 const qs = require('querystring');
-const usr = require('./user.js');
-const dev = require('./device.js');
-const livesvr = require('./liveserver.js');
-const logger = require('./logger.js');
+const usr = require('../models/user');
+const dev = require('../models/device');
+const livesvr = require('./liveserver');
+const logger = require('../utils/logger');
 
 async function processGpx(rawLocationData) {
     let srcData = {}, destData = {}, identObj = '';

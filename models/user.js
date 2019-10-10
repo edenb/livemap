@@ -1,8 +1,8 @@
 "use strict";
 const config = require('config');
-const db = require('./db.js');
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
+const db = require('../database/db');
 
 // In memory list of all users with their attributes
 var users = [];

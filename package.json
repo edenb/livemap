@@ -47,8 +47,8 @@
   },
   "scripts": {
     "test": "nyc mocha --recursive test",
-    "start": "node src/app.js",
-    "lint": "eslint src/*.js"
+    "start": "node app.js",
+    "lint": "eslint app.js models services database routes utils test"
   },
   "author": "edenb",
   "license": "MIT"

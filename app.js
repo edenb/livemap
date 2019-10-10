@@ -8,12 +8,12 @@ const flash = require('connect-flash');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const db = require('./db.js');
-const usr = require('./user.js');
-const livesvr = require('./liveserver.js');
-const webhook = require('./webhook.js');
-const mqtt = require('./mqtt.js');
-const logger = require('./logger.js');
+const db = require('./database/db');
+const usr = require('./models/user');
+const livesvr = require('./services/liveserver');
+const webhook = require('./services/webhook');
+const mqtt = require('./services/mqtt');
+const logger = require('./utils/logger');
 
 const port = config.get('server.port');
 
@@ -36,9 +36,9 @@ if (config.get('server.forceSSL') === 'true') {
 }
 
 // Static route for JavaScript libraries, css files, etc.
-app.use(express.static(__dirname + '/../public'));
+app.use(express.static(__dirname + '/public'));
 
-app.use(favicon(__dirname + '/../public/images/favicon.ico'));
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 // Handle posted positions
 app.post('/location/gpx', (req, res) => {
@@ -50,7 +50,7 @@ app.post('/location/locative', (req, res) => {
 });
 
 // View engine set-up
-app.set('views', __dirname + '/../views');
+app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
@@ -123,8 +123,8 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
     })
 );
 
-let indexRoutes = require('../routes/index')(passport);
-let apiRoutes = require('../routes/api')();
+let indexRoutes = require('./routes/index')(passport);
+let apiRoutes = require('./routes/api')();
 app.use('/', indexRoutes);
 app.use('/api/v1', apiRoutes);
 

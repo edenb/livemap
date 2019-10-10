@@ -2,9 +2,9 @@ const config = require('config');
 const express = require('express');
 require('connect-flash');
 const jwt = require('jsonwebtoken');
-const usr = require('../src/user.js');
-const dev = require('../src/device.js');
-const mqtt = require('../src/mqtt.js');
+const usr = require('../models/user');
+const dev = require('../models/device');
+const mqtt = require('../services/mqtt');
 
 const router = express.Router();
 

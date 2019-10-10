@@ -1,11 +1,11 @@
 "use strict";
 const config = require('config');
 const mqtt = require('mqtt');
-const usr = require('./user.js');
-const dev = require('./device.js');
-const livesvr = require('./liveserver.js');
-const JSONValidator = require('./validator.js');
-const logger = require('./logger.js');
+const usr = require('../models/user');
+const dev = require('../models/device');
+const livesvr = require('./liveserver');
+const JSONValidator = require('../utils/validator');
+const logger = require('../utils/logger');
 
 const MQTTValidator = new JSONValidator('mqtt');
 

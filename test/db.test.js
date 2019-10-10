@@ -1,6 +1,6 @@
 "use strict";
 require('chai').should();
-const db = require('../src/db.js');
+const db = require('../database/db');
 
 const testUser = {
     username: 'testuser1',

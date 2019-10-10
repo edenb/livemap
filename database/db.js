@@ -3,9 +3,9 @@ const config = require('config');
 const { Pool } = require('pg');
 const pgStore = require('connect-pg-simple');
 const memoryStore = require('memorystore');
-const dbcache = require('./dbcache');
 const fs = require('fs');
-const logger = require('./logger.js');
+const dbcache = require('./dbcache');
+const logger = require('../utils/logger');
 
 var sessionStore;
 var queryDef = [];
