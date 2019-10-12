@@ -1,6 +1,6 @@
 "use strict";
-const db = require('./db.js');
-const logger = require('./logger.js');
+const db = require('../database/db');
+const logger = require('../utils/logger');
 
 var devices = [];
 

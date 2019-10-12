@@ -2,20 +2,16 @@
 const config = require('config');
 const express = require('express');
 const favicon = require('serve-favicon');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
 const flash = require('connect-flash');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const db = require('./db.js');
-const usr = require('./user.js');
-const livesvr = require('./liveserver.js');
-const webhook = require('./webhook.js');
-const mqtt = require('./mqtt.js');
-const logger = require('./logger.js');
-
-const port = config.get('server.port');
+const passport = require('./auth/passport');
+const db = require('./database/db');
+const livesvr = require('./services/liveserver');
+const webhook = require('./services/webhook');
+const mqtt = require('./services/mqtt');
+const logger = require('./utils/logger');
 
 //
 // Application
@@ -36,9 +32,9 @@ if (config.get('server.forceSSL') === 'true') {
 }
 
 // Static route for JavaScript libraries, css files, etc.
-app.use(express.static(__dirname + '/../public'));
+app.use(express.static(__dirname + '/public'));
 
-app.use(favicon(__dirname + '/../public/images/favicon.ico'));
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 // Handle posted positions
 app.post('/location/gpx', (req, res) => {
@@ -50,7 +46,7 @@ app.post('/location/locative', (req, res) => {
 });
 
 // View engine set-up
-app.set('views', __dirname + '/../views');
+app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
@@ -83,53 +79,18 @@ app.use((req, res, next) => {
 // Set-up flash messages stored in session
 app.use(flash());
 
-// Set-up authentication
+// Set-up authentication with persistent login sessions
 app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
+app.use(passport.session());
 
-// Passport session set-up
-passport.serializeUser((user, done) => {
-    done(null, user.user_id);
-});
-
-passport.deserializeUser(async (req, id, done) => {
-    const queryRes = await usr.getUserByField('user_id', id);
-    if (queryRes.rowCount === 0) {
-        done(null, {});
-    } else {
-        done(null, queryRes.rows[0]);
-    }
-});
-
-passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'password', passReqToCallback: true},
-    async (req, username, password, done) => {
-        const queryRes = await usr.getUserByField('username', username);
-        if (queryRes.rowCount === 0) {
-            req.flash('error', 'No such user');
-            req.session.save(() => {
-                return done(null, false);
-            });
-        } else {
-            const authOK = await usr.checkPassword(queryRes.rows[0], password);
-            if (authOK) {
-                return done(null, queryRes.rows[0]);
-            } else {
-                req.flash('error', 'Wrong password');
-                req.session.save(() => {
-                    return done(null, false);
-                });
-            }
-        }
-    })
-);
-
-let indexRoutes = require('../routes/index')(passport);
-let apiRoutes = require('../routes/api')();
+let indexRoutes = require('./routes/index')(passport);
+let apiRoutes = require('./routes/api')();
 app.use('/', indexRoutes);
 app.use('/api/v1', apiRoutes);
 
 function allUp() {
     if (db.checkDbUp()) {
+        const port = config.get('server.port');
         let server = app.listen(port);
 
         db.startMaintenance();

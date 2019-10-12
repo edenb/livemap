@@ -2,9 +2,9 @@
 const chai = require('chai');
 const chaihttp = require('chai-http');
 const express = require('express');
-const usr = require('../src/user.js');
-const dev = require('../src/device.js');
-const webhook = require('../src/webhook.js');
+const usr = require('../models/user');
+const dev = require('../models/device');
+const webhook = require('../services/webhook');
 
 chai.use(chaihttp);
 

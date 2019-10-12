@@ -3,10 +3,10 @@ var config = require('config');
 var io = require('socket.io');
 var cookieParser = require('cookie-parser');
 var fs = require('fs');
-var gp = require('./gpxplayer.js');
-var db = require('./db.js');
-var usr = require('./user.js');
-var logger = require('./logger.js');
+var gp = require('./gpxplayer');
+var db = require('../database/db');
+var usr = require('../models/user');
+var logger = require('../utils/logger');
 
 var socketClients = [];
 

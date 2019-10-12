@@ -5,7 +5,7 @@ var url = require('url');
 var qs = require('querystring');
 var fs = require('fs');
 var gpxParse = require("gpx-parse");
-var logger = require('./logger.js');
+var logger = require('../utils/logger');
 
 var port = config.get('server.port');
 var gpxTracks = [];
