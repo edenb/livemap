@@ -1,7 +1,7 @@
 "use strict";
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const fs = require('fs');
+const jwt = require('../auth/jwt');
 const db = require('../database/db');
 const usr = require('../models/user');
 const dev = require('../models/device');
@@ -32,42 +32,12 @@ function readFile(fileName) {
     });
 }
 
-function checkScopes(scopes) {
-    return (req, res, next) => {
-        // Get the token from the header (API requests) or from the session (web client requests)
-        let token = '';
-        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-            token = req.headers.authorization.split(' ')[1];
-        }
-        if (req.isAuthenticated() && req.session && req.session.token) {
-            token = req.session.token;
-        }
-        if (token !== '') {
-            try {
-                let options = {algorithm: 'HS512'};
-                let decoded = jwt.verify(token, 'replacebysecretfromconfig', options);
-                req.decodedToken = decoded;
-                for (let i=0; i<decoded.scopes.length; i++) {
-                    for (let j=0; j<scopes.length; j++) {
-                        if(scopes[j] === decoded.scopes[i]) return next();
-                    }
-                }
-                res.status(401).send('Unauthorized. Invalid scope');
-            } catch(err) {
-                res.status(401).send('Unauthorized. Invalid token');
-            }
-        } else {
-            res.status(401).send('Unauthorized. Token required');
-        }
-    }
-}
-
 module.exports = () => {
     router.get('/', (req, res) => {
         res.status(200).send('API is up');
     });
 
-    router.get('/users', checkScopes(['users']), async (req, res) => {
+    router.get('/users', jwt.checkScopes(['users']), async (req, res) => {
         const queryRes = await usr.getAllUsers();
         if (typeof queryRes.userMessage !== 'undefined') {
             res.status(500).send(`Internal Server Error`);
@@ -76,7 +46,7 @@ module.exports = () => {
         }
     });
 
-    router.get('/users/:userId', checkScopes(['users']), async (req, res) => {
+    router.get('/users/:userId', jwt.checkScopes(['users']), async (req, res) => {
         const userId = parseInt(req.params.userId);
         if (!Number.isInteger(userId)) {
             res.status(400).send(`Bad Request`);
@@ -90,7 +60,7 @@ module.exports = () => {
         }
     });
 
-    router.get('/devices', checkScopes(['devices']), async (req, res) => {
+    router.get('/devices', jwt.checkScopes(['devices']), async (req, res) => {
         const queryRes = await dev.getAllDevices();
         if (typeof queryRes.userMessage !== 'undefined') {
             res.status(500).send(`Internal Server Error`);
@@ -99,7 +69,7 @@ module.exports = () => {
         }
     });
 
-    router.get('/staticlayers', checkScopes(['staticlayers']), async (req, res) => {
+    router.get('/staticlayers', jwt.checkScopes(['staticlayers']), async (req, res) => {
         let staticLayerList = [];
         try {
             let allFiles = await readDir('./staticlayers/');
@@ -121,7 +91,7 @@ module.exports = () => {
         }
     });
 
-    router.get('/positions', checkScopes(['positions']), async (req, res) => {
+    router.get('/positions', jwt.checkScopes(['positions']), async (req, res) => {
         let queryRes = db.getEmptyQueryRes();
         try {
             queryRes = await db.queryDbAsync('getLastPositions', [req.decodedToken.userId]);
