@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var fs = require('fs');
 var gp = require('./gpxplayer');
 var db = require('../database/db');
-var usr = require('../models//user');
+var usr = require('../models/user');
 var logger = require('../utils/logger');
 
 var socketClients = [];
