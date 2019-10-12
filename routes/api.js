@@ -10,7 +10,7 @@ module.exports = () => {
     const router = express.Router();
 
     router.get('/', (req, res) => {
-        res.status(200).send(`API V2 is up`);
+        res.status(200).send(`API V1 is up`);
     });
 
     router.get('/users', jwt.checkScopes(['users']), users.getAllUsers);
