@@ -76,14 +76,14 @@ function start(server) {
     // On every incoming socket get the ID of the current session. Used to access user information for authentication.
     io.use((socket, next) => {
         // Create the fake request that cookieParser will expect
-        var req = {
+        let req = {
             "headers": {
                 "cookie": socket.request.headers.cookie
             }
         };
         // Run the parser and store the sessionID
-        cookieParser(config.get('sessions.secret'))(req, null, function () {});
-        var name = config.get('sessions.name');
+        cookieParser(config.get('sessions.secret'))(req, null, () => {});
+        let name = config.get('sessions.name');
         socket.sessionID = req.signedCookies[name] || req.cookies[name];
         next();
     });
