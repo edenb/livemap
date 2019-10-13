@@ -1,12 +1,11 @@
 "use strict";
-var config = require('config');
-var io = require('socket.io');
-var cookieParser = require('cookie-parser');
-var fs = require('fs');
-var gp = require('./gpxplayer');
-var db = require('../database/db');
-var usr = require('../models/user');
-var logger = require('../utils/logger');
+const config = require('config');
+const socketio = require('socket.io');
+const cookieParser = require('cookie-parser');
+const gp = require('./gpxplayer');
+const db = require('../database/db');
+const usr = require('../models/user');
+const logger = require('../utils/logger');
 
 var socketClients = [];
 
@@ -72,10 +71,10 @@ function getUserIdFromSession(sid) {
 //
 
 function start(server) {
-    io = io.listen(server);
+    let io = socketio.listen(server);
 
     // On every incoming socket get the ID of the current session. Used to access user information for authentication.
-    io.use(function ioSession(socket, next) {
+    io.use((socket, next) => {
         // Create the fake request that cookieParser will expect
         var req = {
             "headers": {
@@ -100,51 +99,12 @@ function start(server) {
             socket.user = queryRes.rows[0];
             socketClients.push(socket);
             logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
-            socket.emit('loginSuccess', {numClients: socketClients.length, fullName: socket.user.fullname});
+            gp.startAll();
         } catch(error) {
             // Ignore socket connections with unknown/invalid session ID
         }
 
-        socket.on('getLastPositions', async function () {
-            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
-                let queryRes;
-                try {
-                    queryRes = await db.queryDbAsync('getLastPositions', [socket.user.user_id]);
-                } catch(err) {
-                    logger.error(`Unable to send last positions.`);
-                }
-                socket.emit('lastPositions', queryRes.rows);
-            }
-        });
-
-        socket.on('getStaticLayers', function () {
-            fs.readdir('./staticlayers/', function (err, allFiles) {
-                var fileNameParts = [], fileExt;
-                if (err === null) {
-                    allFiles.sort(function(a, b) {
-                        return a < b ? -1 : 1;
-                    }).forEach(function(fileName, key) {
-                        fileNameParts = fileName.split('.');
-                        fileExt = fileNameParts[fileNameParts.length - 1];
-                        if (fileNameParts.length > 1 && fileExt == 'geojson') {
-                            fs.readFile('./staticlayers/' + fileName, 'utf8', function (fileError, fileData) {
-                                if (fileError === null) {
-                                    socket.emit('staticLayers', fileData);
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        });
-
-        socket.on('startGpxPlayer', function () {
-            if (typeof socket.user.username !== 'undefined' && socket.user.username !== null) {
-                gp.startAll();
-            }
-        });
-
-        socket.on('disconnect', function () {
+        socket.on('disconnect', () => {
             socketClients.splice(socketClients.indexOf(socket), 1);
         });
     });
