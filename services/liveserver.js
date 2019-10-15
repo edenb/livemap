@@ -5,54 +5,11 @@ const cookieParser = require('cookie-parser');
 const gp = require('./gpxplayer');
 const db = require('../database/db');
 const usr = require('../models/user');
+const JSONValidator = require('../utils/validator');
 const logger = require('../utils/logger');
 
+const LivemapValidator = new JSONValidator('livemap');
 var socketClients = [];
-
-function isInputDataValid(gpsData) {
-    var isValid = true;
-    // Check device id
-    //if (typeof gpsData.device_id !== 'undefined') {
-    //    if (gpsData.device_id.length < 6 || gpsData.device_id.length > 100) {
-    //        isValid = false;
-    //    }
-    //} else {
-    //    isValid = false;
-    //}
-    // Check latitude (allowed: null, -90 < lat < 90)
-    if (typeof gpsData.loc_lat !== 'undefined') {
-        if (gpsData.loc_lat !== null) {
-            if (gpsData.loc_lat < -90.0 || gpsData.loc_lat > 90.0) {
-                isValid = false;
-            }
-        }
-    } else {
-        isValid = false;
-    }
-    // Check longitude (allowed: null, -180 < lon < 180)
-    if (typeof gpsData.loc_lon !== 'undefined') {
-        if (gpsData.loc_lon !== null) {
-            if (gpsData.loc_lon < -180.0 || gpsData.loc_lon > 180.0) {
-                isValid = false;
-            }
-        }
-    } else {
-        isValid = false;
-    }
-    // Check time
-    if (typeof gpsData.loc_timestamp !== 'undefined' && gpsData.loc_timestamp !== '') {
-        if (isNaN(Date.parse(gpsData.loc_timestamp))) {
-            isValid = false;
-        }
-    } else {
-        isValid = false;
-    }
-
-    if (!isValid) {
-        logger.info('Invalid location: ' + JSON.stringify(gpsData));
-    }
-    return isValid;
-}
 
 function getUserIdFromSession(sid) {
     return new Promise ((resolve, reject) => {
@@ -114,7 +71,7 @@ async function sendToClient(destData) {
     // On a valid location reception:
     // 1. Store the location in the database
     // 2. Send a location update to every client that is authorized for this device
-    if (isInputDataValid(destData)) {
+    if (LivemapValidator.validate(destData)) {
         for (let i = 0; i < socketClients.length; i += 1) {
             let client = socketClients[i];
             if (typeof client.user.username !== 'undefined' && client.user.username !== null) {
@@ -138,6 +95,8 @@ async function sendToClient(destData) {
         } catch(err) {
             logger.error(`Unable to store position.`);
         }
+    } else {
+        logger.info('Invalid: ' + LivemapValidator.errorsText());
     }
 }
 
