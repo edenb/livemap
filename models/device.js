@@ -20,6 +20,18 @@ async function getAllDevices() {
     }
 }
 
+async function getAllowedDevices(userId) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('getAllowedDevices', [userId]);
+        devices = queryRes.rows;
+        return queryRes;
+    } catch(err) {
+        queryRes.userMessage = 'Unable to get allowed devices';
+        return queryRes;
+    }
+}
+
 async function getDeviceByIdentity(apiKey, identifier) {
     let queryRes = db.getEmptyQueryRes();
     // Check if the device is already loaded in memory
@@ -159,6 +171,7 @@ async function deleteDevicesById(ids) {
 }
 
 module.exports.getAllDevices = getAllDevices;
+module.exports.getAllowedDevices = getAllowedDevices;
 module.exports.getDeviceByIdentity = getDeviceByIdentity;
 module.exports.getDevicesByField = getDevicesByField;
 module.exports.changeDevice = changeDevice;

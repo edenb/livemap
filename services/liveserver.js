@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const gp = require('./gpxplayer');
 const db = require('../database/db');
 const usr = require('../models/user');
+const dev = require('../models/device');
+const pos = require('../models/position');
 const JSONValidator = require('../utils/validator');
 const logger = require('../utils/logger');
 
@@ -69,18 +71,13 @@ function start(server) {
 
 async function sendToClient(destData) {
     // On a valid location reception:
-    // 1. Store the location in the database
-    // 2. Send a location update to every client that is authorized for this device
+    // 1. Send a location update to every client that is authorized for this device
+    // 2. Store the location in the database
     if (LivemapValidator.validate(destData)) {
         for (let i = 0; i < socketClients.length; i += 1) {
             let client = socketClients[i];
             if (typeof client.user.username !== 'undefined' && client.user.username !== null) {
-                let queryRes;
-                try {
-                    queryRes = await db.queryDbAsync('getAllowedDevices', [client.user.user_id]);
-                } catch(err) {
-                    logger.error(`Unable to get allowed devices. ${err.message}`);
-                }
+                let queryRes = await dev.getAllowedDevices(client.user.user_id);
                 client.devices = [];
                 for (let j = 0; j < queryRes.rows.length; j += 1) {
                     client.devices.push(queryRes.rows[j].device_id);
@@ -90,13 +87,9 @@ async function sendToClient(destData) {
                 }
             }
         }
-        try {
-            await db.queryDbAsync('insertPosition', [destData.device_id, destData.device_id_tag, destData.loc_timestamp, destData.loc_lat, destData.loc_lon, destData.loc_type, destData.loc_attr]);
-        } catch(err) {
-            logger.error(`Unable to store position.`);
-        }
+        await pos.insertPosition([destData.device_id, destData.device_id_tag, destData.loc_timestamp, destData.loc_lat, destData.loc_lon, destData.loc_type, destData.loc_attr]);
     } else {
-        logger.info('Invalid: ' + LivemapValidator.errorsText());
+        logger.info(`Invalid: ${LivemapValidator.errorsText()}`);
     }
 }
 
