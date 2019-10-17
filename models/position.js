@@ -16,4 +16,16 @@ async function getLastPositions(userId) {
     }
 }
 
+async function insertPosition(position) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('insertPosition', position);
+        return queryRes;
+    } catch(err) {
+        // On error return the initial (empty) array
+        return queryRes;
+    }
+}
+
 module.exports.getLastPositions = getLastPositions;
+module.exports.insertPosition = insertPosition;

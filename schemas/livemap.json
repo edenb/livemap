@@ -1,0 +1,56 @@
+{
+    "title": "Livemap Schema",
+    "type": "object",
+    "properties": {
+        "loc_timestamp": {
+            "description": "Timestamp of location in ISO 8601 format",
+            "type": "string",
+            "format": "date-time"
+        },
+        "loc_lat": {
+            "description": "Latitude of the location",
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+        },
+        "loc_lon": {
+            "description": "Longitude of the location",
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+        },
+        "identifier": {
+            "description": "The unique identifier of the device",
+            "type": "string"
+        },
+        "alias": {
+            "description": "Alternative name of the device",
+            "type": "string"
+        },
+        "device_id": {
+            "description": "Unique ID of the device",
+            "type": "number"
+        },
+        "loc_attr": {
+            "description": "Additional attributes of the device",
+            "type": ["null", "object"]
+        },
+        "loc_type": {
+            "description": "Location type of the device",
+            "type": ["null", "string"]
+        },
+        "identifier_tag": {
+            "description": "The unique identifier of the tag",
+            "type": ["null", "string"]
+        },
+        "device_id_tag": {
+            "description": "Unique ID of the tag",
+            "type": ["null", "number"]
+        },
+        "api_key_tag": {
+            "description": "The unique key of the owner of the tag",
+            "type": ["null", "string"]
+        }
+    },
+    "required": ["loc_timestamp", "loc_lat", "loc_lon"]
+}
