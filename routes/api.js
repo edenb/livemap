@@ -6,11 +6,21 @@ const devices = require('../controllers/device');
 const positions = require('../controllers/position');
 const staticLayers = require('../controllers/staticlayer');
 
-module.exports = () => {
+module.exports = (passport) => {
     const router = express.Router();
 
     router.get('/', (req, res) => {
         res.status(200).send(`API V1 is up`);
+    });
+
+    router.post('/login', passport.authenticate('local'), (req, res) => {
+        let token = jwt.getNewToken(req.user);
+        res
+            .status(200)
+            .json({
+                access_token: token,
+                token_type: 'Bearer'
+            });
     });
 
     router.get('/users', jwt.checkScopes(['users']), users.getAllUsers);

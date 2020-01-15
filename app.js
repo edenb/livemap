@@ -84,7 +84,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 let indexRoutes = require('./routes/index')(passport);
-let apiRoutes = require('./routes/api')();
+let apiRoutes = require('./routes/api')(passport);
 app.use('/', indexRoutes);
 app.use('/api/v1', apiRoutes);
 
