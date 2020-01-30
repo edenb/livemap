@@ -20,7 +20,9 @@ function getScopes(user) {
 function getNewToken(user) {
     let options = {algorithm: 'HS512'};
     let scopes = getScopes(user);
-    let token = jsonwebtoken.sign({userId: user.user_id, scopes: scopes}, 'replacebysecretfromconfig', options);
+    let token = jsonwebtoken.sign({userId: user.user_id, role: user.role, scopes: scopes},
+        'replacebysecretfromconfig',
+        options);
     return token;
 }
 
