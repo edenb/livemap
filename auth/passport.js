@@ -21,19 +21,29 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
     async (req, username, password, done) => {
         const queryRes = await usr.getUserByField('username', username);
         if (queryRes.rowCount === 0) {
-            req.flash('error', 'No such user');
-            req.session.save(() => {
+            // No sessions with API logins, so don't store flash message and save sessions
+            try {
+                req.flash('error', 'No such user');
+                req.session.save(() => {
+                    return done(null, false);
+                });
+            } catch (err) {
                 return done(null, false);
-            });
+            }
         } else {
             const authOK = await usr.checkPassword(queryRes.rows[0], password);
             if (authOK) {
                 return done(null, queryRes.rows[0]);
             } else {
-                req.flash('error', 'Wrong password');
-                req.session.save(() => {
+                // No sessions with API logins, so don't store flash message and save sessions
+                try {
+                    req.flash('error', 'Wrong password');
+                    req.session.save(() => {
+                        return done(null, false);
+                    });
+                } catch (err) {
                     return done(null, false);
-                });
+                }
             }
         }
     })

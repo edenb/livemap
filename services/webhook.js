@@ -54,7 +54,6 @@ async function processGpx(rawLocationData) {
 // identity iBeacon - id1:device  id1:id2
 async function processLocative(rawLocationData) {
     let srcData = {}, destData = {}, identObj = '', identity = '';
-    let destDevice;
 
     if (Object.keys(rawLocationData.query).length !== 0) {
         srcData = rawLocationData.query;
@@ -66,12 +65,14 @@ async function processLocative(rawLocationData) {
     if (srcData.latitude === '0' && srcData.longitude === '0') {
         identObj = dev.splitDeviceIdentity(srcData.id, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            destDevice = await dev.getDeviceByIdentity(identObj.apiKey, srcData.device);   // Todo: check device_id existance
-            if (destDevice !== null) {
+            let queryRes = await dev.getDeviceByIdentity(identObj.apiKey, srcData.device);   // Todo: check device_id existance
+            if (queryRes.rowCount === 1) {
+                let destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
-                destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
-                destDevice = await dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier);    // Todo: check id existance
-                if (destDevice !== null) {
+                destData.loc_timestamp = new Date(srcData.timestamp * 1000).toISOString();
+                queryRes = await dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier);    // Todo: check id existance
+                if (queryRes.rowCount === 1) {
+                    destDevice = queryRes.rows[0];
                     destData.device_id_tag = destDevice.device_id;
                     destData.alias = destDevice.alias;
                     destData.loc_lat = destDevice.fixed_loc_lat;
@@ -99,12 +100,13 @@ async function processLocative(rawLocationData) {
         identity = srcData.id + ':' + srcData.device;
         identObj = dev.splitDeviceIdentity(identity, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            destDevice = await dev.getDeviceByIdentity(identObj.apiKey, srcData.device);
-            if (destDevice !== null) {
+            const queryRes = await dev.getDeviceByIdentity(identObj.apiKey, srcData.device);
+            if (queryRes.rowCount === 1) {
+                const destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
                 destData.device_id_tag = null;
                 destData.alias = destDevice.alias;
-                destData.loc_timestamp = new Date(srcData.timestamp * 1000).toUTCString();
+                destData.loc_timestamp = new Date(srcData.timestamp * 1000).toISOString();
                 try {
                     destData.loc_lat = parseFloat(srcData.latitude);
                     destData.loc_lon = parseFloat(srcData.longitude);
