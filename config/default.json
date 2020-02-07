@@ -9,6 +9,8 @@
   },
   "mqtt": {
     "url": "mqtt://test.mosquitto.org:1883",
+    "port": "",
+    "protocol": "",
     "topic": "livemap/#"
   },
   "db": {
