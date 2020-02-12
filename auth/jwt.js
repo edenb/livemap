@@ -3,9 +3,9 @@ const jsonwebtoken = require('jsonwebtoken');
 
 function getScopes(user) {
     let scopesByRole = new Array();
-    scopesByRole['viewer'] = ['positions', 'staticlayers'];
-    scopesByRole['manager'] = ['positions', 'staticlayers'];
-    scopesByRole['admin'] = ['users', 'devices', 'positions', 'staticlayers'];
+    scopesByRole['viewer'] = ['account', 'positions', 'staticlayers'];
+    scopesByRole['manager'] = ['account', 'positions', 'staticlayers'];
+    scopesByRole['admin'] = ['account', 'users', 'devices', 'positions', 'staticlayers'];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];
     } else {
@@ -24,6 +24,17 @@ function getNewToken(user) {
         'replacebysecretfromconfig',
         options);
     return token;
+}
+
+function getTokenPayload(token) {
+    let payload = {};
+    let options = {algorithm: 'HS512'};
+    try {
+        payload = jsonwebtoken.verify(token, 'replacebysecretfromconfig', options);
+    } catch(err) {
+        payload = {};
+    }
+    return payload;
 }
 
 function checkScopes(scopes) {
@@ -57,4 +68,5 @@ function checkScopes(scopes) {
 }
 
 module.exports.getNewToken = getNewToken;
+module.exports.getTokenPayload = getTokenPayload;
 module.exports.checkScopes = checkScopes;

@@ -43,7 +43,7 @@
     "nyc": "^15.0.0"
   },
   "engines": {
-    "node": ">=10.0.0"
+    "node": "10.x.x"
   },
   "scripts": {
     "test": "nyc mocha --recursive test",

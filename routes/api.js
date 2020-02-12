@@ -23,6 +23,8 @@ module.exports = (passport) => {
             });
     });
 
+    router.get('/account', jwt.checkScopes(['account']), users.getAccount);
+
     router.get('/users', jwt.checkScopes(['users']), users.getAllUsers);
 
     router.get('/users/:userId', jwt.checkScopes(['users']), users.getUserByUserId);

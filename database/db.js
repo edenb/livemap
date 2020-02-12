@@ -160,7 +160,7 @@ async function checkDbUp() {
     try {
         let queryRes = await queryDbAsync('getNumberOfTables', []);
         logger.info(`Current number of tables in the database: ${queryRes.rows[0].count}`);
-        if (queryRes.rows[0].count === '0') {
+        if (parseInt(queryRes.rows[0].count) < 5) {
             queryRes = await queryDbFromFile('./setup/schema.sql');
             logger.info(`New database created.`);
         }

@@ -96,7 +96,16 @@ function start() {
 }
 
 function getBrokerUrl() {
-    return new URL(config.get('mqtt.url'));
+    let brokerUrl = new URL(config.get('mqtt.url'));
+    let mqttPort = config.get('mqtt.port');
+    let mqttProtocol = config.get('mqtt.protocol');
+    if ( mqttPort !== "") {
+        brokerUrl.port = mqttPort;
+    }
+    if ( mqttProtocol !== "") {
+        brokerUrl.protocol = mqttProtocol;
+    }
+    return brokerUrl;
 }
 
 module.exports.start = start;
