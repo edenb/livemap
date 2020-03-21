@@ -63,7 +63,7 @@ const sessionMiddleware = session({
     name: config.get('sessions.name'),
     store: db.getStore(),
     secret: config.get('sessions.secret'),
-    cookie: {maxAge: config.get('sessions.maxAge')},
+    cookie: {maxAge: config.get('sessions.maxAge'), sameSite: 'strict'},
     resave: false,
     saveUninitialized: true,
     unset: 'keep'     // Or destroy?
