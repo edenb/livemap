@@ -30,7 +30,7 @@ function getUserIdFromSession(sid) {
 //
 
 function start(server) {
-    let io = socketio.listen(server);
+    let io = socketio.listen(server, {cookie: false});
 
     // On every incoming socket get the ID of the current session. Used to access user information for authentication.
     io.use((socket, next) => {
@@ -65,6 +65,10 @@ function start(server) {
 
         socket.on('disconnect', () => {
             socketClients.splice(socketClients.indexOf(socket), 1);
+        });
+
+        socket.on('authenticate', (data) => {
+            logger.info(`Data: ${data}`);
         });
     });
 }
