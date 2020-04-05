@@ -33,7 +33,7 @@ queryDef.getNumberOfTables = {'qstr': 'SELECT count(*) FROM information_schema.t
 function getEmptyQueryRes() {
     const emptyQueryRes = {
         rows: [],
-        rowCount: 0
+        rowCount: -1
     };
     return emptyQueryRes;
 }

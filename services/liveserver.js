@@ -68,7 +68,7 @@ function start(server) {
             // On successful user ID extraction get user details
             if (userId >= 0) {
                 const queryRes = await usr.getUserByField('user_id', userId);
-                if (queryRes.rowCount === 0) {
+                if (queryRes.rowCount <= 0) {
                    throw new Error();
                 }
                 socket.user = queryRes.rows[0];

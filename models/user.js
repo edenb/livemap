@@ -132,7 +132,7 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
         }
         try {
             queryRes = await db.queryDbAsync('changePwdByUsername', [user.username, newHash]);
-            if (queryRes.rowCount === 0) {
+            if (queryRes.rowCount <= 0) {
                 queryRes.userMessage = 'User not found';
             }
         } catch(err) {

@@ -79,7 +79,7 @@ async function changeDevice(modDevice) {
     if (modDevice.device_id <= 0) {
         try {
             queryRes = await db.queryDbAsync('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias]);
-            if (queryRes.rowCount === 0) {
+            if (queryRes.rowCount <= 0) {
                 queryRes.userMessage = 'Unable to add device';
             }
         } catch(err) {
@@ -88,7 +88,7 @@ async function changeDevice(modDevice) {
     } else {
         try {
             queryRes = await db.queryDbAsync('changeDeviceById', [modDevice.device_id, modDevice.alias, modDevice.fixed_loc_lat, modDevice.fixed_loc_lon]);
-            if (queryRes.rowCount === 0) {
+            if (queryRes.rowCount <= 0) {
                 queryRes.userMessage = 'Unable to change device';
             }
         } catch(err) {
@@ -135,7 +135,7 @@ async function addSharedUser(sharedUser, ids) {
     let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('addSharedUser', [sharedUser, ids]);
-        if (queryRes.rowCount === 0) {
+        if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No shared users were added';
         }
     } catch(err) {
@@ -148,7 +148,7 @@ async function deleteSharedUser(sharedUser, ids) {
     let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('deleteSharedUser', [sharedUser, ids]);
-        if (queryRes.rowCount === 0) {
+        if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No shared users were deleted';
         }
     } catch(err) {
@@ -161,7 +161,7 @@ async function deleteDevicesById(ids) {
     let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('deleteDevices', [ids]);
-        if (queryRes.rowCount === 0) {
+        if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No devices were deleted';
         }
     } catch(err) {
