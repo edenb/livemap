@@ -76,7 +76,7 @@ async function getDevicesByField(field, value) {
 
 async function changeDevice(modDevice) {
     let queryRes = db.getEmptyQueryRes();
-    if (modDevice.device_id === 0) {
+    if (modDevice.device_id <= 0) {
         try {
             queryRes = await db.queryDbAsync('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias]);
             if (queryRes.rowCount === 0) {

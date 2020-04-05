@@ -61,6 +61,12 @@ module.exports = (passport) => {
 
     router.get('/devices', jwt.checkScopes(['devices']), devices.getAllDevices);
 
+    router.post('/devices', jwt.checkScopes(['devices']), devices.addDevice);
+
+    router.put('/devices/:deviceId', jwt.checkScopes(['devices']), devices.modifyDevice);
+
+    router.delete('/devices/:deviceId', jwt.checkScopes(['devices']), devices.removeDevice);
+
     router.get('/positions', jwt.checkScopes(['positions']), positions.getLastPositions);
 
     router.get('/staticlayers', jwt.checkScopes(['staticlayers']), staticLayers.getStaticLayers);
