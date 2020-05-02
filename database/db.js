@@ -46,6 +46,7 @@ function getEmptyQueryRes() {
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
 const pgPool = new Pool({
     connectionString: config.get('db.url'),
+    ssl: {rejectUnauthorized: false}
 });
 
 // The pool emits an error if a backend or network error occurs
