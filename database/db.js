@@ -1,6 +1,7 @@
 "use strict";
 const config = require('config');
 const { Pool } = require('pg');
+const { parse } = require('pg-connection-string');
 const pgStore = require('connect-pg-simple');
 const memoryStore = require('memorystore');
 const fs = require('fs');
@@ -44,10 +45,12 @@ function getEmptyQueryRes() {
 // To set environment variable:
 //  set DATABASE_URL=user:pass@abc.com/table (Windows)
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
-const pgPool = new Pool({
-    connectionString: config.get('db.url'),
-    ssl: {rejectUnauthorized: false}
-});
+const dbConfig = parse(config.get('db.url'));
+// Overwrite tls.connect options to allow self signed certs
+if (dbConfig.ssl) {
+    dbConfig.ssl = {rejectUnauthorized: false};
+}
+const pgPool = new Pool(dbConfig);
 
 // The pool emits an error if a backend or network error occurs
 // on any idle client. This is fatal so exit
