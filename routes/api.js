@@ -11,7 +11,8 @@ module.exports = (passport) => {
 
     // Enable CORS for API
     router.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
         res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,OPTIONS,DELETE');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
         // intercept OPTIONS method
@@ -28,8 +29,24 @@ module.exports = (passport) => {
 
     router.post('/login', passport.authenticate('local'), (req, res) => {
         let token = jwt.getNewToken(req.user);
+        // Check for same origin (client hostname == server hostname)
+        const clientUrl = new URL(req.headers.origin);
+        let serverUrl = new URL('http://localhost');
+        serverUrl.host = req.headers.host;
+        // Create cookie options for same origin/cross origin
+        let cookieOptions = {
+            expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
+            httpOnly: true
+        };
+        if (clientUrl.hostname !== serverUrl.hostname) {
+            cookieOptions.domain = req.headers.host;
+            cookieOptions.sameSite = 'none';
+            cookieOptions.secure = true;
+        }
+
         res
             .status(200)
+            .cookie('access_token', token, cookieOptions)
             .json({
                 access_token: token,
                 token_type: 'Bearer'
@@ -43,6 +60,12 @@ module.exports = (passport) => {
     router.get('/users/:userId', jwt.checkScopes(['users']), users.getUserByUserId);
 
     router.get('/devices', jwt.checkScopes(['devices']), devices.getAllDevices);
+
+    router.post('/devices', jwt.checkScopes(['devices']), devices.addDevice);
+
+    router.put('/devices/:deviceId', jwt.checkScopes(['devices']), devices.modifyDevice);
+
+    router.delete('/devices/:deviceId', jwt.checkScopes(['devices']), devices.removeDevice);
 
     router.get('/positions', jwt.checkScopes(['positions']), positions.getLastPositions);
 

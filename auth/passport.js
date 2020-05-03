@@ -10,27 +10,17 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (req, id, done) => {
     const queryRes = await usr.getUserByField('user_id', id);
-    if (queryRes.rowCount === 0) {
-        done(null, {});
-    } else {
+    if (queryRes.rowCount > 0) {
         done(null, queryRes.rows[0]);
+    } else {
+        done(null, {});
     }
 });
 
 passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'password', passReqToCallback: true},
     async (req, username, password, done) => {
         const queryRes = await usr.getUserByField('username', username);
-        if (queryRes.rowCount === 0) {
-            // No sessions with API logins, so don't store flash message and save sessions
-            try {
-                req.flash('error', 'No such user');
-                req.session.save(() => {
-                    return done(null, false);
-                });
-            } catch (err) {
-                return done(null, false);
-            }
-        } else {
+        if (queryRes.rowCount > 0) {
             const authOK = await usr.checkPassword(queryRes.rows[0], password);
             if (authOK) {
                 return done(null, queryRes.rows[0]);
@@ -44,6 +34,16 @@ passport.use(new LocalStrategy({usernameField: 'username', passwordField: 'passw
                 } catch (err) {
                     return done(null, false);
                 }
+            }
+        } else {
+            // No sessions with API logins, so don't store flash message and save sessions
+            try {
+                req.flash('error', 'No such user');
+                req.session.save(() => {
+                    return done(null, false);
+                });
+            } catch (err) {
+                return done(null, false);
             }
         }
     })

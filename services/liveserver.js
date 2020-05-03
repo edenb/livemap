@@ -7,6 +7,7 @@ const db = require('../database/db');
 const usr = require('../models/user');
 const dev = require('../models/device');
 const pos = require('../models/position');
+const jwt = require('../auth/jwt');
 const JSONValidator = require('../utils/validator');
 const logger = require('../utils/logger');
 
@@ -44,31 +45,43 @@ function start(server) {
         cookieParser(config.get('sessions.secret'))(req, null, () => {});
         let name = config.get('sessions.name');
         socket.sessionID = req.signedCookies[name] || req.cookies[name];
+        socket.token = req.signedCookies.access_token || req.cookies.access_token;
         next();
     });
 
     // On a new socket connection add the user information to the socket
     io.sockets.on('connection', async (socket) => {
         try {
-            const userId = await getUserIdFromSession(socket.sessionID);
-            const queryRes = await usr.getUserByField('user_id', userId);
-            if (queryRes.rowCount === 0) {
-                throw new Error();
+            let userId = -1;
+            // Extract user ID from token in cookie (preferred method)
+            if (socket.token) {
+                const payload = jwt.getTokenPayload(socket.token);
+                if (payload.userId) {
+                    userId = payload.userId;
+                }
             }
-            socket.user = queryRes.rows[0];
-            socketClients.push(socket);
-            logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
-            gp.startAll();
+            // Extract user ID from session ID in cookie (only if no valid or no token)
+            if (userId < 0 && socket.sessionID) {
+                userId = await getUserIdFromSession(socket.sessionID);
+            }
+
+            // On successful user ID extraction get user details
+            if (userId >= 0) {
+                const queryRes = await usr.getUserByField('user_id', userId);
+                if (queryRes.rowCount <= 0) {
+                   throw new Error();
+                }
+                socket.user = queryRes.rows[0];
+                socketClients.push(socket);
+                logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
+                gp.startAll();
+            }
         } catch(error) {
             // Ignore socket connections with unknown/invalid session ID
         }
 
         socket.on('disconnect', () => {
             socketClients.splice(socketClients.indexOf(socket), 1);
-        });
-
-        socket.on('authenticate', (data) => {
-            logger.info(`Data: ${data}`);
         });
     });
 }
