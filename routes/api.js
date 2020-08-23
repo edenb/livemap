@@ -29,24 +29,8 @@ module.exports = (passport) => {
 
     router.post('/login', passport.authenticate('local'), (req, res) => {
         let token = jwt.getNewToken(req.user);
-        // Check for same origin (client hostname == server hostname)
-        const clientUrl = new URL(req.headers.origin);
-        let serverUrl = new URL('http://localhost');
-        serverUrl.host = req.headers.host;
-        // Create cookie options for same origin/cross origin
-        let cookieOptions = {
-            expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
-            httpOnly: true
-        };
-        if (clientUrl.hostname !== serverUrl.hostname) {
-            cookieOptions.domain = req.headers.host;
-            cookieOptions.sameSite = 'none';
-            cookieOptions.secure = true;
-        }
-
         res
             .status(200)
-            .cookie('access_token', token, cookieOptions)
             .json({
                 access_token: token,
                 token_type: 'Bearer'
