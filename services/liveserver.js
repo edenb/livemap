@@ -4,7 +4,6 @@ const socketio = require('socket.io');
 const cookieParser = require('cookie-parser');
 const gp = require('./gpxplayer');
 const db = require('../database/db');
-const usr = require('../models/user');
 const dev = require('../models/device');
 const pos = require('../models/position');
 const jwt = require('../auth/jwt');
@@ -69,7 +68,7 @@ function start(server) {
             if (userId >= 0) {
                 socket.userId = userId;
                 socketClients.push(socket);
-                logger.info(`Client connected (${socketClients.length}): ${socket.userId}`);
+                logger.info(`Client connected using cookie (${socketClients.length}): ${socket.userId}`);
                 gp.startAll();
             }
         } catch(error) {
@@ -84,7 +83,10 @@ function start(server) {
             const payload = jwt.getTokenPayload(data);
             // Token is valid if user ID is present 
             if (payload.userId) {
-                logger.info(`Valid user: ${payload.userId}`);
+                socket.userId = payload.userId;
+                socketClients.push(socket);
+                logger.info(`Client connected using token (${socketClients.length}): ${socket.userId}`);
+                gp.startAll();
             }
         });
     });
