@@ -33,7 +33,7 @@ function getUserIdFromSession(sid) {
 function start(server) {
     let io = socketio.listen(server, {cookie: false});
 
-    // On every incoming socket get the ID of the current session. Used to access user information for authentication.
+    // On every incoming socket get the ID of the current session. Used to access the user ID for authentication.
     io.use((socket, next) => {
         // Create the fake request that cookieParser will expect
         let req = {
@@ -49,7 +49,7 @@ function start(server) {
         next();
     });
 
-    // On a new socket connection add the user information to the socket
+    // On a new socket connection add the user ID to the socket
     io.sockets.on('connection', async (socket) => {
         try {
             let userId = -1;
@@ -65,15 +65,11 @@ function start(server) {
                 userId = await getUserIdFromSession(socket.sessionID);
             }
 
-            // On successful user ID extraction get user details
+            // On successful user ID extraction add user ID to socket
             if (userId >= 0) {
-                const queryRes = await usr.getUserByField('user_id', userId);
-                if (queryRes.rowCount <= 0) {
-                   throw new Error();
-                }
-                socket.user = queryRes.rows[0];
+                socket.userId = userId;
                 socketClients.push(socket);
-                logger.info(`Client connected (${socketClients.length}): ${socket.user.fullname}`);
+                logger.info(`Client connected (${socketClients.length}): ${socket.userId}`);
                 gp.startAll();
             }
         } catch(error) {
@@ -82,6 +78,14 @@ function start(server) {
 
         socket.on('disconnect', () => {
             socketClients.splice(socketClients.indexOf(socket), 1);
+        });
+
+        socket.on('token', (data) => {
+            const payload = jwt.getTokenPayload(data);
+            // Token is valid if user ID is present 
+            if (payload.userId) {
+                logger.info(`Valid user: ${payload.userId}`);
+            }
         });
     });
 }
@@ -93,8 +97,8 @@ async function sendToClient(destData) {
     if (LivemapValidator.validate(destData)) {
         for (let i = 0; i < socketClients.length; i += 1) {
             let client = socketClients[i];
-            if (typeof client.user.username !== 'undefined' && client.user.username !== null) {
-                let queryRes = await dev.getAllowedDevices(client.user.user_id);
+            if (client.userId && client.userId >= 0) {
+                let queryRes = await dev.getAllowedDevices(client.userId);
                 client.devices = [];
                 for (let j = 0; j < queryRes.rows.length; j += 1) {
                     client.devices.push(queryRes.rows[j].device_id);
