@@ -51,6 +51,9 @@ function start(server) {
     // On a new socket connection add the user ID to the socket
     io.sockets.on('connection', async (socket) => {
         try {
+            // Request authentication from client
+            socket.emit('authenticate');
+
             let userId = -1;
             // Extract user ID from token in cookie (preferred method)
             if (socket.token) {
@@ -77,6 +80,13 @@ function start(server) {
 
         socket.on('disconnect', () => {
             socketClients.splice(socketClients.indexOf(socket), 1);
+            // Remove disconnected sockets from list
+            for (let i = 0; i < socketClients.length; i += 1) {
+                if (socketClients[i].disconnected) {
+                    socketClients.splice(i, 1);
+                }
+            }
+
         });
 
         socket.on('token', (data) => {
@@ -84,7 +94,14 @@ function start(server) {
             // Token is valid if user ID is present 
             if (payload.userId) {
                 socket.userId = payload.userId;
-                socketClients.push(socket);
+                socket.token = data;
+                // Add socket to list but prevent duplicates (=same socket ID)
+                let index = socketClients.map(function(x) { return x.id; }).indexOf(socket.id);
+                if (index >= 0) {
+                    socketClients[index] = socket;
+                } else {
+                    socketClients.push(socket);
+                }
                 logger.info(`Client connected using token (${socketClients.length}): ${socket.userId}`);
                 gp.startAll();
             }
