@@ -12,6 +12,7 @@ const logger = require('../utils/logger');
 
 const LivemapValidator = new JSONValidator('livemap');
 var socketClients = [];
+let io;
 
 function getUserIdFromSession(sid) {
     return new Promise ((resolve, reject) => {
@@ -30,7 +31,7 @@ function getUserIdFromSession(sid) {
 //
 
 function start(server) {
-    let io = socketio.listen(server, {cookie: false});
+    io = socketio.listen(server, {cookie: false});
 
     // On every incoming socket get the ID of the current session. Used to access the user ID for authentication.
     io.use((socket, next) => {
@@ -89,19 +90,21 @@ function start(server) {
 
         });
 
-        socket.on('token', (data) => {
+        socket.on('token', async (data) => {
             const payload = jwt.getTokenPayload(data);
             // Token is valid if user ID is present 
             if (payload.userId) {
                 socket.userId = payload.userId;
                 socket.token = data;
-                // Add socket to list but prevent duplicates (=same socket ID)
-                let index = socketClients.map(function(x) { return x.id; }).indexOf(socket.id);
-                if (index >= 0) {
-                    socketClients[index] = socket;
-                } else {
-                    socketClients.push(socket);
+                let queryRes = await dev.getAllowedDevices(socket.userId);
+                let devices = [];
+                for (let j = 0; j < queryRes.rows.length; j += 1) {
+                    devices.push(`dev_${queryRes.rows[j].device_id}`);
                 }
+                socket.join(devices, () => {
+                    const rooms = Object.keys(socket.rooms);
+                    logger.debug(`Rooms: (${rooms})`);
+                });
                 logger.info(`Client connected using token (${socketClients.length}): ${socket.userId}`);
                 gp.startAll();
             }
@@ -114,6 +117,11 @@ async function sendToClient(destData) {
     // 1. Send a location update to every client that is authorized for this device
     // 2. Store the location in the database
     if (LivemapValidator.validate(destData)) {
+        // Send location to room
+        let deviceRoom = `dev_${destData.device_id}`;
+        io.to(deviceRoom).emit('positionUpdate', JSON.stringify({type: 'gps', data: destData}));
+        logger.debug(`Clients connected: ${Object.keys(io.sockets.connected).length}`);
+        // Send location to connected clients (legacy)
         for (let i = 0; i < socketClients.length; i += 1) {
             let client = socketClients[i];
             if (client.userId && client.userId >= 0) {
