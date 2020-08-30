@@ -86,7 +86,7 @@ function start() {
         await usr.getAllUsers();
         const destData = await processMessage(message.toString());
         if (destData !== null) {
-            await livesvr.sendToClient(destData);
+            await livesvr.sendToClients(destData);
         }
     });
 
