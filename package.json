@@ -17,7 +17,7 @@
     "jsonwebtoken": "~8.5.0",
     "memorystore": "^1.6.2",
     "morgan": "~1.10.0",
-    "mqtt": "^4.0.1",
+    "mqtt": "^4.2.1",
     "passport": "~0.4.0",
     "passport-local": "~1.0.0",
     "path": "~0.12.0",
@@ -39,7 +39,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
-    "mocha": "^7.2.0",
+    "mocha": "^8.1.0",
     "nyc": "^15.1.0"
   },
   "engines": {
