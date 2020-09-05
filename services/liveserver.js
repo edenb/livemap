@@ -4,6 +4,7 @@ const socketio = require('socket.io');
 const cookieParser = require('cookie-parser');
 const gp = require('./gpxplayer');
 const db = require('../database/db');
+const usr = require('../models/user');
 const dev = require('../models/device');
 const pos = require('../models/position');
 const jwt = require('../auth/jwt');
@@ -46,6 +47,13 @@ async function joinRooms(socket, token) {
     }
 }
 
+async function startGpxPlayer(userId) {
+    let queryRes = await usr.getUserByField('user_id', userId);
+    if (queryRes.rows && queryRes.rows.length > 0) {
+        gp.startAll(queryRes.rows[0].api_key);
+    }
+}
+
 //
 // Exported modules
 //
@@ -79,8 +87,7 @@ function start(server) {
             if (socket.sessionID) {
                 let sessionInfo = await getSessionInfo(socket.sessionID);
                 joinRooms(socket, sessionInfo.token);
-                logger.info(`Client connected using cookie: ${socket.userId}`);
-                gp.startAll();
+                startGpxPlayer(socket.userId);
             } else {
                 // Authentication by token: request authentication token
                 socket.emit('authenticate');
@@ -91,8 +98,7 @@ function start(server) {
 
         socket.on('token', async (data) => {
             joinRooms(socket, data);
-            logger.info(`Client connected using token: ${socket.userId}`);
-            gp.startAll();
+            startGpxPlayer(socket.userId);
         });
     });
 }

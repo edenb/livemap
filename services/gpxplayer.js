@@ -98,7 +98,7 @@ gpxPlayer.prototype.start = function start() {
     }
 };
 
-function startAll() {
+function startAll(apiKey) {
     var gpxFiles = {}, fileSplit, i, fileExt, fileName, key;
 
     fs.readdir('./tracks/', function (err, allFiles) {
@@ -123,7 +123,8 @@ function startAll() {
             // Check for added track files
             for (key in gpxFiles) {
                 if (Object.prototype.hasOwnProperty.call(gpxFiles, key)) {
-                    if (typeof gpxTracks[key] === 'undefined') {
+                    let gpxApiKey = key.split('_')[0];
+                    if (typeof gpxTracks[key] === 'undefined' && gpxApiKey === apiKey) {
                         gpxTracks[key] = new gpxPlayer(gpxFiles[key], './tracks/' +  gpxFiles[key] + '.gpx', 'http://localhost:' + port + '/location/gpx');
                         logger.info('Added track: ' + gpxTracks[key].fileName);
                     }
