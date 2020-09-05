@@ -155,14 +155,14 @@ async function processLocation(request, response, type) {
             case 'gpx':
                 destData = await processGpx(rawLocationData);
                 if (destData !== null) {
-                    await livesvr.sendToClient(destData);
+                    await livesvr.sendToClients(destData);
                 }
                 response.sendStatus(200);
                 break;
             case 'locative':
                 destData = await processLocative(rawLocationData);
                 if (destData !== null) {
-                    await livesvr.sendToClient(destData);
+                    await livesvr.sendToClients(destData);
                 }
                 response.sendStatus(200);
                 break;
