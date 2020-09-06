@@ -9,6 +9,9 @@
   },
   "mqtt": {
     "url": "C_MQTT_URL",
+    "protocol": "C_MQTT_PROTOCOL",
+    "port": "C_MQTT_PORT",
+    "userVhost": "C_MQTT_USERVHOST",
     "topic": "C_MQTT_TOPIC"
   },
   "db": {

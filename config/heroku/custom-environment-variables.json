@@ -8,7 +8,10 @@
     "colorize": "C_LOGGER_COLORIZE"
   },
   "mqtt": {
-    "url": "CLOUDMQTT_URL",
+    "url": "CLOUDAMQP_URL",
+    "protocol": "C_MQTT_PROTOCOL",
+    "port": "C_MQTT_PORT",
+    "userVhost": "C_MQTT_USERVHOST",
     "topic": "C_MQTT_TOPIC"
   },
   "db": {

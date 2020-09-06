@@ -99,11 +99,17 @@ function getBrokerUrl() {
     let brokerUrl = new URL(config.get('mqtt.url'));
     let mqttPort = config.get('mqtt.port');
     let mqttProtocol = config.get('mqtt.protocol');
-    if ( mqttPort !== "") {
+    let mqttUserVhost = config.get('mqtt.userVhost');
+    console.log(`User Vhost: ${mqttUserVhost}`);
+
+    if (mqttPort !== "") {
         brokerUrl.port = mqttPort;
     }
-    if ( mqttProtocol !== "") {
+    if (mqttProtocol !== "") {
         brokerUrl.protocol = mqttProtocol;
+    }
+    if (mqttUserVhost) {
+        brokerUrl.username = `${brokerUrl.username}:${brokerUrl.username}`;
     }
     return brokerUrl;
 }

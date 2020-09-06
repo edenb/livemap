@@ -20,6 +20,18 @@
     "C_SERVER_FORCESSL": {
       "description": "Force server to use HTTPS",
       "value": "true"
+    },
+    "C_MQTT_PROTOCOL": {
+      "description": "Overwrite protocol in MQTT connection URL",
+      "value": "mqtts"
+    },
+    "C_MQTT_PORT": {
+      "description": "Overwrite port in MQTT connection URL",
+      "value": "8883"
+    },
+    "C_MQTT_USERVHOST": {
+      "description": "Use username:vhost format for MQTT authentication",
+      "value": "true"
     }
   },
   "addons": [
@@ -29,6 +41,6 @@
         "version": "9.6"
       }
     },
-    "cloudmqtt"
+    "cloudamqp"
   ]
 }
