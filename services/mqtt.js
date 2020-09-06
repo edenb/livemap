@@ -100,7 +100,6 @@ function getBrokerUrl() {
     let mqttPort = config.get('mqtt.port');
     let mqttProtocol = config.get('mqtt.protocol');
     let mqttUserVhost = config.get('mqtt.userVhost');
-    console.log(`User Vhost: ${mqttUserVhost}`);
 
     if (mqttPort !== "") {
         brokerUrl.port = mqttPort;
