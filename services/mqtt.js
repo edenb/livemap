@@ -36,6 +36,7 @@ async function processMessage(messageStr) {
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
+                destData.api_key = destDevice.api_key;
                 destData.identifier = srcData.id;
                 destData.device_id_tag = null;
                 destData.identifier_tag = null;

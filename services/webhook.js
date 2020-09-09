@@ -20,6 +20,7 @@ async function processGpx(rawLocationData) {
         if (queryRes.rowCount === 1) {
             const destDevice = queryRes.rows[0];
             destData.device_id = destDevice.device_id;
+            destData.api_key = destDevice.api_key;
             destData.identifier = destDevice.identifier;
             destData.alias = destDevice.alias;
             destData.device_id_tag = null;
@@ -74,6 +75,7 @@ async function processLocative(rawLocationData) {
                 if (queryRes.rowCount === 1) {
                     destDevice = queryRes.rows[0];
                     destData.device_id_tag = destDevice.device_id;
+                    destData.api_key = destDevice.api_key;
                     destData.alias = destDevice.alias;
                     destData.loc_lat = destDevice.fixed_loc_lat;
                     destData.loc_lon = destDevice.fixed_loc_lon;
@@ -104,6 +106,7 @@ async function processLocative(rawLocationData) {
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
+                destData.api_key = destDevice.api_key;
                 destData.device_id_tag = null;
                 destData.alias = destDevice.alias;
                 destData.loc_timestamp = new Date(srcData.timestamp * 1000).toISOString();

@@ -65,6 +65,9 @@ async function getUserByField(field, value) {
     if (field === 'username') {
         queryDefinition = 'getUserByUsername';
     }
+    if (field === 'api_key') {
+        queryDefinition = 'getUserByApiKey';
+    }
     if (queryDefinition !== '') {
         try {
             queryRes = await db.queryDbAsync(queryDefinition, [value]);
