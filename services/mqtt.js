@@ -36,6 +36,7 @@ async function processMessage(messageStr) {
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
+                destData.api_key = destDevice.api_key;
                 destData.identifier = srcData.id;
                 destData.device_id_tag = null;
                 destData.identifier_tag = null;
@@ -99,11 +100,16 @@ function getBrokerUrl() {
     let brokerUrl = new URL(config.get('mqtt.url'));
     let mqttPort = config.get('mqtt.port');
     let mqttProtocol = config.get('mqtt.protocol');
-    if ( mqttPort !== "") {
+    let mqttUserVhost = config.get('mqtt.userVhost');
+
+    if (mqttPort !== "") {
         brokerUrl.port = mqttPort;
     }
-    if ( mqttProtocol !== "") {
+    if (mqttProtocol !== "") {
         brokerUrl.protocol = mqttProtocol;
+    }
+    if (mqttUserVhost) {
+        brokerUrl.username = `${brokerUrl.username}:${brokerUrl.username}`;
     }
     return brokerUrl;
 }

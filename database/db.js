@@ -14,6 +14,7 @@ var queryDef = [];
 queryDef.getAllUsers = {'qstr': 'SELECT user_id, username, fullname, email, role, api_key FROM users', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.getUserByUserId = {'qstr': 'SELECT * FROM users WHERE user_id = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.getUserByUsername = {'qstr': 'SELECT * FROM users WHERE username = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
+queryDef.getUserByApiKey = {'qstr': 'SELECT * FROM users WHERE api_key = $1', 'readTables': ['users'], 'writeTables': [], 'cached': true};
 queryDef.changeDetailsById = {'qstr': 'UPDATE users SET username = $2, fullname = $3, email = $4, role = $5, api_key = $6 WHERE user_id = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
 queryDef.changePwdByUsername = {'qstr': 'UPDATE users SET password = $2 WHERE username = $1', 'readTables': [], 'writeTables': ['users'], 'cached': false};
 queryDef.insertUser = {'qstr': 'INSERT INTO users(username, fullname, email, role, api_key) VALUES ($1, $2, $3, $4, $5)', 'readTables': [], 'writeTables': ['users'], 'cached': false};

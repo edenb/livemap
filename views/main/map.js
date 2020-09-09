@@ -185,8 +185,8 @@ function initMap() {
     // Set the view port to the last view (from a cookie) or set a default view
     mapCookie = docCookies.getItem('map');
     if (mapCookie === null) {
-        mapAttr.center = L.latLng(52.0, 5.0);
-        mapAttr.zoom = 10;
+        mapAttr.center = L.latLng(40.0, -40.0);
+        mapAttr.zoom = 3;
     } else {
         mapAttr = JSON.parse(mapCookie);
     }
@@ -246,7 +246,7 @@ function loadLastPositions() {
         // Add the marker layer to the map
         map.addLayer(markerLayer);
         // Zoom to marker boundaries if any markers defined
-        if (markerLayer.getLayers().length > 0 && mapAttr === null) {
+        if (markerLayer.getLayers().length > 0 && docCookies.getItem('map') === null) {
             map.fitBounds(markerLayer.getBounds());
         }
     });
