@@ -49,7 +49,7 @@ module.exports = (passport) => {
 
     router.put('/devices/:deviceId', jwt.checkScopes(['devices']), devices.modifyDevice);
 
-    router.delete('/devices/:deviceId', jwt.checkScopes(['devices']), devices.removeDevice);
+    router.delete('/devices/:deviceIds', jwt.checkScopes(['devices']), devices.removeDevices);
 
     router.get('/positions', jwt.checkScopes(['positions']), positions.getLastPositions);
 

@@ -36,8 +36,8 @@ exports.modifyDevice = async (req, res) => {
     }
 };
 
-exports.removeDevice = async (req, res) => {
-    const queryRes = await dev.deleteDevicesById([req.params.deviceId]);
+exports.removeDevices = async (req, res) => {
+    const queryRes = await dev.deleteDevicesById(req.params.deviceIds.split(','));
     if (queryRes.rowCount < 0) {
         res.status(500).send(`Internal Server Error`);
     } else {
