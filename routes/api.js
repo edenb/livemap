@@ -43,6 +43,8 @@ module.exports = (passport) => {
 
     router.get('/users/:userId', jwt.checkScopes(['users']), users.getUserByUserId);
 
+    router.get('/users/:userId/devices', jwt.checkScopes(['devices']), devices.getDevicesByUserId);
+
     router.get('/devices', jwt.checkScopes(['devices']), devices.getAllDevices);
 
     router.post('/devices', jwt.checkScopes(['devices']), devices.addDevice);

@@ -145,7 +145,7 @@ module.exports = (passport) => {
 
     // GET Change Devices Page.
     router.get('/changedevices', ensureAuthenticated, async (req, res) => {
-        const queryRes = await dev.getDevicesByField('user_id', req.user.user_id);
+        const queryRes = await dev.getOwnedDevicesByField('user_id', req.user.user_id);
         let userdevices = queryRes.rows;
         if (typeof queryRes.userMessage === 'undefined') {
             res.render('changedevices', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user, userdevices: userdevices});

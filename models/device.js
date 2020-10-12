@@ -58,11 +58,27 @@ async function getDeviceByIdentity(apiKey, identifier) {
     return queryRes;
 }
 
-async function getDevicesByField(field, value) {
+async function getOwnedDevicesByField(field, value) {
     let queryRes = db.getEmptyQueryRes();
     let queryDefinition = '';
     if (field === 'user_id') {
-        queryDefinition = 'getDevicesByUserId';
+        queryDefinition = 'getOwnedDevicesByUserId';
+    }
+    if (queryDefinition !== '') {
+        try {
+            queryRes = await db.queryDbAsync(queryDefinition, [value]);
+        } catch(err) {
+            queryRes.userMessage = 'Unable to find devices.';
+        }
+    }
+    return queryRes;
+}
+
+async function getSharedDevicesByField(field, value) {
+    let queryRes = db.getEmptyQueryRes();
+    let queryDefinition = '';
+    if (field === 'user_id') {
+        queryDefinition = 'getSharedDevicesByUserId';
     }
     if (queryDefinition !== '') {
         try {
@@ -173,7 +189,8 @@ async function deleteDevicesById(ids) {
 module.exports.getAllDevices = getAllDevices;
 module.exports.getAllowedDevices = getAllowedDevices;
 module.exports.getDeviceByIdentity = getDeviceByIdentity;
-module.exports.getDevicesByField = getDevicesByField;
+module.exports.getOwnedDevicesByField = getOwnedDevicesByField;
+module.exports.getSharedDevicesByField = getSharedDevicesByField;
 module.exports.changeDevice = changeDevice;
 module.exports.splitDeviceIdentity = splitDeviceIdentity;
 module.exports.addSharedUser = addSharedUser;
