@@ -178,7 +178,11 @@ module.exports = (passport) => {
                 res.redirect('/main');
                 break;
             case 'submit':
-                queryRes = await dev.changeDevice(modDevice);
+                if (modDevice.device_id <= 0) {
+                    queryRes = await dev.addDevice(modDevice);
+                } else {
+                    queryRes = await dev.modifyDevice(modDevice);
+                }
                 if (queryRes.rowCount === 1) {
                     req.flash('info', 'Device changed');
                     req.session.save(() => {

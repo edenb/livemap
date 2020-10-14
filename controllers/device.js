@@ -41,41 +41,71 @@ exports.getDevicesByUserId = async (req, res) => {
     }
 };
 
-exports.addDevice = async (req, res) => {
-    const queryRes = await dev.changeDevice(req.body);
-    if (queryRes.rowCount < 0) {
-        res.status(500).send(`Internal Server Error`);
-    } else {
-        if (queryRes.rowCount > 0) {
-            res.status(201).send();
+exports.addDeviceByUserId = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    let tokenUserId = -1;
+    if (req.headers && req.headers.authorization) {
+        tokenUserId = jwt.getUserId(req.headers.authorization);
+    }
+    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+        const queryRes = await dev.addDeviceByUserId(reqUserId, req.body);
+        if (queryRes.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
         } else {
-            res.status(409).send();
+            if (queryRes.rowCount > 0) {
+                res.status(201).send();
+            } else {
+                res.status(409).send();
+            }
         }
     }
 };
 
-exports.modifyDevice = async (req, res) => {
-    const queryRes = await dev.changeDevice(req.body);
-    if (queryRes.rowCount < 0) {
-        res.status(500).send(`Internal Server Error`);
-    } else {
-        if (queryRes.rowCount > 0) {
-            res.status(204).send();
+exports.modifyDeviceByUserId = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    let tokenUserId = -1;
+    if (req.headers && req.headers.authorization) {
+        tokenUserId = jwt.getUserId(req.headers.authorization);
+    }
+    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+        const queryRes = await dev.modifyDeviceByUserId(reqUserId, req.body);
+        if (queryRes.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
         } else {
-            res.status(404).send();
+            if (queryRes.rowCount > 0) {
+                res.status(204).send();
+            } else {
+                res.status(404).send();
+            }
         }
     }
 };
 
-exports.removeDevices = async (req, res) => {
-    const queryRes = await dev.deleteDevicesById(req.params.deviceIds.split(','));
-    if (queryRes.rowCount < 0) {
-        res.status(500).send(`Internal Server Error`);
-    } else {
-        if (queryRes.rowCount > 0) {
-            res.status(204).send();
+exports.removeDevicesByUserId = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    let tokenUserId = -1;
+    if (req.headers && req.headers.authorization) {
+        tokenUserId = jwt.getUserId(req.headers.authorization);
+    }
+    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+        const queryRes = await dev.deleteDevicesByUserId(reqUserId, req.params.deviceIds.split(','));
+        if (queryRes.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
         } else {
-            res.status(404).send();
+            if (queryRes.rowCount > 0) {
+                res.status(204).send();
+            } else {
+                res.status(404).send();
+            }
         }
     }
 };
