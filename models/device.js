@@ -188,10 +188,36 @@ async function addSharedUser(sharedUser, ids) {
     return queryRes;
 }
 
+async function addSharedUserByUserId(userId, sharedUser, ids) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('addSharedUserByUserId', [userId, sharedUser.username, ids]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'No shared users were added';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'No shared users were added';
+    }
+    return queryRes;
+}
+
 async function deleteSharedUser(sharedUser, ids) {
     let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('deleteSharedUser', [sharedUser, ids]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'No shared users were deleted';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'No shared users were deleted';
+    }
+    return queryRes;
+}
+
+async function deleteSharedUserByUserId(userId, sharedUser, ids) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('deleteSharedUserByUserId', [userId, sharedUser.username, ids]);
         if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No shared users were deleted';
         }
@@ -238,6 +264,8 @@ module.exports.modifyDevice = modifyDevice;
 module.exports.modifyDeviceByUserId = modifyDeviceByUserId;
 module.exports.splitDeviceIdentity = splitDeviceIdentity;
 module.exports.addSharedUser = addSharedUser;
+module.exports.addSharedUserByUserId = addSharedUserByUserId;
 module.exports.deleteSharedUser = deleteSharedUser;
+module.exports.deleteSharedUserByUserId = deleteSharedUserByUserId;
 module.exports.deleteDevicesById = deleteDevicesById;
 module.exports.deleteDevicesByUserId = deleteDevicesByUserId;

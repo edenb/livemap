@@ -51,6 +51,10 @@ module.exports = (passport) => {
 
     router.delete('/users/:userId/devices/:deviceIds', jwt.checkScopes(['devices']), devices.removeDevicesByUserId);
 
+    router.post('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes(['devices']), devices.addSharedUserByUserId);
+
+    router.delete('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes(['devices']), devices.removeSharedUserByUserId);
+
     router.get('/devices', jwt.checkScopes(['devices']), devices.getAllDevices);
 
     router.get('/positions', jwt.checkScopes(['positions']), positions.getLastPositions);

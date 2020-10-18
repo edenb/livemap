@@ -37,7 +37,7 @@ exports.getDevicesByUserId = async (req, res) => {
             res.status(200).send(ownedDevices.concat(sharedDevices));
         }
     } else {
-        res.status(401).send('Unauthorized.');
+        res.status(403).send();
     }
 };
 
@@ -61,6 +61,8 @@ exports.addDeviceByUserId = async (req, res) => {
                 res.status(409).send();
             }
         }
+    } else {
+        res.status(403).send();
     }
 };
 
@@ -84,6 +86,8 @@ exports.modifyDeviceByUserId = async (req, res) => {
                 res.status(404).send();
             }
         }
+    } else {
+        res.status(403).send();
     }
 };
 
@@ -107,5 +111,57 @@ exports.removeDevicesByUserId = async (req, res) => {
                 res.status(404).send();
             }
         }
+    } else {
+        res.status(403).send();
+    }
+};
+
+exports.addSharedUserByUserId = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    let tokenUserId = -1;
+    if (req.headers && req.headers.authorization) {
+        tokenUserId = jwt.getUserId(req.headers.authorization);
+    }
+    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+        const queryRes = await dev.addSharedUserByUserId(reqUserId, req.body, req.params.deviceIds.split(','));
+        if (queryRes.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
+        } else {
+            if (queryRes.rowCount > 0) {
+                res.status(201).send();
+            } else {
+                res.status(409).send();
+            }
+        }
+    } else {
+        res.status(403).send();
+    }
+};
+
+exports.removeSharedUserByUserId = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    let tokenUserId = -1;
+    if (req.headers && req.headers.authorization) {
+        tokenUserId = jwt.getUserId(req.headers.authorization);
+    }
+    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+        const queryRes = await dev.deleteSharedUserByUserId(reqUserId, req.body, req.params.deviceIds.split(','));
+        if (queryRes.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
+        } else {
+            if (queryRes.rowCount > 0) {
+                res.status(204).send();
+            } else {
+                res.status(404).send();
+            }
+        }
+    } else {
+        res.status(403).send();
     }
 };
