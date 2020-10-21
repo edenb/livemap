@@ -3,8 +3,8 @@ const jsonwebtoken = require('jsonwebtoken');
 
 function getScopes(user) {
     let scopesByRole = new Array();
-    scopesByRole['viewer'] = ['account', 'positions', 'staticlayers'];
-    scopesByRole['manager'] = ['account', 'positions', 'staticlayers'];
+    scopesByRole['viewer'] = ['account', 'positions', 'devices', 'staticlayers'];
+    scopesByRole['manager'] = ['account', 'positions', 'devices', 'staticlayers'];
     scopesByRole['admin'] = ['account', 'users', 'devices', 'positions', 'staticlayers'];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];
@@ -35,6 +35,20 @@ function getTokenPayload(token) {
         payload = {};
     }
     return payload;
+}
+
+function getUserId(token) {
+    // If the token comes from the authorization header remove the 'Bearer' part
+    const tokenElements = token.split(' ');
+    if (tokenElements.length === 2 && tokenElements[0] === 'Bearer') {
+        token = tokenElements[1];
+    }
+    const payload = getTokenPayload(token);
+    if (payload.userId) {
+        return parseInt(payload.userId) || -1;
+    } else {
+        return -1;
+    }
 }
 
 function checkScopes(scopes) {
@@ -69,4 +83,5 @@ function checkScopes(scopes) {
 
 module.exports.getNewToken = getNewToken;
 module.exports.getTokenPayload = getTokenPayload;
+module.exports.getUserId = getUserId;
 module.exports.checkScopes = checkScopes;

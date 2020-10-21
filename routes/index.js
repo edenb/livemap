@@ -145,7 +145,7 @@ module.exports = (passport) => {
 
     // GET Change Devices Page.
     router.get('/changedevices', ensureAuthenticated, async (req, res) => {
-        const queryRes = await dev.getDevicesByField('user_id', req.user.user_id);
+        const queryRes = await dev.getOwnedDevicesByField('user_id', req.user.user_id);
         let userdevices = queryRes.rows;
         if (typeof queryRes.userMessage === 'undefined') {
             res.render('changedevices', {wclient: config.get('wclient'), broker: mqtt.getBrokerUrl(), flash: req.flash(), user: req.user, userdevices: userdevices});
@@ -178,7 +178,11 @@ module.exports = (passport) => {
                 res.redirect('/main');
                 break;
             case 'submit':
-                queryRes = await dev.changeDevice(modDevice);
+                if (modDevice.device_id <= 0) {
+                    queryRes = await dev.addDevice(modDevice);
+                } else {
+                    queryRes = await dev.modifyDevice(modDevice);
+                }
                 if (queryRes.rowCount === 1) {
                     req.flash('info', 'Device changed');
                     req.session.save(() => {

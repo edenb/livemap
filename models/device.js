@@ -58,11 +58,11 @@ async function getDeviceByIdentity(apiKey, identifier) {
     return queryRes;
 }
 
-async function getDevicesByField(field, value) {
+async function getOwnedDevicesByField(field, value) {
     let queryRes = db.getEmptyQueryRes();
     let queryDefinition = '';
     if (field === 'user_id') {
-        queryDefinition = 'getDevicesByUserId';
+        queryDefinition = 'getOwnedDevicesByUserId';
     }
     if (queryDefinition !== '') {
         try {
@@ -74,26 +74,70 @@ async function getDevicesByField(field, value) {
     return queryRes;
 }
 
-async function changeDevice(modDevice) {
+async function getSharedDevicesByField(field, value) {
     let queryRes = db.getEmptyQueryRes();
-    if (modDevice.device_id <= 0) {
+    let queryDefinition = '';
+    if (field === 'user_id') {
+        queryDefinition = 'getSharedDevicesByUserId';
+    }
+    if (queryDefinition !== '') {
         try {
-            queryRes = await db.queryDbAsync('insertDevice', [modDevice.api_key, modDevice.identifier, modDevice.alias]);
-            if (queryRes.rowCount <= 0) {
-                queryRes.userMessage = 'Unable to add device';
-            }
+            queryRes = await db.queryDbAsync(queryDefinition, [value]);
         } catch(err) {
+            queryRes.userMessage = 'Unable to find devices.';
+        }
+    }
+    return queryRes;
+}
+
+async function addDevice(device) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('insertDevice', [device.api_key, device.identifier, device.alias]);
+        if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'Unable to add device';
         }
-    } else {
-        try {
-            queryRes = await db.queryDbAsync('changeDeviceById', [modDevice.device_id, modDevice.alias, modDevice.fixed_loc_lat, modDevice.fixed_loc_lon]);
-            if (queryRes.rowCount <= 0) {
-                queryRes.userMessage = 'Unable to change device';
-            }
-        } catch(err) {
+    } catch(err) {
+        queryRes.userMessage = 'Unable to add device';
+    }
+    return queryRes;
+}
+
+async function addDeviceByUserId(userId, device) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('addDeviceByUserId', [userId, device.identifier, device.alias, device.fixed_loc_lat, device.fixed_loc_lon]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'Unable to add device';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'Unable to add device';
+    }
+    return queryRes;
+}
+
+async function modifyDevice(device) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('modifyDeviceById', [device.device_id, device.alias, device.fixed_loc_lat, device.fixed_loc_lon]);
+        if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'Unable to change device';
         }
+    } catch(err) {
+        queryRes.userMessage = 'Unable to change device';
+    }
+    return queryRes;
+}
+
+async function modifyDeviceByUserId(userId, device) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('modifyDeviceByUserId', [userId, device.device_id, device.alias, device.fixed_loc_lat, device.fixed_loc_lon]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'Unable to change device';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'Unable to change device';
     }
     return queryRes;
 }
@@ -144,10 +188,36 @@ async function addSharedUser(sharedUser, ids) {
     return queryRes;
 }
 
+async function addSharedUserByUserId(userId, sharedUser, ids) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('addSharedUserByUserId', [userId, sharedUser.username, ids]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'No shared users were added';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'No shared users were added';
+    }
+    return queryRes;
+}
+
 async function deleteSharedUser(sharedUser, ids) {
     let queryRes = db.getEmptyQueryRes();
     try {
         queryRes = await db.queryDbAsync('deleteSharedUser', [sharedUser, ids]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'No shared users were deleted';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'No shared users were deleted';
+    }
+    return queryRes;
+}
+
+async function deleteSharedUserByUserId(userId, sharedUser, ids) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('deleteSharedUserByUserId', [userId, sharedUser.username, ids]);
         if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No shared users were deleted';
         }
@@ -170,12 +240,32 @@ async function deleteDevicesById(ids) {
     return queryRes;
 }
 
+async function deleteDevicesByUserId(userId, ids) {
+    let queryRes = db.getEmptyQueryRes();
+    try {
+        queryRes = await db.queryDbAsync('deleteDevicesByUserId', [userId, ids]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'No devices were deleted';
+        }
+    } catch(err) {
+        queryRes.userMessage = 'No devices were deleted';
+    }
+    return queryRes;
+}
+
 module.exports.getAllDevices = getAllDevices;
 module.exports.getAllowedDevices = getAllowedDevices;
 module.exports.getDeviceByIdentity = getDeviceByIdentity;
-module.exports.getDevicesByField = getDevicesByField;
-module.exports.changeDevice = changeDevice;
+module.exports.getOwnedDevicesByField = getOwnedDevicesByField;
+module.exports.getSharedDevicesByField = getSharedDevicesByField;
+module.exports.addDevice = addDevice;
+module.exports.addDeviceByUserId = addDeviceByUserId;
+module.exports.modifyDevice = modifyDevice;
+module.exports.modifyDeviceByUserId = modifyDeviceByUserId;
 module.exports.splitDeviceIdentity = splitDeviceIdentity;
 module.exports.addSharedUser = addSharedUser;
+module.exports.addSharedUserByUserId = addSharedUserByUserId;
 module.exports.deleteSharedUser = deleteSharedUser;
+module.exports.deleteSharedUserByUserId = deleteSharedUserByUserId;
 module.exports.deleteDevicesById = deleteDevicesById;
+module.exports.deleteDevicesByUserId = deleteDevicesByUserId;

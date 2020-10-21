@@ -169,10 +169,10 @@ describe('Remove test user including owned devices', () => {
             }
         });   
     });
-    describe('#getDevicesByField', () => {
+    describe('#getOwnedDevicesByField', () => {
         it('should return 5 devices', async () => {
             try {
-                const queryRes = await dev.getDevicesByField('user_id', testUser.user_id);
+                const queryRes = await dev.getOwnedDevicesByField('user_id', testUser.user_id);
                 testDevices = queryRes.rows;
                 queryRes.rowCount.should.equal(5);
             } catch(err) {

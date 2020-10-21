@@ -43,13 +43,19 @@ module.exports = (passport) => {
 
     router.get('/users/:userId', jwt.checkScopes(['users']), users.getUserByUserId);
 
+    router.get('/users/:userId/devices', jwt.checkScopes(['devices']), devices.getDevicesByUserId);
+
+    router.post('/users/:userId/devices', jwt.checkScopes(['devices']), devices.addDeviceByUserId);
+
+    router.put('/users/:userId/devices/:deviceId', jwt.checkScopes(['devices']), devices.modifyDeviceByUserId);
+
+    router.delete('/users/:userId/devices/:deviceIds', jwt.checkScopes(['devices']), devices.removeDevicesByUserId);
+
+    router.post('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes(['devices']), devices.addSharedUserByUserId);
+
+    router.delete('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes(['devices']), devices.removeSharedUserByUserId);
+
     router.get('/devices', jwt.checkScopes(['devices']), devices.getAllDevices);
-
-    router.post('/devices', jwt.checkScopes(['devices']), devices.addDevice);
-
-    router.put('/devices/:deviceId', jwt.checkScopes(['devices']), devices.modifyDevice);
-
-    router.delete('/devices/:deviceId', jwt.checkScopes(['devices']), devices.removeDevice);
 
     router.get('/positions', jwt.checkScopes(['positions']), positions.getLastPositions);
 
