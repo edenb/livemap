@@ -43,7 +43,7 @@ describe('Setup test user', () => {
     describe('#changeDetails', () => {
         it('should create 1 user', async () => {
             try {
-                const queryRes = await usr.changeDetails(0, testUser);
+                const queryRes = await usr.addUser(0, testUser);
                 queryRes.rowCount.should.equal(1);
             } catch(err) {
                 throw new Error(err.message);

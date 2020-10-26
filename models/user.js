@@ -79,7 +79,7 @@ async function getUserByField(field, value) {
     return queryRes;
 }
 
-async function changeDetails(user, modUser) {
+async function addUser(user, modUser) {
     let queryRes = db.getEmptyQueryRes();
     let userMessage;
     // If the API key is empty generate one
@@ -102,12 +102,31 @@ async function changeDetails(user, modUser) {
         } catch(err) {
             queryRes.userMessage = 'Unable to add user';
         }
-    } else {
-        try {
-            queryRes = await db.queryDbAsync('changeDetailsById', [modUser.user_id, modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
-        } catch(err) {
-            queryRes.userMessage = 'Unable to change details';
-        }
+    }
+    return queryRes;
+}
+
+async function modifyUser(user, modUser) {
+    let queryRes = db.getEmptyQueryRes();
+    let userMessage;
+    // If the API key is empty generate one
+    if (modUser.api_key === '') {
+        modUser.api_key = generateAPIkey();
+    }
+    userMessage = checkChangesAllowed(user, modUser);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        return queryRes;
+    }
+    userMessage = validateChanges(user, modUser);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        return queryRes;
+    }
+    try {
+        queryRes = await db.queryDbAsync('modifyUserById', [modUser.user_id, modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
+    } catch(err) {
+        queryRes.userMessage = 'Unable to change details';
     }
     return queryRes;
 }
@@ -201,7 +220,8 @@ function isKnownAPIkey(apiKey, ignoreUser) {
 
 module.exports.getAllUsers = getAllUsers;
 module.exports.getUserByField = getUserByField;
-module.exports.changeDetails = changeDetails;
+module.exports.addUser = addUser;
+module.exports.modifyUser = modifyUser;
 module.exports.changePassword = changePassword;
 module.exports.checkPassword = checkPassword;
 module.exports.deleteUser = deleteUser;
