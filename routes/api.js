@@ -41,6 +41,12 @@ module.exports = (passport) => {
 
     router.get('/users', jwt.checkScopes('usr_.a.r..'), users.getAllUsers);
 
+    router.post('/users', jwt.checkScopes('usr_.ac...'), users.addUser);
+
+    router.put('/users/:userId', jwt.checkScopes('usr_.a..u.'), users.modifyUser);
+
+    router.delete('/users/:userId', jwt.checkScopes('usr_.a...d'), users.removeUser);
+
     router.get('/users/:userId', jwt.checkScopes('usr_o..r..'), users.getUserByUserId);
 
     router.get('/users/:userId/devices', jwt.checkScopes('dev_o..r..'), devices.getDevicesByUserId);

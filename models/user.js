@@ -83,7 +83,7 @@ async function addUser(user, modUser) {
     let queryRes = db.getEmptyQueryRes();
     let userMessage;
     // If the API key is empty generate one
-    if (modUser.api_key === '') {
+    if (!modUser.api_key || modUser.api_key === '') {
         modUser.api_key = generateAPIkey();
     }
     userMessage = checkChangesAllowed(user, modUser);
@@ -96,7 +96,7 @@ async function addUser(user, modUser) {
         queryRes.userMessage = userMessage;
         return queryRes;
     }
-    if (typeof modUser.user_id === 'undefined' || modUser.user_id === 0) {
+    if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
         try {
             queryRes = await db.queryDbAsync('insertUser', [modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
         } catch(err) {
