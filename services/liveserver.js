@@ -12,7 +12,7 @@ const JSONValidator = require('../utils/validator');
 const logger = require('../utils/logger');
 
 const LivemapValidator = new JSONValidator('livemap');
-let io;
+const io = socketio();
 let recentDeviceRooms = [];
 
 function getSessionInfo(sid) {
@@ -62,17 +62,10 @@ function joinRooms(socket, token) {
 function addRoom(sockets, device) {
     return new Promise ((resolve) => {
         // Check if the device room already exists
-        let roomExists = false
-        let deviceRoom = getRoomName(device.device_id);
-        for (let connectedKey in sockets.connected) {
-            for (let roomsKey in sockets.connected[connectedKey].rooms) {
-                if (sockets.connected[connectedKey].rooms[roomsKey] === deviceRoom) {
-                    roomExists = true;
-                }
-            }
-        }
+        const deviceRoom = getRoomName(device.device_id);
+        const roomExists = sockets.adapter.rooms.has(deviceRoom);
 
-        // If the device room exists and we haven't seen this device before
+        // If the device room does't exist and we haven't seen this device before
         if (!roomExists && !recentDeviceRooms.includes(deviceRoom)) {
             // Save this device room so we don't have to check again
             recentDeviceRooms.push(deviceRoom);
@@ -81,9 +74,8 @@ function addRoom(sockets, device) {
             usr.getUserByField('api_key', device.api_key)
                 .then((queryRes) => {
                     // Add a new device room to every socket used by the owner
-                    for (let key in sockets.connected) {
-                       let socket = sockets.connected[key];
-                       if (socket.userId === queryRes.rows[0].user_id) {
+                    for (let socket of sockets.sockets.values()) {
+                        if (socket.userId === queryRes.rows[0].user_id) {
                             socket.join(getRoomName(device.device_id), () => {
                                 resolve();
                             });
@@ -108,8 +100,6 @@ async function startGpxPlayer(userId) {
 //
 
 function start(server) {
-    io = socketio.listen(server, {cookie: false});
-
     // On every incoming socket that contains a cookie get the ID of the current session.
     io.use((socket, next) => {
         // Only get the session ID if the socket contains a cookie
@@ -154,6 +144,14 @@ function start(server) {
                 });
         });
     });
+
+    // Start Socket IO server
+    io.listen(server, {
+        cookie: false,
+        cors: {
+            origin: "*"
+        }
+    });
 }
 
 async function sendToClients(destData) {
@@ -166,9 +164,12 @@ async function sendToClients(destData) {
         addRoom(io.sockets, destData)
             .then(() => {
                 io.to(deviceRoom).emit('positionUpdate', JSON.stringify({type: 'gps', data: destData}));
-                logger.debug(`Clients connected: ${Object.keys(io.sockets.connected).length}`);
+                logger.debug(`Clients connected: ${io.sockets.sockets.size}`);
                 pos.insertPosition([destData.device_id, destData.device_id_tag, destData.loc_timestamp, destData.loc_lat, destData.loc_lon, destData.loc_type, destData.loc_attr]);
-            });
+            })
+            .catch((err) => {
+                logger.error(`Send to clients: ${err.message}`);
+            })
     } else {
         logger.info(`Invalid: ${LivemapValidator.errorsText()}`);
     }
