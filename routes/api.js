@@ -37,29 +37,35 @@ module.exports = (passport) => {
             });
     });
 
-    router.get('/account', jwt.checkScopes(['account']), users.getAccount);
+    router.get('/account', jwt.checkScopes('acc_o..r..'), users.getAccount);
 
-    router.get('/users', jwt.checkScopes(['users']), users.getAllUsers);
+    router.get('/users', jwt.checkScopes('usr_.a.r..'), users.getAllUsers);
 
-    router.get('/users/:userId', jwt.checkScopes(['users']), users.getUserByUserId);
+    router.post('/users', jwt.checkScopes('usr_.ac...'), users.addUser);
 
-    router.get('/users/:userId/devices', jwt.checkScopes(['devices']), devices.getDevicesByUserId);
+    router.put('/users/:userId', jwt.checkScopes('usr_.a..u.'), users.modifyUser);
 
-    router.post('/users/:userId/devices', jwt.checkScopes(['devices']), devices.addDeviceByUserId);
+    router.delete('/users/:userId', jwt.checkScopes('usr_.a...d'), users.removeUser);
 
-    router.put('/users/:userId/devices/:deviceId', jwt.checkScopes(['devices']), devices.modifyDeviceByUserId);
+    router.get('/users/:userId', jwt.checkScopes('usr_o..r..'), users.getUserByUserId);
 
-    router.delete('/users/:userId/devices/:deviceIds', jwt.checkScopes(['devices']), devices.removeDevicesByUserId);
+    router.get('/users/:userId/devices', jwt.checkScopes('dev_o..r..'), devices.getDevicesByUserId);
 
-    router.post('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes(['devices']), devices.addSharedUserByUserId);
+    router.post('/users/:userId/devices', jwt.checkScopes('dev_o.c...'), devices.addDeviceByUserId);
 
-    router.delete('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes(['devices']), devices.removeSharedUserByUserId);
+    router.put('/users/:userId/devices/:deviceId', jwt.checkScopes('dev_o...u.'), devices.modifyDeviceByUserId);
 
-    router.get('/devices', jwt.checkScopes(['devices']), devices.getAllDevices);
+    router.delete('/users/:userId/devices/:deviceIds', jwt.checkScopes('dev_o....d'), devices.removeDevicesByUserId);
 
-    router.get('/positions', jwt.checkScopes(['positions']), positions.getLastPositions);
+    router.post('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes('sha_o.c...'), devices.addSharedUserByUserId);
 
-    router.get('/staticlayers', jwt.checkScopes(['staticlayers']), staticLayers.getStaticLayers);
+    router.delete('/users/:userId/devices/:deviceIds/shareduser', jwt.checkScopes('sha_o....d'), devices.removeSharedUserByUserId);
+
+    router.get('/devices', jwt.checkScopes('dev_.a.r..'), devices.getAllDevices);
+
+    router.get('/positions', jwt.checkScopes('pos_o..r..'), positions.getLastPositions);
+
+    router.get('/staticlayers', jwt.checkScopes('lay_.a.r..'), staticLayers.getStaticLayers);
 
     // This middleware always at the end to catch undefined endpoints
     router.use('*', (req, res) => {

@@ -110,7 +110,11 @@ module.exports = (passport) => {
                 res.redirect('/main');
                 break;
             case 'submit':
-                queryRes = await usr.changeDetails(req.user, modUser);
+                if (modUser.user_id <= 0) {
+                    queryRes = await usr.addUser(req.user, modUser);
+                } else {
+                    queryRes = await usr.modifyUser(req.user, modUser);
+                }
                 if (queryRes.rowCount === 1) {
                     req.flash('info', 'Details changed');
                     req.session.save(() => {

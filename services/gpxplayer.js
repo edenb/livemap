@@ -25,12 +25,12 @@ function postMessage(destinationUrl, data) {
     var req = http.request(options, function (res) {
         res.setEncoding('utf8');
         // Response is 'OK' if POST request is successful, '404 not found' if request not accepted
-        res.on('data', function (chunk) {
+        res.on('data', function () {
         });
     });
 
     // Ignore errors if POST request fails, e.g. no response
-    req.on('error', function (e) {
+    req.on('error', function () {
     });
 
     req.write(data);

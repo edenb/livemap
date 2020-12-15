@@ -3,9 +3,9 @@ const jsonwebtoken = require('jsonwebtoken');
 
 function getScopes(user) {
     let scopesByRole = new Array();
-    scopesByRole['viewer'] = ['account', 'positions', 'devices', 'staticlayers'];
-    scopesByRole['manager'] = ['account', 'positions', 'devices', 'staticlayers'];
-    scopesByRole['admin'] = ['account', 'users', 'devices', 'positions', 'staticlayers'];
+    scopesByRole['viewer'] = ['acc_o--r--', 'pos_o--r--', 'dev_o--r--', 'usr_o--ru-', 'lay_-a-r--'];
+    scopesByRole['manager'] = ['acc_o--r--', 'pos_o--r--', 'dev_o-crud', 'usr_o--ru-', 'sha_o-crud', 'lay_-a-r--'];
+    scopesByRole['admin'] = ['acc_oacrud', 'pos_oacrud', 'dev_oacrud', 'usr_oacrud', 'sha_oacrud', 'lay_oacrud'];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];
     } else {
@@ -51,7 +51,7 @@ function getUserId(token) {
     }
 }
 
-function checkScopes(scopes) {
+function checkScopes(scope) {
     return (req, res, next) => {
         // Get the token from the header (API requests) or from the session (web client requests)
         let token = '';
@@ -67,8 +67,9 @@ function checkScopes(scopes) {
                 let decoded = jsonwebtoken.verify(token, 'replacebysecretfromconfig', options);
                 req.decodedToken = decoded;
                 for (let i=0; i<decoded.scopes.length; i++) {
-                    for (let j=0; j<scopes.length; j++) {
-                        if(scopes[j] === decoded.scopes[i]) return next();
+                    for (let j=0; j<scope.length; j++) {
+                        const regexScope = RegExp(scope);
+                        if (regexScope.test(decoded.scopes[i])) return next();
                     }
                 }
                 res.status(401).send('Unauthorized. Invalid scope');

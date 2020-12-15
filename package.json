@@ -7,7 +7,7 @@
     "ajv": "^6.12.6",
     "bcrypt": "~5.0.0",
     "body-parser": "~1.19.0",
-    "config": "^3.3.2",
+    "config": "^3.3.3",
     "connect-flash": "~0.1.0",
     "connect-pg-simple": "~6.2.0",
     "cookie-parser": "^1.4.5",
@@ -15,32 +15,26 @@
     "express-session": "^1.17.1",
     "gpx-parse": "~0.10.0",
     "jsonwebtoken": "~8.5.0",
-    "memorystore": "^1.6.2",
+    "memorystore": "^1.6.4",
     "morgan": "~1.10.0",
-    "mqtt": "^4.2.1",
+    "mqtt": "~4.2.6",
     "passport": "~0.4.0",
     "passport-local": "~1.0.0",
     "path": "~0.12.0",
-    "pg": "^8.4.1",
+    "pg": "^8.5.1",
     "pg-connection-string": "^2.4.0",
     "pug": "~3.0.0",
     "serve-favicon": "~2.5.0",
-    "shortid": "~2.2.0",
-    "socket.io": "~2.3.0",
+    "shortid": "^2.2.16",
+    "socket.io": "~3.0.4",
     "url": "~0.11.0",
     "winston": "~3.3.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
-    "eslint": "^7.11.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "mocha": "^8.2.0",
+    "eslint": "^7.15.0",
+    "mocha": "^8.2.1",
     "nyc": "^15.1.0"
   },
   "engines": {
@@ -49,7 +43,7 @@
   "scripts": {
     "test": "nyc mocha --recursive test",
     "start": "node app.js",
-    "lint": "eslint app.js models services database routes utils test"
+    "lint": "eslint app.js auth controllers database models routes services test utils"
   },
   "author": "edenb",
   "license": "MIT"
