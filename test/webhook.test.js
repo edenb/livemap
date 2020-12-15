@@ -5,11 +5,8 @@ const express = require('express');
 const usr = require('../models/user');
 const dev = require('../models/device');
 const webhook = require('../services/webhook');
-const livesvr = require('../services/liveserver');
 
 chai.use(chaihttp);
-
-livesvr.start();
 
 // Setup test user
 let testUser = {
