@@ -1,14 +1,16 @@
 "use strict";
-var ajv = require('ajv');
-var fs = require('fs');
-var logger = require('./logger');
+const ajv = require('ajv').default;
+const addFormats = require('ajv-formats');
+const fs = require('fs');
+const logger = require('./logger');
 
 class Validator {
     constructor(schemaName) {
         this._schemaValid = false;
         this._schemaName = schemaName;
-        this.ajvValidator = ajv({schemaId: 'auto', allErrors: true, coerceTypes: true});
+        this.ajvValidator = new ajv({allErrors: true, coerceTypes: true});
         this.ajvValidator.addMetaSchema(require('../schemas/json-schema-draft-06.json'));
+        addFormats(this.ajvValidator);
         this.loadSchema(schemaName);
     }
 
