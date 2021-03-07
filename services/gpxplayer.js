@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const config = require('config');
 var http = require('http');
 var url = require('url');
@@ -23,9 +23,10 @@ function postMessage(data) {
         device_id: data.device_id,
         gps_latitude: data.gps_latitude,
         gps_longitude: data.gps_longitude,
-        gps_time: data.gps_time
+        gps_time: data.gps_time,
     });
-    const destinationUrl = 'http://localhost:' + config.get('server.port') + '/location/gpx'
+    const destinationUrl =
+        'http://localhost:' + config.get('server.port') + '/location/gpx';
     const options = {
         host: url.parse(destinationUrl).hostname,
         port: url.parse(destinationUrl).port,
@@ -33,20 +34,18 @@ function postMessage(data) {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
-            'Content-Length': Buffer.byteLength(gpxQuerystring)
-        }
+            'Content-Length': Buffer.byteLength(gpxQuerystring),
+        },
     };
 
     var req = http.request(options, (res) => {
         res.setEncoding('utf8');
         // Response is 'OK' if POST request is successful, '404 not found' if request not accepted
-        res.on('data', function () {
-        });
+        res.on('data', function () {});
     });
 
     // Ignore errors if POST request fails, e.g. no response
-    req.on('error', function () {
-    });
+    req.on('error', function () {});
 
     req.write(gpxQuerystring);
     req.end();
@@ -71,7 +70,9 @@ class GpxPlayer {
             // If track not already running and a GPX file is present
             if (!track && this.fileTrackNames.indexOf(trackName) >= 0) {
                 // Start a new track
-                this.tracks.push(new Track(this.dirName, trackName, this.cbPoint));
+                this.tracks.push(
+                    new Track(this.dirName, trackName, this.cbPoint)
+                );
             }
         }
     }
@@ -93,8 +94,8 @@ class GpxPlayer {
                 this.fileTrackNames = [];
             } else {
                 let fileTrackNames = [];
-                allFiles.forEach(file => {
-                    if (path.extname(file) === ".gpx") {
+                allFiles.forEach((file) => {
+                    if (path.extname(file) === '.gpx') {
                         fileTrackNames.push(path.basename(file, '.gpx'));
                     }
                 });
@@ -128,14 +129,14 @@ class Track {
         try {
             this.gpxData = await this.loadGpxFile();
             this.sendGpxPoint();
-        } catch(err) {
+        } catch (err) {
             logger.error('Unable to open GPX file.', err);
         }
     }
 
     loadGpxFile() {
-        return new Promise ((resolve, reject) => {
-            let fileName = this.dirName + this.name + '.gpx'
+        return new Promise((resolve, reject) => {
+            let fileName = this.dirName + this.name + '.gpx';
             fs.readFile(fileName, (err, fileData) => {
                 if (err) {
                     reject(err);
@@ -149,7 +150,7 @@ class Track {
                     });
                 }
             });
-        })
+        });
     }
 
     sendGpxPoint() {
@@ -157,7 +158,10 @@ class Track {
         this.gpxIndex += 1;
         let nextPoint = this._getPoint();
         if (curPoint && nextPoint) {
-            let diffTime = this._getDiffTime(curPoint.gps_time, nextPoint.gps_time);
+            let diffTime = this._getDiffTime(
+                curPoint.gps_time,
+                nextPoint.gps_time
+            );
             setTimeout(this.sendGpxPoint.bind(this), diffTime);
             this.isRunning = true;
         } else {
@@ -174,9 +178,13 @@ class Track {
         } else {
             return {
                 device_id: this.name,
-                gps_latitude: this.gpxData.tracks[0].segments[0][this.gpxIndex].lat,
-                gps_longitude: this.gpxData.tracks[0].segments[0][this.gpxIndex].lon,
-                gps_time: this.gpxData.tracks[0].segments[0][this.gpxIndex].time.toISOString()
+                gps_latitude: this.gpxData.tracks[0].segments[0][this.gpxIndex]
+                    .lat,
+                gps_longitude: this.gpxData.tracks[0].segments[0][this.gpxIndex]
+                    .lon,
+                gps_time: this.gpxData.tracks[0].segments[0][
+                    this.gpxIndex
+                ].time.toISOString(),
             };
         }
     }
