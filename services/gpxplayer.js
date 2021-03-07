@@ -1,7 +1,6 @@
 'use strict';
 const config = require('config');
 var http = require('http');
-var url = require('url');
 var qs = require('querystring');
 const fs = require('fs');
 const path = require('path');
@@ -25,12 +24,11 @@ function postMessage(data) {
         gps_longitude: data.gps_longitude,
         gps_time: data.gps_time,
     });
-    const destinationUrl =
-        'http://localhost:' + config.get('server.port') + '/location/gpx';
+
     const options = {
-        host: url.parse(destinationUrl).hostname,
-        port: url.parse(destinationUrl).port,
-        path: url.parse(destinationUrl).pathname + '?' + gpxQuerystring,
+        host: 'localhost',
+        port: config.get('server.port'),
+        path: '/location/gpx?' + gpxQuerystring,
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
@@ -38,14 +36,17 @@ function postMessage(data) {
         },
     };
 
-    var req = http.request(options, (res) => {
-        res.setEncoding('utf8');
-        // Response is 'OK' if POST request is successful, '404 not found' if request not accepted
-        res.on('data', function () {});
+    const req = http.request(options, (res) => {
+        if (res.statusCode >= 300) {
+            logger.error(
+                `GPX player failed HTTP POST with status code: ${res.statusCode}`
+            );
+        }
     });
 
-    // Ignore errors if POST request fails, e.g. no response
-    req.on('error', function () {});
+    req.on('error', (err) => {
+        logger.error('GPX player failed HTTP POST.', err);
+    });
 
     req.write(gpxQuerystring);
     req.end();

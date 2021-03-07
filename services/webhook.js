@@ -200,7 +200,7 @@ async function processLocation(request, response, type) {
                 response.sendStatus(200);
                 break;
             default:
-                response.sendStatus(404);
+                response.sendStatus(422);
         }
     });
 }
