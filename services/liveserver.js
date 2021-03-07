@@ -11,9 +11,11 @@ const jwt = require('../auth/jwt');
 const JSONValidator = require('../utils/validator');
 const logger = require('../utils/logger');
 
-const LivemapValidator = new JSONValidator('livemap');
+const livemapValidator = new JSONValidator('livemap');
 const io = socketio();
 let recentDeviceRooms = [];
+
+gp.start();
 
 function getSessionInfo(sid) {
     return new Promise ((resolve, reject) => {
@@ -89,9 +91,10 @@ function addRoom(sockets, device) {
 }
 
 async function startGpxPlayer(userId) {
-    let queryRes = await usr.getUserByField('user_id', userId);
+    let queryRes = await dev.getAllowedDevices(userId);
     if (queryRes.rows && queryRes.rows.length > 0) {
-        gp.startAll(queryRes.rows[0].api_key);
+        const deviceList= queryRes.rows.map((item) => ({ identifier: item.identifier, api_key: item.api_key }));
+        gp.add(deviceList);
     }
 }
 
@@ -158,7 +161,7 @@ async function sendToClients(destData) {
     // On a valid location reception:
     // 1. Send a location update to every client that is authorized for this device
     // 2. Store the location in the database
-    if (LivemapValidator.validate(destData)) {
+    if (livemapValidator.validate(destData)) {
         // Send location to room of the device
         let deviceRoom = getRoomName(destData.device_id);
         addRoom(io.sockets, destData)
@@ -171,7 +174,7 @@ async function sendToClients(destData) {
                 logger.error(`Send to clients: ${err.message}`);
             })
     } else {
-        logger.info(`Invalid: ${LivemapValidator.errorsText()}`);
+        logger.info(`Invalid: ${livemapValidator.errorsText()}`);
     }
 }
 
