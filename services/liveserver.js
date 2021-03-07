@@ -15,7 +15,7 @@ const livemapValidator = new JSONValidator('livemap');
 const io = socketio();
 let recentDeviceRooms = [];
 
-gp.start();
+gp.create();
 
 function getSessionInfo(sid) {
     return new Promise((resolve, reject) => {

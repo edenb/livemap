@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
 
 let gpxPlayer = {};
 
-function start() {
+function create() {
     gpxPlayer = new GpxPlayer('./tracks/', postMessage);
 }
 
@@ -203,5 +203,5 @@ class Track {
     }
 }
 
-module.exports.start = start;
+module.exports.create = create;
 module.exports.add = add;
