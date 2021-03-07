@@ -1,10 +1,10 @@
-﻿"use strict";
+﻿'use strict';
 var config = require('config');
 var http = require('http');
 var url = require('url');
 var qs = require('querystring');
 var fs = require('fs');
-var gpxParse = require("gpx-parse");
+var gpxParse = require('gpx-parse');
 var logger = require('../utils/logger');
 
 var port = config.get('server.port');
@@ -18,20 +18,18 @@ function postMessage(destinationUrl, data) {
         method: 'POST',
         headers: {
             'Content-Type': 'text/plain',
-            'Content-Length': Buffer.byteLength(data)
-        }
+            'Content-Length': Buffer.byteLength(data),
+        },
     };
 
     var req = http.request(options, function (res) {
         res.setEncoding('utf8');
         // Response is 'OK' if POST request is successful, '404 not found' if request not accepted
-        res.on('data', function () {
-        });
+        res.on('data', function () {});
     });
 
     // Ignore errors if POST request fails, e.g. no response
-    req.on('error', function () {
-    });
+    req.on('error', function () {});
 
     req.write(data);
     req.end();
@@ -52,13 +50,21 @@ gpxPlayer.prototype.sendGpxPoint = function sendGpxPoint() {
         device_id: this.device_id,
         gps_latitude: this.gpxPlayerData.tracks[0].segments[0][this.index].lat,
         gps_longitude: this.gpxPlayerData.tracks[0].segments[0][this.index].lon,
-        gps_time: this.gpxPlayerData.tracks[0].segments[0][this.index].time.toISOString()
+        gps_time: this.gpxPlayerData.tracks[0].segments[0][
+            this.index
+        ].time.toISOString(),
     });
 
     postMessage(this.postUrl, gpxQuerystring);
     this.index += 1;
     if (this.index < this.gpxPlayerData.tracks[0].segments[0].length) {
-        diffTime = this.gpxPlayerData.tracks[0].segments[0][this.index].time.getTime() - this.gpxPlayerData.tracks[0].segments[0][this.index - 1].time.getTime();
+        diffTime =
+            this.gpxPlayerData.tracks[0].segments[0][
+                this.index
+            ].time.getTime() -
+            this.gpxPlayerData.tracks[0].segments[0][
+                this.index - 1
+            ].time.getTime();
         // Prevent very short or very long interval (1 sec < diffTime < 15 min). Also prevents negative intervals.
         if (diffTime < 1000) {
             diffTime = 1000;
@@ -77,7 +83,7 @@ gpxPlayer.prototype.start = function start() {
     var self = this;
 
     if (this.isRunning === false) {
-        // Read and parse GPX file 
+        // Read and parse GPX file
         fs.readFile(this.fileName, function (fileError, fileData) {
             if (fileError === null) {
                 gpxParse.parseGpx(fileData, function (error, data) {
@@ -99,7 +105,12 @@ gpxPlayer.prototype.start = function start() {
 };
 
 function startAll(apiKey) {
-    var gpxFiles = {}, fileSplit, i, fileExt, fileName, key;
+    var gpxFiles = {},
+        fileSplit,
+        i,
+        fileExt,
+        fileName,
+        key;
 
     fs.readdir('./tracks/', function (err, allFiles) {
         if (err === null) {
@@ -124,8 +135,15 @@ function startAll(apiKey) {
             for (key in gpxFiles) {
                 if (Object.prototype.hasOwnProperty.call(gpxFiles, key)) {
                     let gpxApiKey = key.split('_')[0];
-                    if (typeof gpxTracks[key] === 'undefined' && gpxApiKey === apiKey) {
-                        gpxTracks[key] = new gpxPlayer(gpxFiles[key], './tracks/' +  gpxFiles[key] + '.gpx', 'http://localhost:' + port + '/location/gpx');
+                    if (
+                        typeof gpxTracks[key] === 'undefined' &&
+                        gpxApiKey === apiKey
+                    ) {
+                        gpxTracks[key] = new gpxPlayer(
+                            gpxFiles[key],
+                            './tracks/' + gpxFiles[key] + '.gpx',
+                            'http://localhost:' + port + '/location/gpx'
+                        );
                         logger.info('Added track: ' + gpxTracks[key].fileName);
                     }
                 }
@@ -135,7 +153,9 @@ function startAll(apiKey) {
             for (key in gpxTracks) {
                 if (Object.prototype.hasOwnProperty.call(gpxFiles, key)) {
                     if (typeof gpxFiles[key] === 'undefined') {
-                        logger.info('Removed track: ' + gpxTracks[key].fileName);
+                        logger.info(
+                            'Removed track: ' + gpxTracks[key].fileName
+                        );
                         delete gpxTracks[key];
                     } else {
                         gpxTracks[key].start();

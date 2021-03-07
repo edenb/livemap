@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const db = require('../database/db');
 
 //
@@ -10,7 +10,7 @@ async function getLastPositions(userId) {
     try {
         queryRes = await db.queryDbAsync('getLastPositions', [userId]);
         return queryRes;
-    } catch(err) {
+    } catch (err) {
         // On error return the initial (empty) array
         return queryRes;
     }
@@ -21,7 +21,7 @@ async function insertPosition(position) {
     try {
         queryRes = await db.queryDbAsync('insertPosition', position);
         return queryRes;
-    } catch(err) {
+    } catch (err) {
         // On error return the initial (empty) array
         return queryRes;
     }

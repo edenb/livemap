@@ -1,11 +1,31 @@
-"use strict";
+'use strict';
 const jsonwebtoken = require('jsonwebtoken');
 
 function getScopes(user) {
     let scopesByRole = new Array();
-    scopesByRole['viewer'] = ['acc_o--r--', 'pos_o--r--', 'dev_o--r--', 'usr_o--ru-', 'lay_-a-r--'];
-    scopesByRole['manager'] = ['acc_o--r--', 'pos_o--r--', 'dev_o-crud', 'usr_o--ru-', 'sha_o-crud', 'lay_-a-r--'];
-    scopesByRole['admin'] = ['acc_oacrud', 'pos_oacrud', 'dev_oacrud', 'usr_oacrud', 'sha_oacrud', 'lay_oacrud'];
+    scopesByRole['viewer'] = [
+        'acc_o--r--',
+        'pos_o--r--',
+        'dev_o--r--',
+        'usr_o--ru-',
+        'lay_-a-r--',
+    ];
+    scopesByRole['manager'] = [
+        'acc_o--r--',
+        'pos_o--r--',
+        'dev_o-crud',
+        'usr_o--ru-',
+        'sha_o-crud',
+        'lay_-a-r--',
+    ];
+    scopesByRole['admin'] = [
+        'acc_oacrud',
+        'pos_oacrud',
+        'dev_oacrud',
+        'usr_oacrud',
+        'sha_oacrud',
+        'lay_oacrud',
+    ];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];
     } else {
@@ -18,20 +38,26 @@ function getScopes(user) {
 //
 
 function getNewToken(user) {
-    let options = {algorithm: 'HS512'};
+    let options = { algorithm: 'HS512' };
     let scopes = getScopes(user);
-    let token = jsonwebtoken.sign({userId: user.user_id, role: user.role, scopes: scopes},
+    let token = jsonwebtoken.sign(
+        { userId: user.user_id, role: user.role, scopes: scopes },
         'replacebysecretfromconfig',
-        options);
+        options
+    );
     return token;
 }
 
 function getTokenPayload(token) {
     let payload = {};
-    let options = {algorithm: 'HS512'};
+    let options = { algorithm: 'HS512' };
     try {
-        payload = jsonwebtoken.verify(token, 'replacebysecretfromconfig', options);
-    } catch(err) {
+        payload = jsonwebtoken.verify(
+            token,
+            'replacebysecretfromconfig',
+            options
+        );
+    } catch (err) {
         payload = {};
     }
     return payload;
@@ -55,7 +81,10 @@ function checkScopes(scope) {
     return (req, res, next) => {
         // Get the token from the header (API requests) or from the session (web client requests)
         let token = '';
-        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        if (
+            req.headers.authorization &&
+            req.headers.authorization.split(' ')[0] === 'Bearer'
+        ) {
             token = req.headers.authorization.split(' ')[1];
         }
         if (req.isAuthenticated() && req.session && req.session.token) {
@@ -63,23 +92,27 @@ function checkScopes(scope) {
         }
         if (token !== '') {
             try {
-                let options = {algorithm: 'HS512'};
-                let decoded = jsonwebtoken.verify(token, 'replacebysecretfromconfig', options);
+                let options = { algorithm: 'HS512' };
+                let decoded = jsonwebtoken.verify(
+                    token,
+                    'replacebysecretfromconfig',
+                    options
+                );
                 req.decodedToken = decoded;
-                for (let i=0; i<decoded.scopes.length; i++) {
-                    for (let j=0; j<scope.length; j++) {
+                for (let i = 0; i < decoded.scopes.length; i++) {
+                    for (let j = 0; j < scope.length; j++) {
                         const regexScope = RegExp(scope);
                         if (regexScope.test(decoded.scopes[i])) return next();
                     }
                 }
                 res.status(401).send('Unauthorized. Invalid scope');
-            } catch(err) {
+            } catch (err) {
                 res.status(401).send('Unauthorized. Invalid token');
             }
         } else {
             res.status(401).send('Unauthorized. Token required');
         }
-    }
+    };
 }
 
 module.exports.getNewToken = getNewToken;

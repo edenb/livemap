@@ -7,7 +7,10 @@ var cache = [];
 
 function getIndexOf(qry, param) {
     for (let i = 0; i < cache.length; i += 1) {
-        if ((cache[i].qry.qstr === qry.qstr) && (JSON.stringify(cache[i].param) === JSON.stringify(param))) {
+        if (
+            cache[i].qry.qstr === qry.qstr &&
+            JSON.stringify(cache[i].param) === JSON.stringify(param)
+        ) {
             return i;
         }
     }
@@ -24,7 +27,7 @@ function save(qry, param, result) {
             cacheItem.qry = qry;
             cacheItem.param = param;
             cacheItem.result = result;
-            cacheItem.timestamp = null;  // For future use
+            cacheItem.timestamp = null; // For future use
             cache.push(cacheItem);
         }
     }
@@ -39,7 +42,7 @@ function load(qry, param) {
 }
 
 function invalidate(qry) {
-     for (let i = 0; i < qry.writeTables.length; i += 1) {
+    for (let i = 0; i < qry.writeTables.length; i += 1) {
         let j = 0;
         while (j < cache.length) {
             if (cache[j].qry.readTables.indexOf(qry.writeTables[i]) > -1) {

@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const config = require('config');
 const express = require('express');
 const favicon = require('serve-favicon');
@@ -23,7 +23,10 @@ const app = express();
 // Force HTTPS
 if (config.get('server.forceSSL') === 'true') {
     app.use((req, res, next) => {
-        if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+        if (
+            req.headers['x-forwarded-proto'] &&
+            req.headers['x-forwarded-proto'] !== 'https'
+        ) {
             res.redirect('https://' + req.headers.host + req.url);
         } else {
             next();
@@ -50,9 +53,9 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
-app.use(morgan('combined', { "stream": logger.stream })); // log every request to the logger
+app.use(morgan('combined', { stream: logger.stream })); // log every request to the logger
 app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.enable('trust proxy');
 
 // Sessions stored in 'memory' or 'pg' (database)
@@ -63,10 +66,10 @@ const sessionMiddleware = session({
     name: config.get('sessions.name'),
     store: db.getStore(),
     secret: config.get('sessions.secret'),
-    cookie: {maxAge: config.get('sessions.maxAge'), sameSite: 'strict'},
+    cookie: { maxAge: config.get('sessions.maxAge'), sameSite: 'strict' },
     resave: false,
     saveUninitialized: true,
-    unset: 'keep'     // Or destroy?
+    unset: 'keep', // Or destroy?
 });
 
 app.use((req, res, next) => {
