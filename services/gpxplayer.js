@@ -7,88 +7,41 @@ const path = require('path');
 const gpxParse = require('gpx-parse');
 const logger = require('../utils/logger');
 
-let gpxPlayer = {};
-
-function create() {
-    gpxPlayer = new GpxPlayer('./tracks/', postMessage);
-}
-
-function add(deviceList) {
-    gpxPlayer.add(deviceList);
-}
-
-function postMessage(data) {
-    const gpxQuerystring = qs.stringify({
-        device_id: data.device_id,
-        gps_latitude: data.gps_latitude,
-        gps_longitude: data.gps_longitude,
-        gps_time: data.gps_time,
-    });
-
-    const options = {
-        host: 'localhost',
-        port: config.get('server.port'),
-        path: '/location/gpx?' + gpxQuerystring,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain',
-            'Content-Length': Buffer.byteLength(gpxQuerystring),
-        },
-    };
-
-    const req = http.request(options, (res) => {
-        if (res.statusCode >= 300) {
-            logger.error(
-                `GPX player failed HTTP POST with status code: ${res.statusCode}`
-            );
-        }
-    });
-
-    req.on('error', (err) => {
-        logger.error('GPX player failed HTTP POST.', err);
-    });
-
-    req.write(gpxQuerystring);
-    req.end();
-}
-
 class GpxPlayer {
-    constructor(dirName, cbPoint) {
+    constructor(dirName, destPath, cbPoint) {
         this.dirName = dirName;
-        this.cbPoint = cbPoint;
+        this.destPath = destPath;
+        if (typeof cbPoint === 'function') {
+            this.cbPoint = cbPoint;
+        } else {
+            this.cbPoint = this.postMessage;
+        }
         this.tracks = [];
         this.fileTrackNames = [];
         // Get the list of GPX files from disk
         this.updateFileTrackNames(dirName);
     }
 
-    add(deviceList) {
-        this.cleanup();
+    // Create new tracks from gpx files based on the given device list
+    // Do not create if a track already exists
+    addTracks(deviceList) {
         for (let device of deviceList) {
             let trackName = `${device.api_key}_${device.identifier}`;
-            // Check if this track is already running
             let track = this.getTrackByName(trackName);
-            // If track not already running and a GPX file is present
             if (!track && this.fileTrackNames.indexOf(trackName) >= 0) {
-                // Start a new track
                 this.tracks.push(
-                    new Track(this.dirName, trackName, this.cbPoint)
+                    new Track(
+                        this.dirName,
+                        trackName,
+                        this.destPath,
+                        this.cbPoint
+                    )
                 );
             }
         }
     }
 
-    cleanup() {
-        let index = 0;
-        while (index < this.tracks.length) {
-            if (!this.tracks[index].isRunning) {
-                this.tracks.splice(index, 1);
-            } else {
-                index++;
-            }
-        }
-    }
-
+    // Create a list of all gpx files in the given directory
     updateFileTrackNames(dirName) {
         fs.readdir(dirName, (err, allFiles) => {
             if (err) {
@@ -105,20 +58,70 @@ class GpxPlayer {
         });
     }
 
+    // Get the track with the given name
     getTrackByName(name) {
         for (let track of this.tracks) {
             if (track.name === name) {
-                return name;
+                return track;
             }
         }
         return null;
     }
+
+    // Remove all stopped tracks
+    cleanupTracks() {
+        let index = 0;
+        while (index < this.tracks.length) {
+            if (!this.tracks[index].isRunning) {
+                this.tracks.splice(index, 1);
+            } else {
+                index++;
+            }
+        }
+    }
+
+    // Send HTTP POST request
+    postMessage(data) {
+        const gpxQuerystring = qs.stringify({
+            device_id: data.device_id,
+            gps_latitude: data.gps_latitude,
+            gps_longitude: data.gps_longitude,
+            gps_time: data.gps_time,
+        });
+
+        const options = {
+            host: 'localhost',
+            port: config.get('server.port'),
+            path: this.destPath + '?' + gpxQuerystring,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain',
+                'Content-Length': Buffer.byteLength(gpxQuerystring),
+            },
+        };
+
+        const req = http.request(options, (res) => {
+            if (res.statusCode >= 300) {
+                logger.error(
+                    `GPX player failed HTTP POST with status code: ${res.statusCode}`
+                );
+            }
+        });
+
+        req.on('error', (err) => {
+            logger.error('GPX player failed HTTP POST.', err);
+        });
+
+        req.write(gpxQuerystring);
+        req.end();
+    }
 }
 
 class Track {
-    constructor(dirName, name, cbPoint) {
+    constructor(dirName, name, destPath, cbPoint) {
         this.dirName = dirName;
         this.name = name;
+        this.destPath = destPath;
         this.cbPoint = cbPoint;
         this.gpxData = {};
         this.gpxIndex = 0;
@@ -203,5 +206,4 @@ class Track {
     }
 }
 
-module.exports.create = create;
-module.exports.add = add;
+module.exports.GpxPlayer = GpxPlayer;

@@ -15,7 +15,7 @@ const livemapValidator = new JSONValidator('livemap');
 const io = socketio();
 let recentDeviceRooms = [];
 
-gp.create();
+const gpxPlayer = new gp.GpxPlayer('./tracks/', '/location/gpx');
 
 function getSessionInfo(sid) {
     return new Promise((resolve, reject) => {
@@ -95,7 +95,8 @@ async function startGpxPlayer(userId) {
             identifier: item.identifier,
             api_key: item.api_key,
         }));
-        gp.add(deviceList);
+        gpxPlayer.cleanupTracks();
+        gpxPlayer.addTracks(deviceList);
     }
 }
 
