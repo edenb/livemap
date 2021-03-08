@@ -17,9 +17,17 @@ class GpxPlayer {
             this.cbPoint = this.postMessage;
         }
         this.tracks = [];
-        this.fileTrackNames = [];
-        // Get the list of GPX files from disk
-        this.updateFileTrackNames(dirName);
+        this.fileList = [];
+        this.init();
+    }
+
+    async init() {
+        try {
+            this.fileList = await this.loadFileList(this.dirName);
+        } catch (err) {
+            this.fileList = [];
+            logger.error('Unable to locate GPX files.', err);
+        }
     }
 
     // Create new tracks from gpx files based on the given device list
@@ -28,7 +36,7 @@ class GpxPlayer {
         for (let device of deviceList) {
             let trackName = `${device.api_key}_${device.identifier}`;
             let track = this.getTrackByName(trackName);
-            if (!track && this.fileTrackNames.indexOf(trackName) >= 0) {
+            if (!track && this.fileList.indexOf(trackName) >= 0) {
                 this.tracks.push(
                     new Track(
                         this.dirName,
@@ -42,19 +50,21 @@ class GpxPlayer {
     }
 
     // Create a list of all gpx files in the given directory
-    updateFileTrackNames(dirName) {
-        fs.readdir(dirName, (err, allFiles) => {
-            if (err) {
-                this.fileTrackNames = [];
-            } else {
-                let fileTrackNames = [];
-                allFiles.forEach((file) => {
-                    if (path.extname(file) === '.gpx') {
-                        fileTrackNames.push(path.basename(file, '.gpx'));
-                    }
-                });
-                this.fileTrackNames = fileTrackNames;
-            }
+    loadFileList(dirName) {
+        return new Promise((resolve, reject) => {
+            fs.readdir(dirName, (err, allFiles) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    let fileList = [];
+                    allFiles.forEach((file) => {
+                        if (path.extname(file) === '.gpx') {
+                            fileList.push(path.basename(file, '.gpx'));
+                        }
+                    });
+                    resolve(fileList);
+                }
+            });
         });
     }
 
