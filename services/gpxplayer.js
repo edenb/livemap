@@ -1,7 +1,7 @@
 'use strict';
 const config = require('config');
-var http = require('http');
-var qs = require('querystring');
+const http = require('http');
+const qs = require('querystring');
 const fs = require('fs');
 const path = require('path');
 const gpxParse = require('gpx-parse');
