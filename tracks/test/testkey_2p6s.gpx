@@ -4,8 +4,8 @@
   version="1.0" creator="edenb"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
- <name><![CDATA[test1]]></name>
- <desc><![CDATA[Description for test1]]></desc>
+ <name><![CDATA[2p6s]]></name>
+ <desc><![CDATA[Description for 2p6s]]></desc>
  <author><![CDATA[edenb]]></author>
  <email><![CDATA[edenb@example.com]]></email>
  <url><![CDATA[http://www.example.com]]></url>
@@ -29,11 +29,11 @@
   <trkseg>
     <trkpt lat="0.1" lon="-0.1">
       <ele>0</ele>
-      <time>2000-01-01T00:00:00Z</time>
+      <time>2030-01-01T00:00:00Z</time>
     </trkpt>
     <trkpt lat="0.2" lon="-0.2">
-      <ele>0</ele>
-      <time>2000-01-01T00:00:01Z</time>
+      <ele>-1</ele>
+      <time>2030-01-01T00:00:06Z</time>
     </trkpt>
   </trkseg>
 </trk>
