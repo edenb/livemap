@@ -1,0 +1,60 @@
+<?xml version="1.0" standalone="yes"?>
+<gpx
+  xmlns="http://www.topografix.com/GPX/1/0"
+  version="1.0" creator="edenb"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
+ <name><![CDATA[delay-too-short]]></name>
+ <desc><![CDATA[Description for delay-too-short]]></desc>
+ <author><![CDATA[edenb]]></author>
+ <email><![CDATA[edenb@example.com]]></email>
+ <url><![CDATA[http://www.example.com]]></url>
+ <urlname><![CDATA[Example Home Page]]></urlname>
+ <keywords><![CDATA[test]]></keywords>
+<bounds maxlat="2.0" minlon="-2.0" minlat="-2.0" maxlon="2.0"/>
+<wpt lat="0" lon="0">
+ <name><![CDATA[Waypoint 1]]></name>
+ <cmt><![CDATA[]]></cmt>
+</wpt>
+<wpt lat="1" lon="1">
+ <name><![CDATA[Waypoint 2]]></name>
+ <cmt><![CDATA[]]></cmt>
+</wpt>
+<trk>
+ <name><![CDATA[test]]></name>
+ <cmt><![CDATA[test]]></cmt>
+ <src><![CDATA[Manual]]></src>
+ <url><![CDATA[http://www.example.com]]></url>
+ <urlname><![CDATA[Example Home Page]]></urlname>
+  <trkseg>
+    <trkpt lat="0.1" lon="-0.1">
+      <ele>0</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+    <trkpt lat="0.2" lon="-0.2">
+      <ele>-1</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+    <trkpt lat="0.3" lon="-0.3">
+      <ele>2</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+    <trkpt lat="0.4" lon="-0.4">
+      <ele>-3</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+    <trkpt lat="0.5" lon="-0.5">
+      <ele>4</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+    <trkpt lat="0.6" lon="-0.6">
+      <ele>-5</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+    <trkpt lat="0.7" lon="-0.7">
+      <ele>6</ele>
+      <time>2000-01-01T00:00:00Z</time>
+    </trkpt>
+  </trkseg>
+</trk>
+</gpx>

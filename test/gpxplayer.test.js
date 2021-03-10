@@ -11,6 +11,10 @@ const test7p1s = { api_key: 'testkey', identifier: '7p1s' };
 const test4p2s = { api_key: 'testkey', identifier: '4p2s' };
 const test3p3s = { api_key: 'testkey', identifier: '3p3s' };
 const test2p6s = { api_key: 'testkey', identifier: '2p6s' };
+const test_delay_too_short = {
+    api_key: 'testkey',
+    identifier: 'delay-too-short',
+};
 
 function getTrackname(testDevice) {
     return `${testDevice.api_key}_${testDevice.identifier}`;
@@ -107,7 +111,7 @@ function waitForTimeout(delay) {
 
 describe('GPX player', () => {
     describe('create gpx player', () => {
-        it('should find all 5 gpx test files', async () => {
+        it('should find all 6 gpx test files', async () => {
             try {
                 startHttpServer(config.get('server.port'));
                 //gpxPlayer = new gp.GpxPlayer('./tracks/test/', '', storePoint);
@@ -118,7 +122,7 @@ describe('GPX player', () => {
                 const fileList = await gpxPlayer.loadFileList(
                     gpxPlayer.dirName
                 );
-                fileList.length.should.equal(5);
+                fileList.length.should.equal(6);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -127,14 +131,20 @@ describe('GPX player', () => {
     describe('play tracks from file and validate results', () => {
         it('should load and play the gpx test files of 4 devices', () => {
             try {
-                gpxPlayer.addTracks([test7p1s, test4p2s, test3p3s, test2p6s]);
-                gpxPlayer.tracks.length.should.equal(4);
+                gpxPlayer.addTracks([
+                    test7p1s,
+                    test4p2s,
+                    test3p3s,
+                    test2p6s,
+                    test_delay_too_short,
+                ]);
+                gpxPlayer.tracks.length.should.equal(5);
             } catch (err) {
                 throw new Error(err.message);
             }
         });
         // !!! this.timeout() doesn't work with arrow functions. Use function() syntax. !!!
-        it('should wait for playing of 4 devices to finish', async function () {
+        it('should wait for playing of 5 devices to finish', async function () {
             try {
                 this.timeout(8000);
                 await waitForTimeout(7000);
@@ -190,6 +200,25 @@ describe('GPX player', () => {
                 report.minDelay.should.be.within(5800, 6200);
                 report.maxDelay.should.be.within(5800, 6200);
                 report.duration.should.be.within(5500, 6500);
+            } catch (err) {
+                throw new Error(err.message);
+            }
+        });
+        it('should report 7 points and 1 second delay (testkey_delay-too-short.gpx)', () => {
+            try {
+                const report = reportPoints(getTrackname(test_delay_too_short));
+                report.totalPoints.should.equal(7);
+                report.minDelay.should.be.within(800, 1200);
+                report.maxDelay.should.be.within(800, 1200);
+                report.duration.should.be.within(5500, 6500);
+            } catch (err) {
+                throw new Error(err.message);
+            }
+        });
+        it('should cleanup all tracks', () => {
+            try {
+                gpxPlayer.cleanupTracks();
+                gpxPlayer.tracks.length.should.equal(0);
             } catch (err) {
                 throw new Error(err.message);
             }
