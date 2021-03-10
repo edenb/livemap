@@ -1,6 +1,10 @@
 'use strict';
+const config = require('config');
+const qs = require('querystring');
+const http = require('http');
 const gp = require('../services/gpxplayer');
 
+let server;
 let gpxPlayer = {};
 let points = [];
 const test7p1s = { api_key: 'testkey', identifier: '7p1s' };
@@ -10,6 +14,37 @@ const test2p6s = { api_key: 'testkey', identifier: '2p6s' };
 
 function getTrackname(testDevice) {
     return `${testDevice.api_key}_${testDevice.identifier}`;
+}
+
+// Create a server that receives the requests from the gpx player
+function startHttpServer(port) {
+    server = http
+        .createServer((req, res) => {
+            if (req.method === 'POST') {
+                req.on('error', (err) => {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'text/html' });
+                        res.write('An error occurred');
+                        res.end();
+                    }
+                });
+                let body = '';
+                req.on('data', (chunk) => {
+                    body += chunk.toString();
+                });
+                req.on('end', () => {
+                    let point = qs.parse(body);
+                    storePoint(point);
+                    res.writeHead(200, { 'Content-Type': 'text/plain' });
+                    res.end();
+                });
+            }
+        })
+        .listen(port);
+}
+
+function stopHttpServer() {
+    server.close();
 }
 
 // Logger for points. Can be used as callback for GpxPlayer
@@ -74,7 +109,12 @@ describe('GPX player', () => {
     describe('create gpx player', () => {
         it('should find all 5 gpx test files', async () => {
             try {
-                gpxPlayer = new gp.GpxPlayer('./tracks/test/', '', storePoint);
+                startHttpServer(config.get('server.port'));
+                //gpxPlayer = new gp.GpxPlayer('./tracks/test/', '', storePoint);
+                gpxPlayer = new gp.GpxPlayer(
+                    './tracks/test/',
+                    '/location/gpx/test'
+                );
                 const fileList = await gpxPlayer.loadFileList(
                     gpxPlayer.dirName
                 );
@@ -105,6 +145,7 @@ describe('GPX player', () => {
                     }
                 });
                 totalRunning.should.equal(0);
+                stopHttpServer();
             } catch (err) {
                 throw new Error(err.message);
             }
