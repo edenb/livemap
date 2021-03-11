@@ -2,7 +2,10 @@
 const config = require('config');
 const qs = require('querystring');
 const http = require('http');
+const chai = require('chai');
 const gp = require('../services/gpxplayer');
+
+const should = chai.should();
 
 let server;
 let gpxPlayer = {};
@@ -139,6 +142,10 @@ describe('GPX player', () => {
                     test_delay_too_short,
                 ]);
                 gpxPlayer.tracks.length.should.equal(5);
+                should.exist(gpxPlayer.getTrackByName(getTrackname(test7p1s)));
+                should.not.exist(
+                    gpxPlayer.getTrackByName('non-existing-track-name')
+                );
             } catch (err) {
                 throw new Error(err.message);
             }
