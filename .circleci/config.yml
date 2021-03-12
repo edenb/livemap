@@ -61,6 +61,7 @@ jobs:
       - heroku/install
       - heroku/deploy-via-git:
           app-name: $HEROKU_APP_NAME_STAGING
+          force: true
 
   deploy-production:
     docker:
