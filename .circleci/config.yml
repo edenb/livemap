@@ -64,15 +64,13 @@ jobs:
           force: true
 
   deploy-production:
-    docker:
-      - image: buildpack-deps:trusty
+    executor: heroku/default
     steps:
       - checkout
-
-      - run:
-          name: Deploy production to Heroku
-          command: |
-            git push --force https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_PRODUCTION.git master
+      - heroku/install
+      - heroku/deploy-via-git:
+          app-name: $HEROKU_APP_NAME_PRODUCTION
+          force: true
 
 workflows:
   version: 2.1
