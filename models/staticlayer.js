@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 const fs = require('fs');
 
 function readDir(dirName) {
-    return new Promise ((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         fs.readdir(dirName, (dirError, dirData) => {
             if (dirError === null) {
                 resolve(dirData);
@@ -14,7 +14,7 @@ function readDir(dirName) {
 }
 
 function readFile(fileName) {
-    return new Promise ((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         fs.readFile(fileName, 'utf8', (fileError, fileData) => {
             if (fileError === null) {
                 resolve(fileData);
@@ -46,7 +46,7 @@ async function getStaticLayers() {
             }
         }
         return staticLayerList;
-    } catch(err) {
+    } catch (err) {
         return [];
     }
 }

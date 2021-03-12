@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const qs = require('querystring');
 const usr = require('../models/user');
 const dev = require('../models/device');
@@ -6,7 +6,9 @@ const livesvr = require('./liveserver');
 const logger = require('../utils/logger');
 
 async function processGpx(rawLocationData) {
-    let srcData = {}, destData = {}, identObj = '';
+    let srcData = {},
+        destData = {},
+        identObj = '';
 
     if (Object.keys(rawLocationData.query).length !== 0) {
         srcData = rawLocationData.query;
@@ -15,8 +17,11 @@ async function processGpx(rawLocationData) {
     }
 
     identObj = dev.splitDeviceIdentity(srcData.device_id, '_');
-    if ((identObj.err === null) && usr.isKnownAPIkey(identObj.apiKey, null)) {
-        const queryRes = await dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier);    // Todo: check device_id existance
+    if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
+        const queryRes = await dev.getDeviceByIdentity(
+            identObj.apiKey,
+            identObj.identifier
+        ); // Todo: check device_id existance
         if (queryRes.rowCount === 1) {
             const destDevice = queryRes.rows[0];
             destData.device_id = destDevice.device_id;
@@ -30,7 +35,7 @@ async function processGpx(rawLocationData) {
             try {
                 destData.loc_lat = parseFloat(srcData.gps_latitude);
                 destData.loc_lon = parseFloat(srcData.gps_longitude);
-            } catch(err) {
+            } catch (err) {
                 return null;
             }
             destData.loc_type = 'rec';
@@ -54,7 +59,10 @@ async function processGpx(rawLocationData) {
 // identity geofence - id:device
 // identity iBeacon - id1:device  id1:id2
 async function processLocative(rawLocationData) {
-    let srcData = {}, destData = {}, identObj = '', identity = '';
+    let srcData = {},
+        destData = {},
+        identObj = '',
+        identity = '';
 
     if (Object.keys(rawLocationData.query).length !== 0) {
         srcData = rawLocationData.query;
@@ -66,12 +74,20 @@ async function processLocative(rawLocationData) {
     if (srcData.latitude === '0' && srcData.longitude === '0') {
         identObj = dev.splitDeviceIdentity(srcData.id, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            let queryRes = await dev.getDeviceByIdentity(identObj.apiKey, srcData.device);   // Todo: check device_id existance
+            let queryRes = await dev.getDeviceByIdentity(
+                identObj.apiKey,
+                srcData.device
+            ); // Todo: check device_id existance
             if (queryRes.rowCount === 1) {
                 let destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
-                destData.loc_timestamp = new Date(srcData.timestamp * 1000).toISOString();
-                queryRes = await dev.getDeviceByIdentity(identObj.apiKey, identObj.identifier);    // Todo: check id existance
+                destData.loc_timestamp = new Date(
+                    srcData.timestamp * 1000
+                ).toISOString();
+                queryRes = await dev.getDeviceByIdentity(
+                    identObj.apiKey,
+                    identObj.identifier
+                ); // Todo: check id existance
                 if (queryRes.rowCount === 1) {
                     destDevice = queryRes.rows[0];
                     destData.device_id_tag = destDevice.device_id;
@@ -81,7 +97,10 @@ async function processLocative(rawLocationData) {
                     destData.loc_lon = destDevice.fixed_loc_lon;
                     destData.loc_attr = null;
                     destData.loc_type = null;
-                    if ((srcData.trigger === 'enter') || (srcData.trigger === 'test')) {
+                    if (
+                        srcData.trigger === 'enter' ||
+                        srcData.trigger === 'test'
+                    ) {
                         destData.loc_type = 'now';
                     }
                     if (srcData.trigger === 'exit') {
@@ -91,7 +110,6 @@ async function processLocative(rawLocationData) {
                 } else {
                     return null;
                 }
-        
             } else {
                 return null;
             }
@@ -102,23 +120,28 @@ async function processLocative(rawLocationData) {
         identity = srcData.id + ':' + srcData.device;
         identObj = dev.splitDeviceIdentity(identity, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
-            const queryRes = await dev.getDeviceByIdentity(identObj.apiKey, srcData.device);
+            const queryRes = await dev.getDeviceByIdentity(
+                identObj.apiKey,
+                srcData.device
+            );
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
                 destData.api_key = destDevice.api_key;
                 destData.device_id_tag = null;
                 destData.alias = destDevice.alias;
-                destData.loc_timestamp = new Date(srcData.timestamp * 1000).toISOString();
+                destData.loc_timestamp = new Date(
+                    srcData.timestamp * 1000
+                ).toISOString();
                 try {
                     destData.loc_lat = parseFloat(srcData.latitude);
                     destData.loc_lon = parseFloat(srcData.longitude);
-                } catch(err) {
+                } catch (err) {
                     return null;
                 }
                 destData.loc_attr = null;
                 destData.loc_type = null;
-                if ((srcData.trigger === 'enter') || (srcData.trigger === 'test')) {
+                if (srcData.trigger === 'enter' || srcData.trigger === 'test') {
                     destData.loc_type = 'now';
                 }
                 if (srcData.trigger === 'exit') {
@@ -127,7 +150,7 @@ async function processLocative(rawLocationData) {
                 return destData;
             } else {
                 return null;
-            }   
+            }
         } else {
             return null;
         }
@@ -148,8 +171,15 @@ async function processLocation(request, response, type) {
     });
 
     request.on('end', async () => {
-        logger.debug('HTTP ' +  request.method + ' query: ' + qs.stringify(rawLocationData.query));
-        logger.debug('HTTP ' +  request.method + ' body: ' + rawLocationData.body);
+        logger.debug(
+            'HTTP ' +
+                request.method +
+                ' query: ' +
+                qs.stringify(rawLocationData.query)
+        );
+        logger.debug(
+            'HTTP ' + request.method + ' body: ' + rawLocationData.body
+        );
         await dev.getAllDevices();
         await usr.getAllUsers();
 
@@ -170,7 +200,7 @@ async function processLocation(request, response, type) {
                 response.sendStatus(200);
                 break;
             default:
-                response.sendStatus(404);
+                response.sendStatus(422);
         }
     });
 }

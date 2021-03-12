@@ -1,6 +1,7 @@
 [![CircleCI](https://circleci.com/gh/edenb/livemap.svg?style=shield)](https://circleci.com/gh/edenb/livemap)
 [![Dependencies](https://img.shields.io/david/edenb/livemap.svg)](https://david-dm.org/edenb/livemap)
 [![DevDependencies](https://img.shields.io/david/dev/edenb/livemap.svg)](https://david-dm.org/edenb/livemap?type=dev)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/edenb/livemap)
 

@@ -27,12 +27,12 @@ CREATE TABLE locations (
   location_id           serial PRIMARY KEY,
   device_id             integer NOT NULL REFERENCES devices(device_id) ON DELETE CASCADE,
   device_id_tag         integer REFERENCES devices(device_id) ON DELETE CASCADE,
-  loc_timestamp         timestamp without time zone,
+  loc_timestamp         timestamptz,
   loc_lat               double precision,
   loc_lon               double precision,
   loc_type              varchar(20),
   loc_attr              json,
-  created_at            timestamp without time zone
+  created_at            timestamptz
 );
 CREATE TABLE sessions (
   sid                   varchar NOT NULL COLLATE "default",

@@ -8,7 +8,8 @@ const consoleLogFormat = format.combine(
     format.label({ label: path.basename(process.mainModule.filename) }),
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     format.printf(
-        info => `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`
+        (info) =>
+            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`
     )
 );
 
@@ -16,26 +17,29 @@ const consoleLogFormatNoColor = format.combine(
     format.label({ label: path.basename(process.mainModule.filename) }),
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     format.printf(
-        info => `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`
+        (info) =>
+            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`
     )
 );
 
 const logger = createLogger({
     transports: [
         new transports.Console({
-            format: config.get('logger.colorize')?consoleLogFormat:consoleLogFormatNoColor,
+            format: config.get('logger.colorize')
+                ? consoleLogFormat
+                : consoleLogFormatNoColor,
             level: config.get('logger.level'),
             handleExceptions: true,
-            json: false
-        })
-    ]
+            json: false,
+        }),
+    ],
 });
 
 logger.stream = {
-    write: function(message) {
+    write: function (message) {
         // Trim message to remove empty line
         logger.info(message.trim());
-    }
+    },
 };
 
 module.exports = logger;

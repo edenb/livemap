@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const usr = require('../models/user');
 const jwt = require('../auth/jwt');
 
@@ -27,7 +27,10 @@ exports.getUserByUserId = async (req, res) => {
 
 exports.addUser = async (req, res) => {
     if (req.decodedToken) {
-        const queryRes = await usr.addUser({user_id: req.decodedToken.userId, role: req.decodedToken.role}, req.body);
+        const queryRes = await usr.addUser(
+            { user_id: req.decodedToken.userId, role: req.decodedToken.role },
+            req.body
+        );
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
         } else {
@@ -49,7 +52,10 @@ exports.modifyUser = async (req, res) => {
     }
     if (reqUserId >= 0 && req.decodedToken) {
         req.body.user_id = reqUserId;
-        const queryRes = await usr.modifyUser({user_id: req.decodedToken.userId, role: req.decodedToken.role}, req.body);
+        const queryRes = await usr.modifyUser(
+            { user_id: req.decodedToken.userId, role: req.decodedToken.role },
+            req.body
+        );
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
         } else {
@@ -70,7 +76,10 @@ exports.removeUser = async (req, res) => {
         reqUserId = parseInt(req.params.userId) || -1;
     }
     if (reqUserId >= 0 && req.decodedToken) {
-        const queryRes = await usr.deleteUser({user_id: req.decodedToken.userId, role: req.decodedToken.role}, {user_id: reqUserId});
+        const queryRes = await usr.deleteUser(
+            { user_id: req.decodedToken.userId, role: req.decodedToken.role },
+            { user_id: reqUserId }
+        );
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
         } else {
@@ -87,7 +96,10 @@ exports.removeUser = async (req, res) => {
 
 exports.getAccount = async (req, res) => {
     let token = '';
-    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.split(' ')[0] === 'Bearer'
+    ) {
         token = req.headers.authorization.split(' ')[1];
     }
     if (token !== '') {
@@ -98,8 +110,8 @@ exports.getAccount = async (req, res) => {
                 res.status(400).send(`Bad Request`);
             } else {
                 const queryRes = await usr.getUserByField('user_id', userId);
-                 if (typeof queryRes.userMessage !== 'undefined') {
-                     res.status(500).send(`Internal Server Error`);
+                if (typeof queryRes.userMessage !== 'undefined') {
+                    res.status(500).send(`Internal Server Error`);
                 } else {
                     let response = {};
                     response.user_id = queryRes.rows[0].user_id;

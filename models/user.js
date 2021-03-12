@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const config = require('config');
 const bcrypt = require('bcrypt');
 const shortid = require('shortid');
@@ -20,7 +20,11 @@ function checkChangesAllowed(user, modUser) {
     if (modUser.role === '') {
         return 'No role selected';
     }
-    if (user.role === 'admin' && user.user_id === modUser.user_id && user.role !== modUser.role) {
+    if (
+        user.role === 'admin' &&
+        user.user_id === modUser.user_id &&
+        user.role !== modUser.role
+    ) {
         return 'You can not change your own role';
     }
     return null;
@@ -50,7 +54,7 @@ async function getAllUsers() {
         queryRes = await db.queryDbAsync('getAllUsers', []);
         users = queryRes.rows;
         return queryRes;
-    } catch(err) {
+    } catch (err) {
         queryRes.userMessage = 'Unable to get users';
         return queryRes;
     }
@@ -71,7 +75,7 @@ async function getUserByField(field, value) {
     if (queryDefinition !== '') {
         try {
             queryRes = await db.queryDbAsync(queryDefinition, [value]);
-        } catch(err) {
+        } catch (err) {
             queryRes.userMessage = 'Unable to get user';
             return queryRes;
         }
@@ -98,8 +102,14 @@ async function addUser(user, modUser) {
     }
     if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
         try {
-            queryRes = await db.queryDbAsync('insertUser', [modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
-        } catch(err) {
+            queryRes = await db.queryDbAsync('insertUser', [
+                modUser.username,
+                modUser.fullname,
+                modUser.email,
+                modUser.role,
+                modUser.api_key,
+            ]);
+        } catch (err) {
             queryRes.userMessage = 'Unable to add user';
         }
     }
@@ -124,8 +134,15 @@ async function modifyUser(user, modUser) {
         return queryRes;
     }
     try {
-        queryRes = await db.queryDbAsync('modifyUserById', [modUser.user_id, modUser.username, modUser.fullname, modUser.email, modUser.role, modUser.api_key]);
-    } catch(err) {
+        queryRes = await db.queryDbAsync('modifyUserById', [
+            modUser.user_id,
+            modUser.username,
+            modUser.fullname,
+            modUser.email,
+            modUser.role,
+            modUser.api_key,
+        ]);
+    } catch (err) {
         queryRes.userMessage = 'Unable to change details';
     }
     return queryRes;
@@ -133,7 +150,7 @@ async function modifyUser(user, modUser) {
 
 async function changePassword(user, curPwd, newPwd, confirmPwd) {
     let queryRes = db.getEmptyQueryRes();
-     // The new password should have a minimal length
+    // The new password should have a minimal length
     if (newPwd.length < config.get('user.pwdMinLength')) {
         queryRes.userMessage = 'New password too short';
         return queryRes;
@@ -144,20 +161,26 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
     }
     const authOK = await checkPassword(user, curPwd);
     // If a user has no password yet, any current password will work
-    if ((user.password === null) || authOK) {
+    if (user.password === null || authOK) {
         let newHash;
         try {
-            newHash = await bcrypt.hash(newPwd, config.get('user.pwdSaltRounds'));
-        } catch(err) {
+            newHash = await bcrypt.hash(
+                newPwd,
+                config.get('user.pwdSaltRounds')
+            );
+        } catch (err) {
             queryRes.userMessage = 'Hashing failed';
             return queryRes;
         }
         try {
-            queryRes = await db.queryDbAsync('changePwdByUsername', [user.username, newHash]);
+            queryRes = await db.queryDbAsync('changePwdByUsername', [
+                user.username,
+                newHash,
+            ]);
             if (queryRes.rowCount <= 0) {
                 queryRes.userMessage = 'User not found';
             }
-        } catch(err) {
+        } catch (err) {
             queryRes.userMessage = 'Failed to change password';
             return queryRes;
         }
@@ -191,7 +214,7 @@ async function deleteUser(user, modUser) {
     } else {
         try {
             queryRes = await db.queryDbAsync('deleteUser', [modUser.user_id]);
-        } catch(err) {
+        } catch (err) {
             queryRes.userMessage = 'Failed to delete user';
         }
     }
@@ -208,7 +231,10 @@ function isKnownAPIkey(apiKey, ignoreUser) {
     }
 
     i = 0;
-    while ((i < users.length) && (users[i].api_key !== apiKey || users[i].user_id === ignoreId)) {
+    while (
+        i < users.length &&
+        (users[i].api_key !== apiKey || users[i].user_id === ignoreId)
+    ) {
         i++;
     }
     if (i !== users.length) {

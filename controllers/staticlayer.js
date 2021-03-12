@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const slayer = require('../models/staticlayer');
 
 exports.getStaticLayers = async (req, res) => {

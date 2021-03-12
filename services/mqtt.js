@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const config = require('config');
 const mqtt = require('mqtt');
 const usr = require('../models/user');
@@ -10,14 +10,15 @@ const logger = require('../utils/logger');
 const MQTTValidator = new JSONValidator('mqtt');
 
 async function processMessage(messageStr) {
-    var srcData, destData = {};
+    var srcData,
+        destData = {};
 
     // Convert JSON string to object
     // Required: id, apikey, timestamp, lat, lon
     // Optional: tagid, tagapikey, type, attr
     try {
         srcData = JSON.parse(messageStr);
-    } catch(e) {
+    } catch (e) {
         srcData = null;
     }
 
@@ -31,7 +32,10 @@ async function processMessage(messageStr) {
 
     if (srcData !== null) {
         if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
-            const queryRes = await dev.getDeviceByIdentity(srcData.apikey, srcData.id);
+            const queryRes = await dev.getDeviceByIdentity(
+                srcData.apikey,
+                srcData.id
+            );
             logger.info('MQTT message: ' + JSON.stringify(srcData));
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
@@ -53,7 +57,6 @@ async function processMessage(messageStr) {
                 logger.debug('Unable to find device');
                 return null;
             }
-            
         } else {
             logger.debug('Unknown API key: ' + srcData.apikey);
             return null;
@@ -70,7 +73,7 @@ async function processMessage(messageStr) {
 
 function start() {
     var client;
-    client = mqtt.connect(getBrokerUrl().href, {keepalive: 10});
+    client = mqtt.connect(getBrokerUrl().href, { keepalive: 10 });
 
     client.on('connect', function () {
         logger.info('Connected to MQTT broker: ' + getBrokerUrl().href);
@@ -82,7 +85,9 @@ function start() {
     });
 
     client.on('message', async (topic, message) => {
-        logger.debug('MQTT message (topic=' + topic + '): ' + message.toString());
+        logger.debug(
+            'MQTT message (topic=' + topic + '): ' + message.toString()
+        );
         await dev.getAllDevices();
         await usr.getAllUsers();
         const destData = await processMessage(message.toString());
@@ -102,10 +107,10 @@ function getBrokerUrl() {
     let mqttProtocol = config.get('mqtt.protocol');
     let mqttUserVhost = config.get('mqtt.userVhost');
 
-    if (mqttPort !== "") {
+    if (mqttPort !== '') {
         brokerUrl.port = mqttPort;
     }
-    if (mqttProtocol !== "") {
+    if (mqttProtocol !== '') {
         brokerUrl.protocol = mqttProtocol;
     }
     if (mqttUserVhost) {

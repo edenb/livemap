@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 const pos = require('../models/position');
 
 exports.getLastPositions = async (req, res) => {
