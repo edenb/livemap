@@ -30,7 +30,7 @@ function checkChangesAllowed(user, modUser) {
     return null;
 }
 
-function validateChanges(user, modUser) {
+function validateAccountInput(modUser) {
     // ToDo: add more validations here
 
     // The full name should have a minimal length
@@ -42,6 +42,13 @@ function validateChanges(user, modUser) {
         return 'API key already in use';
     }
     return null;
+}
+
+function validatePasswordInput(password) {
+    // A password should have a minimal length
+    if (password.length < config.get('user.pwdMinLength')) {
+        return 'Password too short';
+    }
 }
 
 //
@@ -95,7 +102,7 @@ async function addUser(user, modUser) {
         queryRes.userMessage = userMessage;
         return queryRes;
     }
-    userMessage = validateChanges(user, modUser);
+    userMessage = validateAccountInput(modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
         return queryRes;
@@ -128,7 +135,7 @@ async function modifyUser(user, modUser) {
         queryRes.userMessage = userMessage;
         return queryRes;
     }
-    userMessage = validateChanges(user, modUser);
+    userMessage = validateAccountInput(modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
         return queryRes;
@@ -150,9 +157,11 @@ async function modifyUser(user, modUser) {
 
 async function changePassword(user, curPwd, newPwd, confirmPwd) {
     let queryRes = db.getEmptyQueryRes();
-    // The new password should have a minimal length
-    if (newPwd.length < config.get('user.pwdMinLength')) {
-        queryRes.userMessage = 'New password too short';
+    let userMessage;
+
+    userMessage = validatePasswordInput(newPwd);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
         return queryRes;
     }
     if (newPwd !== confirmPwd) {
