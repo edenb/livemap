@@ -100,11 +100,13 @@ async function addUser(user, modUser) {
     userMessage = checkChangesAllowed(user, modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     userMessage = validateAccountInput(modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
@@ -133,11 +135,13 @@ async function modifyUser(user, modUser) {
     userMessage = checkChangesAllowed(user, modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     userMessage = validateAccountInput(modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     try {
@@ -162,10 +166,12 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
     userMessage = validatePasswordInput(newPwd);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     if (newPwd !== confirmPwd) {
         queryRes.userMessage = 'New passwords mismatch';
+        queryRes.rowCount = -2;
         return queryRes;
     }
     const authOK = await checkPassword(user, curPwd);
@@ -179,6 +185,7 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
             );
         } catch (err) {
             queryRes.userMessage = 'Hashing failed';
+            queryRes.rowCount = -2;
             return queryRes;
         }
         try {
@@ -195,6 +202,7 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
         }
     } else {
         queryRes.userMessage = 'Old password incorrect';
+        queryRes.rowCount = -2;
     }
     return queryRes;
 }
@@ -220,6 +228,7 @@ async function deleteUser(user, modUser) {
     let queryRes = db.getEmptyQueryRes();
     if (user.user_id === modUser.user_id) {
         queryRes.userMessage = 'You can not delete your own account';
+        queryRes.rowCount = -2;
     } else {
         try {
             queryRes = await db.queryDbAsync('deleteUser', [modUser.user_id]);
