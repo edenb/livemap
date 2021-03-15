@@ -8,6 +8,7 @@ const testUser = {
     email: 'test@user1',
     role: 'user',
     api_key: '12345678',
+    password: 'testuser1',
 };
 
 let testUser_Id = null;
@@ -68,6 +69,7 @@ describe('Database', () => {
                     testUser.email,
                     testUser.role,
                     testUser.api_key,
+                    testUser.password,
                 ]);
                 queryRes.rowCount.should.equal(1);
             } catch (err) {

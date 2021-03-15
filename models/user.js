@@ -46,9 +46,13 @@ function validateAccountInput(modUser) {
 
 function validatePasswordInput(password) {
     // A password should have a minimal length
+    if (!password) {
+        return 'No password';
+    }
     if (password.length < config.get('user.pwdMinLength')) {
         return 'Password too short';
     }
+    return null;
 }
 
 //
@@ -109,6 +113,21 @@ async function addUser(user, modUser) {
         queryRes.rowCount = -2;
         return queryRes;
     }
+    userMessage = validatePasswordInput(modUser.password);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
+        return queryRes;
+    }
+    await createHash(modUser.password)
+        .then((hash) => {
+            modUser.password = hash;
+        })
+        .catch(() => {
+            queryRes.userMessage = 'Hashing failed';
+            queryRes.rowCount = -2;
+            return queryRes;
+        });
     if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
         try {
             queryRes = await db.queryDbAsync('insertUser', [
@@ -117,6 +136,7 @@ async function addUser(user, modUser) {
                 modUser.email,
                 modUser.role,
                 modUser.api_key,
+                modUser.password,
             ]);
         } catch (err) {
             queryRes.userMessage = 'Unable to add user';
@@ -178,16 +198,15 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
     // If a user has no password yet, any current password will work
     if (user.password === null || authOK) {
         let newHash;
-        try {
-            newHash = await bcrypt.hash(
-                newPwd,
-                config.get('user.pwdSaltRounds')
-            );
-        } catch (err) {
-            queryRes.userMessage = 'Hashing failed';
-            queryRes.rowCount = -2;
-            return queryRes;
-        }
+        createHash(curPwd)
+            .then((hash) => {
+                newHash = hash;
+            })
+            .catch(() => {
+                queryRes.userMessage = 'Hashing failed';
+                queryRes.rowCount = -2;
+                return queryRes;
+            });
         try {
             queryRes = await db.queryDbAsync('changePwdByUsername', [
                 user.username,
@@ -205,6 +224,11 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
         queryRes.rowCount = -2;
     }
     return queryRes;
+}
+
+async function createHash(password) {
+    const hash = await bcrypt.hash(password, config.get('user.pwdSaltRounds'));
+    return hash;
 }
 
 async function checkPassword(user, password) {
