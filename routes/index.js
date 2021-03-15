@@ -130,6 +130,7 @@ module.exports = (passport) => {
         modUser.email = req.body.email;
         modUser.role = req.body.role || '';
         modUser.api_key = req.body.api_key;
+        modUser.password = req.body.password;
 
         let queryRes;
         switch (req.body.action) {

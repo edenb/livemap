@@ -4,8 +4,10 @@ const jwt = require('../auth/jwt');
 
 exports.getAllUsers = async (req, res) => {
     const queryRes = await usr.getAllUsers();
-    if (typeof queryRes.userMessage !== 'undefined') {
+    if (queryRes.rowCount === -1) {
         res.status(500).send(`Internal Server Error`);
+    } else if (queryRes.rowCount === -2) {
+        res.status(400).send(queryRes.userMessage);
     } else {
         res.status(200).send(queryRes.rows);
     }
@@ -17,8 +19,10 @@ exports.getUserByUserId = async (req, res) => {
         res.status(400).send(`Bad Request`);
     } else {
         const queryRes = await usr.getUserByField('user_id', userId);
-        if (typeof queryRes.userMessage !== 'undefined') {
+        if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
+        } else if (queryRes.rowCount === -2) {
+            res.status(400).send(queryRes.userMessage);
         } else {
             res.status(200).send(queryRes.rows);
         }
@@ -31,13 +35,15 @@ exports.addUser = async (req, res) => {
             { user_id: req.decodedToken.userId, role: req.decodedToken.role },
             req.body
         );
-        if (queryRes.rowCount < 0) {
+        if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
+        } else if (queryRes.rowCount === -2) {
+            res.status(400).send(queryRes.userMessage);
         } else {
             if (queryRes.rowCount > 0) {
                 res.status(201).send();
             } else {
-                res.status(409).send();
+                res.status(409).send(queryRes.userMessage);
             }
         }
     } else {
@@ -56,13 +62,15 @@ exports.modifyUser = async (req, res) => {
             { user_id: req.decodedToken.userId, role: req.decodedToken.role },
             req.body
         );
-        if (queryRes.rowCount < 0) {
+        if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
+        } else if (queryRes.rowCount === -2) {
+            res.status(400).send(queryRes.userMessage);
         } else {
             if (queryRes.rowCount > 0) {
                 res.status(204).send();
             } else {
-                res.status(404).send();
+                res.status(404).send(queryRes.userMessage);
             }
         }
     } else {
@@ -80,13 +88,15 @@ exports.removeUser = async (req, res) => {
             { user_id: req.decodedToken.userId, role: req.decodedToken.role },
             { user_id: reqUserId }
         );
-        if (queryRes.rowCount < 0) {
+        if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
+        } else if (queryRes.rowCount === -2) {
+            res.status(400).send(queryRes.userMessage);
         } else {
             if (queryRes.rowCount > 0) {
                 res.status(204).send();
             } else {
-                res.status(404).send();
+                res.status(404).send(queryRes.userMessage);
             }
         }
     } else {
@@ -110,8 +120,10 @@ exports.getAccount = async (req, res) => {
                 res.status(400).send(`Bad Request`);
             } else {
                 const queryRes = await usr.getUserByField('user_id', userId);
-                if (typeof queryRes.userMessage !== 'undefined') {
+                if (queryRes.rowCount === -1) {
                     res.status(500).send(`Internal Server Error`);
+                } else if (queryRes.rowCount === -2) {
+                    res.status(400).send(queryRes.userMessage);
                 } else {
                     let response = {};
                     response.user_id = queryRes.rows[0].user_id;

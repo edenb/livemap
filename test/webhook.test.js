@@ -15,6 +15,7 @@ let testUser = {
     email: 'test@user1',
     role: 'user',
     api_key: 'testkey',
+    password: 'testuser_webhook',
 };
 
 // Setup HTTP querystrings

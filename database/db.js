@@ -37,7 +37,7 @@ queryDef.getUserByApiKey = {
 };
 queryDef.insertUser = {
     qstr:
-        'INSERT INTO users(username, fullname, email, role, api_key) VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO users(username, fullname, email, role, api_key, password) VALUES ($1, $2, $3, $4, $5, $6)',
     readTables: [],
     writeTables: ['users'],
     cached: false,

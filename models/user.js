@@ -30,7 +30,7 @@ function checkChangesAllowed(user, modUser) {
     return null;
 }
 
-function validateChanges(user, modUser) {
+function validateAccountInput(modUser) {
     // ToDo: add more validations here
 
     // The full name should have a minimal length
@@ -40,6 +40,17 @@ function validateChanges(user, modUser) {
     // An API key should be unique (mainly for manually changed API keys)
     if (isKnownAPIkey(modUser.api_key, modUser)) {
         return 'API key already in use';
+    }
+    return null;
+}
+
+function validatePasswordInput(password) {
+    // A password should have a minimal length
+    if (!password) {
+        return 'No password';
+    }
+    if (password.length < config.get('user.pwdMinLength')) {
+        return 'Password too short';
     }
     return null;
 }
@@ -93,13 +104,30 @@ async function addUser(user, modUser) {
     userMessage = checkChangesAllowed(user, modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
-    userMessage = validateChanges(user, modUser);
+    userMessage = validateAccountInput(modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
+    userMessage = validatePasswordInput(modUser.password);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
+        return queryRes;
+    }
+    await createHash(modUser.password)
+        .then((hash) => {
+            modUser.password = hash;
+        })
+        .catch(() => {
+            queryRes.userMessage = 'Hashing failed';
+            queryRes.rowCount = -2;
+            return queryRes;
+        });
     if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
         try {
             queryRes = await db.queryDbAsync('insertUser', [
@@ -108,6 +136,7 @@ async function addUser(user, modUser) {
                 modUser.email,
                 modUser.role,
                 modUser.api_key,
+                modUser.password,
             ]);
         } catch (err) {
             queryRes.userMessage = 'Unable to add user';
@@ -126,11 +155,13 @@ async function modifyUser(user, modUser) {
     userMessage = checkChangesAllowed(user, modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
-    userMessage = validateChanges(user, modUser);
+    userMessage = validateAccountInput(modUser);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     try {
@@ -150,28 +181,32 @@ async function modifyUser(user, modUser) {
 
 async function changePassword(user, curPwd, newPwd, confirmPwd) {
     let queryRes = db.getEmptyQueryRes();
-    // The new password should have a minimal length
-    if (newPwd.length < config.get('user.pwdMinLength')) {
-        queryRes.userMessage = 'New password too short';
+    let userMessage;
+
+    userMessage = validatePasswordInput(newPwd);
+    if (userMessage !== null) {
+        queryRes.userMessage = userMessage;
+        queryRes.rowCount = -2;
         return queryRes;
     }
     if (newPwd !== confirmPwd) {
         queryRes.userMessage = 'New passwords mismatch';
+        queryRes.rowCount = -2;
         return queryRes;
     }
     const authOK = await checkPassword(user, curPwd);
     // If a user has no password yet, any current password will work
     if (user.password === null || authOK) {
         let newHash;
-        try {
-            newHash = await bcrypt.hash(
-                newPwd,
-                config.get('user.pwdSaltRounds')
-            );
-        } catch (err) {
-            queryRes.userMessage = 'Hashing failed';
-            return queryRes;
-        }
+        createHash(curPwd)
+            .then((hash) => {
+                newHash = hash;
+            })
+            .catch(() => {
+                queryRes.userMessage = 'Hashing failed';
+                queryRes.rowCount = -2;
+                return queryRes;
+            });
         try {
             queryRes = await db.queryDbAsync('changePwdByUsername', [
                 user.username,
@@ -186,8 +221,14 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
         }
     } else {
         queryRes.userMessage = 'Old password incorrect';
+        queryRes.rowCount = -2;
     }
     return queryRes;
+}
+
+async function createHash(password) {
+    const hash = await bcrypt.hash(password, config.get('user.pwdSaltRounds'));
+    return hash;
 }
 
 async function checkPassword(user, password) {
@@ -211,6 +252,7 @@ async function deleteUser(user, modUser) {
     let queryRes = db.getEmptyQueryRes();
     if (user.user_id === modUser.user_id) {
         queryRes.userMessage = 'You can not delete your own account';
+        queryRes.rowCount = -2;
     } else {
         try {
             queryRes = await db.queryDbAsync('deleteUser', [modUser.user_id]);

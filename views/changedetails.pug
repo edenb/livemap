@@ -21,6 +21,10 @@ block content
               input.form-control(type='text', name='username', placeholder='Enter username', value=user.username)
             else
               input.form-control(type='text', name='username', value=user.username, readonly='true')
+          if user.role === 'admin'
+            .form-group
+              label(for='password') Password
+              input.form-control(type='password', name='password')
           .form-group
             label(for='fullname') Full name
             if user.role === 'admin' || user.role === 'manager'
