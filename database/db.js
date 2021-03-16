@@ -201,7 +201,7 @@ function getEmptyQueryRes() {
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
 const dbConfig = parse(config.get('db.url'));
 // Overwrite tls.connect options to allow self signed certs
-if (dbConfig.ssl) {
+if (config.get('db.ssl') === true) {
     dbConfig.ssl = { rejectUnauthorized: false };
 }
 const pgPool = new Pool(dbConfig);

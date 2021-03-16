@@ -16,6 +16,7 @@
   },
   "db": {
     "url": "C_DB_URL",
+    "ssl": "C_DB_SSL",
     "maintenanceInterval": "C_DB_MAINTENANCEINTERVAL"
   },
   "sessions": {
