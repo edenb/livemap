@@ -65,6 +65,18 @@ module.exports = (passport) => {
         users.getUserByUserId
     );
 
+    router.post(
+        '/users/:userId/password/change',
+        jwt.checkScopes('usr_o...u.'),
+        users.changePassword
+    );
+
+    router.post(
+        '/users/:userId/password/reset',
+        jwt.checkScopes('usr_.a..u.'),
+        users.resetPassword
+    );
+
     router.get(
         '/users/:userId/devices',
         jwt.checkScopes('dev_o..r..'),

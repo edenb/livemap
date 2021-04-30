@@ -104,6 +104,85 @@ exports.removeUser = async (req, res) => {
     }
 };
 
+exports.changePassword = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    if (
+        reqUserId >= 0 &&
+        req.decodedToken &&
+        reqUserId === req.decodedToken.userId
+    ) {
+        const queryRes1 = await usr.getUserByField('user_id', reqUserId);
+        if (queryRes1.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
+        } else {
+            if (queryRes1.rowCount > 0 && req.body.curpwd !== null) {
+                let queryRes2;
+                queryRes2 = await usr.changePassword(
+                    queryRes1.rows[0],
+                    req.body.curpwd,
+                    req.body.newpwd,
+                    req.body.confirmpwd
+                );
+                if (queryRes2.rowCount === -1) {
+                    res.status(500).send(`Internal Server Error`);
+                } else if (queryRes2.rowCount === -2) {
+                    res.status(400).send(queryRes2.userMessage);
+                } else {
+                    if (queryRes2.rowCount > 0) {
+                        res.status(201).send();
+                    } else {
+                        res.status(409).send();
+                    }
+                }
+            } else {
+                res.status(409).send();
+            }
+        }
+    } else {
+        res.status(403).send();
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    let reqUserId = -1;
+    if (req.params && req.params.userId) {
+        reqUserId = parseInt(req.params.userId) || -1;
+    }
+    if (reqUserId >= 0) {
+        const queryRes1 = await usr.getUserByField('user_id', reqUserId);
+        if (queryRes1.rowCount < 0) {
+            res.status(500).send(`Internal Server Error`);
+        } else {
+            if (queryRes1.rowCount > 0 && req.body.curpwd !== null) {
+                let queryRes2;
+                queryRes2 = await usr.resetPassword(
+                    queryRes1.rows[0],
+                    req.body.newpwd,
+                    req.body.confirmpwd
+                );
+                if (queryRes2.rowCount === -1) {
+                    res.status(500).send(`Internal Server Error`);
+                } else if (queryRes2.rowCount === -2) {
+                    res.status(400).send(queryRes2.userMessage);
+                } else {
+                    if (queryRes2.rowCount > 0) {
+                        res.status(201).send();
+                    } else {
+                        res.status(409).send();
+                    }
+                }
+            } else {
+                res.status(409).send();
+            }
+        }
+    } else {
+        res.status(403).send();
+    }
+};
+
 exports.getAccount = async (req, res) => {
     let token = '';
     if (
