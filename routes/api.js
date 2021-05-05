@@ -5,6 +5,7 @@ const users = require('../controllers/user');
 const devices = require('../controllers/device');
 const positions = require('../controllers/position');
 const staticLayers = require('../controllers/staticlayer');
+const server = require('../controllers/server');
 
 module.exports = (passport) => {
     const router = express.Router();
@@ -130,6 +131,8 @@ module.exports = (passport) => {
         jwt.checkScopes('lay_.a.r..'),
         staticLayers.getStaticLayers
     );
+
+    router.get('/server/info', jwt.checkScopes('ser_.a.r..'), server.getInfo);
 
     // This middleware always at the end to catch undefined endpoints
     router.use('*', (req, res) => {
