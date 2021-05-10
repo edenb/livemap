@@ -9,6 +9,7 @@ function getScopes(user) {
         'dev_o--r--',
         'usr_o--ru-',
         'lay_-a-r--',
+        'ser_-a-r--',
     ];
     scopesByRole['manager'] = [
         'acc_o--r--',
@@ -17,6 +18,7 @@ function getScopes(user) {
         'usr_o--ru-',
         'sha_o-crud',
         'lay_-a-r--',
+        'ser_-a-r--',
     ];
     scopesByRole['admin'] = [
         'acc_oacrud',
@@ -25,6 +27,7 @@ function getScopes(user) {
         'usr_oacrud',
         'sha_oacrud',
         'lay_oacrud',
+        'ser_oacrud',
     ];
     if (user.role in scopesByRole) {
         return scopesByRole[user.role];

@@ -28,8 +28,8 @@ passport.use(
             const queryRes = await usr.getUserByField('username', username);
             if (queryRes.rowCount > 0) {
                 const authOK = await usr.checkPassword(
-                    queryRes.rows[0],
-                    password
+                    password,
+                    queryRes.rows[0].password
                 );
                 if (authOK) {
                     return done(null, queryRes.rows[0]);

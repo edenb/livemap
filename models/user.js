@@ -181,9 +181,28 @@ async function modifyUser(user, modUser) {
 
 async function changePassword(user, curPwd, newPwd, confirmPwd) {
     let queryRes = db.getEmptyQueryRes();
-    let userMessage;
+    let authOK = false;
 
-    userMessage = validatePasswordInput(newPwd);
+    // If a user has no password yet, any current password will work (for legacy UI)
+    if (user.password === null) {
+        authOK = true;
+    } else {
+        authOK = await checkPassword(curPwd, user.password);
+    }
+    if (authOK) {
+        queryRes = await resetPassword(user, newPwd, confirmPwd);
+        return queryRes;
+    } else {
+        queryRes.userMessage = 'Old password incorrect';
+        queryRes.rowCount = -2;
+        return queryRes;
+    }
+}
+
+async function resetPassword(user, newPwd, confirmPwd) {
+    let queryRes = db.getEmptyQueryRes();
+
+    const userMessage = validatePasswordInput(newPwd);
     if (userMessage !== null) {
         queryRes.userMessage = userMessage;
         queryRes.rowCount = -2;
@@ -194,57 +213,43 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
         queryRes.rowCount = -2;
         return queryRes;
     }
-    const authOK = await checkPassword(user, curPwd);
-    // If a user has no password yet, any current password will work
-    if (user.password === null || authOK) {
-        let newHash;
-        createHash(curPwd)
-            .then((hash) => {
-                newHash = hash;
-            })
-            .catch(() => {
-                queryRes.userMessage = 'Hashing failed';
-                queryRes.rowCount = -2;
-                return queryRes;
-            });
-        try {
-            queryRes = await db.queryDbAsync('changePwdByUsername', [
-                user.username,
-                newHash,
-            ]);
-            if (queryRes.rowCount <= 0) {
-                queryRes.userMessage = 'User not found';
-            }
-        } catch (err) {
-            queryRes.userMessage = 'Failed to change password';
-            return queryRes;
-        }
-    } else {
-        queryRes.userMessage = 'Old password incorrect';
+    let newHash;
+    try {
+        newHash = await createHash(newPwd);
+    } catch (err) {
+        queryRes.userMessage = 'Hashing failed';
         queryRes.rowCount = -2;
+        return queryRes;
+    }
+    try {
+        queryRes = await db.queryDbAsync('changePwdByUsername', [
+            user.username,
+            newHash,
+        ]);
+        if (queryRes.rowCount <= 0) {
+            queryRes.userMessage = 'User not found';
+        }
+    } catch (err) {
+        queryRes.userMessage = 'Failed to change password';
+        return queryRes;
     }
     return queryRes;
 }
 
 async function createHash(password) {
-    const hash = await bcrypt.hash(password, config.get('user.pwdSaltRounds'));
-    return hash;
+    const passwordHash = await bcrypt.hash(
+        password,
+        config.get('user.pwdSaltRounds')
+    );
+    return passwordHash;
 }
 
-async function checkPassword(user, password) {
-    if (user !== null) {
-        if (user.password === null) {
-            return true;
-        } else {
-            const match = await bcrypt.compare(password, user.password);
-            if (match) {
-                return true;
-            } else {
-                return false;
-            }
-        }
+async function checkPassword(password, passwordHash) {
+    if (password === null) {
+        return true;
     } else {
-        return false;
+        const match = await bcrypt.compare(password || '', passwordHash);
+        return match;
     }
 }
 
@@ -291,6 +296,7 @@ module.exports.getUserByField = getUserByField;
 module.exports.addUser = addUser;
 module.exports.modifyUser = modifyUser;
 module.exports.changePassword = changePassword;
+module.exports.resetPassword = resetPassword;
 module.exports.checkPassword = checkPassword;
 module.exports.deleteUser = deleteUser;
 module.exports.isKnownAPIkey = isKnownAPIkey;
