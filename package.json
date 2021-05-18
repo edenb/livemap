@@ -4,8 +4,8 @@
   "description": "Web server for live map viewing",
   "main": "app.js",
   "dependencies": {
-    "ajv": "^8.1.0",
-    "ajv-formats": "^2.0.2",
+    "ajv": "^8.4.0",
+    "ajv-formats": "^2.1.0",
     "bcrypt": "^5.0.1",
     "body-parser": "~1.19.0",
     "config": "^3.3.6",
@@ -27,18 +27,18 @@
     "pug": "^3.0.2",
     "serve-favicon": "~2.5.0",
     "shortid": "^2.2.16",
-    "socket.io": "^4.0.1",
+    "socket.io": "^4.1.2",
     "winston": "~3.3.0"
   },
   "devDependencies": {
     "chai": "^4.3.3",
     "chai-http": "^4.3.0",
-    "eslint": "^7.21.0",
-    "eslint-config-prettier": "^8.1.0",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.3.1",
-    "mocha": "^8.3.1",
+    "mocha": "^8.4.0",
     "nyc": "^15.1.0",
-    "prettier": "^2.2.1"
+    "prettier": "^2.3.0"
   },
   "engines": {
     "node": "12.x.x"
