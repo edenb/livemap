@@ -3,7 +3,7 @@ FROM node:12 AS build-stage
 WORKDIR /usr/src/app
 COPY package*.json /usr/src/app/
 RUN npm ci --only=production
- 
+
 # production stage
 FROM node:12-alpine
 RUN apk add dumb-init

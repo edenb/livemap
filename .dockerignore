@@ -9,6 +9,7 @@
 .prettierrc
 .vscode
 docs
-Dockerfile
 node_modules
 npm-debug.log
+staticlayers/*
+tracks/*
