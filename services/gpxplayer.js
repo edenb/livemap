@@ -32,10 +32,10 @@ class GpxPlayer {
 
     // Create new tracks from gpx files based on the given device list
     // Do not create if a track already exists
-    addTracks(deviceList) {
+    addTracksByDevice(deviceList) {
         for (let device of deviceList) {
-            let trackName = `${device.api_key}_${device.identifier}`;
-            let track = this.getTrackByName(trackName);
+            const trackName = `${device.api_key}_${device.identifier}`;
+            const track = this.getTrackByName(trackName);
             if (!track && this.fileList.indexOf(trackName) >= 0) {
                 this.tracks.push(
                     new Track(
@@ -45,6 +45,26 @@ class GpxPlayer {
                         this.cbPoint
                     )
                 );
+            }
+        }
+    }
+
+    // Create new tracks from gpx files based on the given API key
+    // Do not create if a track already exists
+    addTracksByApiKey(apiKey) {
+        for (let trackName of this.fileList) {
+            if (trackName.split('_')[0] === apiKey) {
+                const track = this.getTrackByName(trackName);
+                if (!track && this.fileList.indexOf(trackName) >= 0) {
+                    this.tracks.push(
+                        new Track(
+                            this.dirName,
+                            trackName,
+                            this.destPath,
+                            this.cbPoint
+                        )
+                    );
+                }
             }
         }
     }
@@ -192,13 +212,14 @@ class Track {
         } else {
             return {
                 device_id: this.name,
-                gps_latitude: this.gpxData.tracks[0].segments[0][this.gpxIndex]
-                    .lat,
-                gps_longitude: this.gpxData.tracks[0].segments[0][this.gpxIndex]
-                    .lon,
-                gps_time: this.gpxData.tracks[0].segments[0][
-                    this.gpxIndex
-                ].time.toISOString(),
+                gps_latitude:
+                    this.gpxData.tracks[0].segments[0][this.gpxIndex].lat,
+                gps_longitude:
+                    this.gpxData.tracks[0].segments[0][this.gpxIndex].lon,
+                gps_time:
+                    this.gpxData.tracks[0].segments[0][
+                        this.gpxIndex
+                    ].time.toISOString(),
             };
         }
     }

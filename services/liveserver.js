@@ -89,15 +89,22 @@ function addRoom(sockets, device) {
 }
 
 async function startGpxPlayer(userId) {
-    let queryRes = await dev.getAllowedDevices(userId);
+    // Start tracks of own devices
+    let queryRes = await usr.getUserByField('user_id', userId);
+    if (queryRes.rows && queryRes.rows.length > 0) {
+        gpxPlayer.addTracksByApiKey(queryRes.rows[0].api_key);
+    }
+    // Start tracks of shared devices
+    queryRes = await dev.getAllowedDevices(userId);
     if (queryRes.rows && queryRes.rows.length > 0) {
         const deviceList = queryRes.rows.map((item) => ({
             identifier: item.identifier,
             api_key: item.api_key,
         }));
-        gpxPlayer.cleanupTracks();
-        gpxPlayer.addTracks(deviceList);
+        gpxPlayer.addTracksByDevice(deviceList);
     }
+    // Remove all tracks that stopped running
+    gpxPlayer.cleanupTracks();
 }
 
 //
