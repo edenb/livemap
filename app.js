@@ -91,8 +91,8 @@ let apiRoutes = require('./routes/api')(passport);
 app.use('/', indexRoutes);
 app.use('/api/v1', apiRoutes);
 
-function allUp() {
-    if (db.checkDbUp()) {
+async function allUp() {
+    if (await db.checkDbUp()) {
         const port = config.get('server.port');
         let server = app.listen(port);
 
