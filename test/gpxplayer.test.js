@@ -134,7 +134,7 @@ describe('GPX player', () => {
     describe('play tracks from file and validate results', () => {
         it('should load and play the gpx test files of 5 devices', () => {
             try {
-                gpxPlayer.addTracks([
+                gpxPlayer.addTracksByDevice([
                     test7p1s,
                     test4p2s,
                     test3p3s,
