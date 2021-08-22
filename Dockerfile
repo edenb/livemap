@@ -7,7 +7,7 @@ RUN npm ci --only=production
 
 # production stage
 FROM node:12-alpine
-RUN apk add dumb-init
+RUN apk --no-cache add dumb-init
 ENV NODE_ENV production
 RUN mkdir /app
 WORKDIR /app
