@@ -1,60 +1,76 @@
 version: 2.1
 orbs:
   heroku: circleci/heroku@0.0.10
-jobs:
-  build:
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: edenb/livemap
     docker:
-      - image: circleci/node:10.15
-
-    steps:
-      - checkout
-
-      - run:
-          name: Install packages
-          command: npm install
-
+      - image: circleci/buildpack-deps:stretch
+jobs:
   test:
     docker:
       - image: circleci/node:10.15
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
-
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-
     steps:
       - checkout
-
       - run:
           name: Install packages
           command: npm install -D
-
       - run:
           name: Install PostgreSQL client
           command: |
             sudo apt-get update && sudo apt-get install postgresql-client
-
       - run:
           name: Wait for DB
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-
       - run:
           name: Initialise DB
           command: |
             psql -h localhost -p 5432 -U postgres < initdb/10_init-user-db.sql
-
       - run:
           name: Create tables
           command: |
             psql -h localhost -p 5432 -U livemap -d livemapdb < setup/schema.sql
-
       - run:
           name: Run tests
           command: npm test
-
-  deploy-staging:
+  build-docker-image:
+    executor: docker-publisher
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: |
+            docker build -t $IMAGE_NAME:latest .
+      - run:
+          name: Archive Docker image
+          command: docker save -o image.tar $IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./image.tar
+  publish-docker-hub:
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived Docker image
+          command: docker load -i /tmp/workspace/image.tar
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker push $IMAGE_NAME:latest
+  deploy-heroku-staging:
     executor: heroku/default
     steps:
       - checkout
@@ -62,8 +78,7 @@ jobs:
       - heroku/deploy-via-git:
           app-name: $HEROKU_APP_NAME_STAGING
           force: true
-
-  deploy-production:
+  deploy-heroku-production:
     executor: heroku/default
     steps:
       - checkout
@@ -71,25 +86,28 @@ jobs:
       - heroku/deploy-via-git:
           app-name: $HEROKU_APP_NAME_PRODUCTION
           force: true
-
 workflows:
-  version: 2.1
   build-test-deploy:
     jobs:
-      - build
-
-      - test:
+      - test
+      - build-docker-image:
+          filters:
+            branches:
+              only: master
+      - publish-docker-hub:
           requires:
-            - build
-
-      - deploy-staging:
+            - test
+            - build-docker-image
+          filters:
+            branches:
+              only: master
+      - deploy-heroku-staging:
           requires:
             - test
           filters:
             branches:
               ignore: master
-
-      - deploy-production:
+      - deploy-heroku-production:
           requires:
             - test
           filters:
