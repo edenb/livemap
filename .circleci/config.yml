@@ -8,14 +8,6 @@ executors:
     docker:
       - image: circleci/buildpack-deps:stretch
 jobs:
-  install-packages:
-    docker:
-      - image: circleci/node:10.15
-    steps:
-      - checkout
-      - run:
-          name: Install packages
-          command: npm install
   test:
     docker:
       - image: circleci/node:10.15
