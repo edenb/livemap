@@ -73,7 +73,6 @@ jobs:
           force: true
 
 workflows:
-  version: 2.1
   build-test-deploy:
     jobs:
       - build
