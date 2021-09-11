@@ -1,60 +1,54 @@
 version: 2.1
 orbs:
   heroku: circleci/heroku@0.0.10
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: edenb/livemap
+    docker:
+      - image: circleci/buildpack-deps:stretch
 jobs:
-  build:
+  install-packages:
     docker:
       - image: circleci/node:10.15
-
     steps:
       - checkout
-
       - run:
           name: Install packages
           command: npm install
-
   test:
     docker:
       - image: circleci/node:10.15
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
-
       - image: circleci/postgres:9.6
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-
     steps:
       - checkout
-
       - run:
           name: Install packages
           command: npm install -D
-
       - run:
           name: Install PostgreSQL client
           command: |
             sudo apt-get update && sudo apt-get install postgresql-client
-
       - run:
           name: Wait for DB
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-
       - run:
           name: Initialise DB
           command: |
             psql -h localhost -p 5432 -U postgres < initdb/10_init-user-db.sql
-
       - run:
           name: Create tables
           command: |
             psql -h localhost -p 5432 -U livemap -d livemapdb < setup/schema.sql
-
       - run:
           name: Run tests
           command: npm test
-
-  deploy-staging:
+  deploy-heroku-staging:
     executor: heroku/default
     steps:
       - checkout
@@ -62,8 +56,7 @@ jobs:
       - heroku/deploy-via-git:
           app-name: $HEROKU_APP_NAME_STAGING
           force: true
-
-  deploy-production:
+  deploy-heroku-production:
     executor: heroku/default
     steps:
       - checkout
@@ -71,24 +64,17 @@ jobs:
       - heroku/deploy-via-git:
           app-name: $HEROKU_APP_NAME_PRODUCTION
           force: true
-
 workflows:
   build-test-deploy:
     jobs:
-      - build
-
-      - test:
-          requires:
-            - build
-
-      - deploy-staging:
+      - test
+      - deploy-heroku-staging:
           requires:
             - test
           filters:
             branches:
               ignore: master
-
-      - deploy-production:
+      - deploy-heroku-production:
           requires:
             - test
           filters:
