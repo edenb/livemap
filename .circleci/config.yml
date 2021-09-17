@@ -2,12 +2,6 @@ version: 2.1
 orbs:
   docker: circleci/docker@1.7.0
   heroku: circleci/heroku@1.2.6
-executors:
-  docker-publisher:
-    environment:
-      IMAGE_NAME: edenb/livemap
-    docker:
-      - image: circleci/buildpack-deps:stretch
 jobs:
   test:
     docker:
@@ -41,44 +35,6 @@ jobs:
       - run:
           name: Run tests
           command: npm test
-  publish-only:
-    executor: docker/docker
-    steps:
-      - setup_remote_docker
-      - checkout
-      - docker/check
-      - docker/push:
-          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
-  build-docker-image:
-    executor: docker-publisher
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build Docker image
-          command: |
-            docker build -t $IMAGE_NAME:latest .
-      - run:
-          name: Archive Docker image
-          command: docker save -o image.tar $IMAGE_NAME
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./image.tar
-  publish-docker-hub:
-    executor: docker-publisher
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker
-      - run:
-          name: Load archived Docker image
-          command: docker load -i /tmp/workspace/image.tar
-      - run:
-          name: Publish Docker Image to Docker Hub
-          command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $IMAGE_NAME:latest
   deploy-heroku-staging:
     executor: heroku/default
     steps:
@@ -100,23 +56,13 @@ workflows:
     jobs:
       - test
       - docker/publish:
-          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
-          deploy: false
-      - publish-only:
+          image:  $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          update-description: true
           requires:
             - test
-            - docker/publish
-      - build-docker-image:
           filters:
             branches:
-              only: master
-      - publish-docker-hub:
-          requires:
-            - test
-            - build-docker-image
-          filters:
-            branches:
-              only: master
+              ignore: master
       - deploy-heroku-staging:
           requires:
             - test
