@@ -1,5 +1,6 @@
 version: 2.1
 orbs:
+  docker: circleci/docker@1.7.0
   heroku: circleci/heroku@1.2.6
 executors:
   docker-publisher:
@@ -90,6 +91,9 @@ workflows:
   build-test-deploy:
     jobs:
       - test
+      - docker/publish:
+          image:  $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          deploy: false
       - build-docker-image:
           filters:
             branches:
