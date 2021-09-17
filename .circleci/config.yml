@@ -41,6 +41,14 @@ jobs:
       - run:
           name: Run tests
           command: npm test
+  publish-only:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      - docker/check
+      - docker/push:
+          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
   build-docker-image:
     executor: docker-publisher
     steps:
@@ -92,8 +100,12 @@ workflows:
     jobs:
       - test
       - docker/publish:
-          image:  $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
           deploy: false
+      - publish-only:
+          requires:
+            - test
+            - docker/publish
       - build-docker-image:
           filters:
             branches:
