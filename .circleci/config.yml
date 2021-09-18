@@ -57,12 +57,13 @@ workflows:
       - test
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          tag: $CIRCLE_SHA1, latest
           update-description: true
           requires:
             - test
           filters:
             branches:
-              only: master
+              ignore: master
       - deploy-heroku-staging:
           requires:
             - test
