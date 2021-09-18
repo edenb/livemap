@@ -63,7 +63,7 @@ workflows:
             - test
           filters:
             branches:
-              ignore: master
+              only: master
       - deploy-heroku-staging:
           requires:
             - test
