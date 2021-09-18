@@ -5,7 +5,7 @@ orbs:
 jobs:
   test:
     docker:
-      - image: circleci/node:10.15
+      - image: circleci/node:12.22
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
       - image: circleci/postgres:9.6
