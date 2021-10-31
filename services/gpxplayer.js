@@ -155,7 +155,7 @@ class Track {
         this.cbPoint = cbPoint;
         this.gpxData = {};
         this.gpxIndex = 0;
-        this.isRunning = false;
+        this.isRunning = true;
         this.init();
     }
 
