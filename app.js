@@ -4,7 +4,6 @@ const express = require('express');
 const favicon = require('serve-favicon');
 const flash = require('connect-flash');
 const morgan = require('morgan');
-const bodyParser = require('body-parser');
 const session = require('express-session');
 const passport = require('./auth/passport');
 const db = require('./database/db');
@@ -54,8 +53,8 @@ app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
 app.use(morgan('combined', { stream: logger.stream })); // log every request to the logger
-app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json()); // get information from html forms
+app.use(express.urlencoded({ extended: true }));
 app.enable('trust proxy');
 
 // Sessions stored in 'memory' or 'pg' (database)
