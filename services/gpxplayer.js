@@ -1,7 +1,6 @@
 'use strict';
 const config = require('config');
 const http = require('http');
-const qs = require('querystring');
 const fs = require('fs');
 const path = require('path');
 const gpxParse = require('gpx-parse');
@@ -112,12 +111,12 @@ class GpxPlayer {
 
     // Send HTTP POST request
     postMessage(data) {
-        const gpxQuerystring = qs.stringify({
+        const gpxQuerystring = new URLSearchParams({
             device_id: data.device_id,
             gps_latitude: data.gps_latitude,
             gps_longitude: data.gps_longitude,
             gps_time: data.gps_time,
-        });
+        }).toString();
 
         const options = {
             host: 'localhost',

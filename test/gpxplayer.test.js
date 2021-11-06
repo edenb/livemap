@@ -1,6 +1,5 @@
 'use strict';
 const config = require('config');
-const qs = require('querystring');
 const http = require('http');
 const chai = require('chai');
 const gp = require('../services/gpxplayer');
@@ -40,7 +39,7 @@ function startHttpServer(port) {
                     body += chunk.toString();
                 });
                 req.on('end', () => {
-                    let point = qs.parse(body);
+                    let point = Object.fromEntries(new URLSearchParams(body));
                     storePoint(point);
                     res.writeHead(200, { 'Content-Type': 'text/plain' });
                     res.end();
