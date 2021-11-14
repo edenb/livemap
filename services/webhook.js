@@ -1,5 +1,4 @@
 'use strict';
-const qs = require('querystring');
 const usr = require('../models/user');
 const dev = require('../models/device');
 const livesvr = require('./liveserver');
@@ -13,7 +12,7 @@ async function processGpx(rawLocationData) {
     if (Object.keys(rawLocationData.query).length !== 0) {
         srcData = rawLocationData.query;
     } else if (rawLocationData.body !== '') {
-        srcData = qs.parse(rawLocationData.body);
+        srcData = Object.fromEntries(new URLSearchParams(rawLocationData.body));
     }
 
     identObj = dev.splitDeviceIdentity(srcData.device_id, '_');
@@ -67,7 +66,7 @@ async function processLocative(rawLocationData) {
     if (Object.keys(rawLocationData.query).length !== 0) {
         srcData = rawLocationData.query;
     } else if (rawLocationData.body !== '') {
-        srcData = qs.parse(rawLocationData.body);
+        srcData = Object.fromEntries(new URLSearchParams(rawLocationData.body));
     }
 
     // Determine if it's a detection of an iBeacon (lon and lat are '0') or the location of a device
@@ -175,7 +174,7 @@ async function processLocation(request, response, type) {
             'HTTP ' +
                 request.method +
                 ' query: ' +
-                qs.stringify(rawLocationData.query)
+                new URLSearchParams(rawLocationData.query).toString()
         );
         logger.debug(
             'HTTP ' + request.method + ' body: ' + rawLocationData.body
