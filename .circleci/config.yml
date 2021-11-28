@@ -72,18 +72,21 @@ workflows:
           tag: $CIRCLE_SHA1,latest
           update-description: true
           requires:
+            - lint
             - test
           filters:
             branches:
               only: master
       - deploy-heroku-staging:
           requires:
+            - lint
             - test
           filters:
             branches:
               ignore: master
       - deploy-heroku-production:
           requires:
+            - lint
             - test
           filters:
             branches:
