@@ -9,6 +9,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install packages
+          command: npm install -D
+      - run:
           name: Run lint
           command: npm run lint
   test:
