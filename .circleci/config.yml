@@ -3,6 +3,17 @@ orbs:
   docker: circleci/docker@1.7.0
   heroku: circleci/heroku@1.2.6
 jobs:
+  lint:
+    docker:
+      - image: circleci/node:12.22
+    steps:
+      - checkout
+      - run:
+          name: Install packages
+          command: npm install -D
+      - run:
+          name: Run lint
+          command: npm run lint
   test:
     docker:
       - image: circleci/node:12.22
@@ -52,26 +63,30 @@ jobs:
           app-name: $HEROKU_APP_NAME_PRODUCTION
           force: true
 workflows:
-  build-test-deploy:
+  lint-build-test-deploy:
     jobs:
+      - lint
       - test
       - docker/publish:
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
           tag: $CIRCLE_SHA1,latest
           update-description: true
           requires:
+            - lint
             - test
           filters:
             branches:
               only: master
       - deploy-heroku-staging:
           requires:
+            - lint
             - test
           filters:
             branches:
               ignore: master
       - deploy-heroku-production:
           requires:
+            - lint
             - test
           filters:
             branches:
