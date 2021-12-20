@@ -72,9 +72,6 @@ const sessionMiddleware = session({
 });
 
 app.use((req, res, next) => {
-    if (req.headers.authorization) {
-        return next();
-    }
     return sessionMiddleware(req, res, next);
 });
 
@@ -82,7 +79,6 @@ app.use((req, res, next) => {
 app.use(flash());
 
 // Set-up authentication with persistent login sessions
-app.use(passport.initialize());
 app.use(passport.session());
 
 let indexRoutes = require('./routes/index')(passport);
