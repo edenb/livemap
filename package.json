@@ -18,6 +18,7 @@
     "memorystore": "^1.6.5",
     "morgan": "~1.10.0",
     "mqtt": "^4.2.8",
+    "nanoid": "^3.3.1",
     "passport": "~0.5.2",
     "passport-local": "~1.0.0",
     "path": "~0.12.0",
@@ -25,9 +26,8 @@
     "pg-connection-string": "^2.4.0",
     "pug": "^3.0.2",
     "serve-favicon": "~2.5.0",
-    "shortid": "^2.2.16",
     "socket.io": "^4.2.0",
-    "winston": "~3.4.0"
+    "winston": "~3.6.0"
   },
   "devDependencies": {
     "chai": "^4.3.3",

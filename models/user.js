@@ -1,7 +1,7 @@
 'use strict';
 const config = require('config');
 const bcrypt = require('bcrypt');
-const shortid = require('shortid');
+const { customAlphabet } = require('nanoid');
 const db = require('../database/db');
 
 // In memory list of all users with their attributes
@@ -12,7 +12,13 @@ var users = [];
 //
 
 function generateAPIkey() {
-    return shortid.generate();
+    const alphabet =
+        '0123456789' +
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+        'abcdefghijklmnopqrstuvwxyz';
+    const nanoid = customAlphabet(alphabet, 10);
+    const newAPIkey = nanoid();
+    return newAPIkey;
 }
 
 function checkChangesAllowed(user, modUser) {
