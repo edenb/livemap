@@ -93,8 +93,9 @@ module.exports = (passport) => {
     // Handle Logout
     router.get('/signout', (req, res) => {
         req.session.destroy(() => {
-            req.logOut();
-            res.redirect('/');
+            req.logOut(() => {
+                res.redirect('/');
+            });
         });
     });
 
