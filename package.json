@@ -40,7 +40,7 @@
     "prettier": "^2.4.1"
   },
   "engines": {
-    "node": "12.x.x"
+    "node": "14.x.x"
   },
   "scripts": {
     "test": "nyc mocha --recursive test",
