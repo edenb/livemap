@@ -1,12 +1,12 @@
 # build stage
-FROM node:12 AS build-stage
+FROM node:14 AS build-stage
 RUN mkdir /app
 WORKDIR /app
 COPY package*.json /app/
 RUN npm ci --only=production
 
 # production stage
-FROM node:12-alpine
+FROM node:14-alpine
 RUN apk --no-cache add dumb-init
 ENV NODE_ENV production
 RUN mkdir /app
