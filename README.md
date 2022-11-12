@@ -33,7 +33,7 @@ The demo contains 3 devices that play back recorded tracks.
 The easiest way to get started is to deploy the application on [Heroku](https://heroku.com). Use the [Deploy to Heroku](https://heroku.com/deploy?template=https://github.com/edenb/livemap) button and follow instructions to create an account. On Heroku press the Deploy for Free button at the bottom and your server is up and running!
 
 On a local NodeJS setup you first need to install some packages.
-* Download and install the newest Node.js 14.x version from [Node.js](https://nodejs.org)
+* Download and install the newest Node.js 18.x version from [Node.js](https://nodejs.org)
 * Download and install the newest [PostgreSQL 9.6.x](http://www.postgresql.org/download/)
 * Copy or clone the latest Live Map from GitHub into a project directory of your choice
 * In the project directory run `npm install`

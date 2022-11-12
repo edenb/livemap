@@ -1,11 +1,11 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@2.0.3
-  heroku: circleci/heroku@1.2.6
+  docker: circleci/docker@2.1.4
+  heroku: circleci/heroku@2.0.0
 jobs:
   lint:
     docker:
-      - image: cimg/node:14.19
+      - image: cimg/node:18.12
     steps:
       - checkout
       - run:
@@ -16,7 +16,7 @@ jobs:
           command: npm run lint
   test:
     docker:
-      - image: cimg/node:14.19
+      - image: cimg/node:18.12
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
       - image: circleci/postgres:9.6
