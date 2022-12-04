@@ -26,7 +26,7 @@ The demo contains 3 devices that play back recorded tracks.
 ### [Demo modern UI](https://livemap.vercel.app)
 ![Screenshot livemap](https://github.com/edenb/livemap-ui/raw/master/docs/img/screenshot.png)
 
-### [Demo original UI](https://livemapdemo.herokuapp.com)
+### [Demo original UI](https://livemap.fly.dev)
 ![Screenshot livemap](docs/img/screenshot.png)
 
 ## Set up your own Livemap server
