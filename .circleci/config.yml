@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@2.0.3
+  docker: circleci/docker@2.1.4
   heroku: circleci/heroku@1.2.6
 jobs:
   lint:
