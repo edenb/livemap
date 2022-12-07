@@ -45,7 +45,7 @@ jobs:
       - run:
           name: Run tests
           command: npm test
-  deploy-fly-development
+  deploy-fly-development:
     machine:
       docker_layer_caching: true
     steps:
@@ -58,7 +58,7 @@ jobs:
             docker build -t registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM
             ./flyctl deploy -i registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM -a $FLY_APP_NAME_DEV --ignorefile .dockerignore.demo
-  deploy-fly-production
+  deploy-fly-production:
     machine:
       docker_layer_caching: true
     steps:
