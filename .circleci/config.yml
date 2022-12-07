@@ -45,6 +45,32 @@ jobs:
       - run:
           name: Run tests
           command: npm test
+  deploy-fly-development
+    machine:
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          name: Deploy Fly development
+          command: |
+            wget -qO- 'https://getfly.fly.dev/linux-x86-64/flyctl.tgz' | tar xz
+            ./flyctl auth docker
+            docker build -t registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM .
+            docker push registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM
+            ./flyctl deploy -i registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM -a $FLY_APP_NAME_DEV --ignorefile .dockerignore.demo
+  deploy-fly-production
+    machine:
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          name: Deploy Fly development
+          command: |
+            wget -qO- 'https://getfly.fly.dev/linux-x86-64/flyctl.tgz' | tar xz
+            ./flyctl auth docker
+            docker build -t registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM .
+            docker push registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM
+            ./flyctl deploy -i registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM -a $FLY_APP_NAME_PROD --ignorefile .dockerignore.demo
 workflows:
   lint-build-test-deploy:
     jobs:
@@ -54,6 +80,20 @@ workflows:
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
           tag: $CIRCLE_SHA1,latest
           update-description: true
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              only: master
+      - deploy-fly-development:
+          requires:
+            - lint
+            - test
+          filters:
+            branches:
+              ignore: master
+      - deploy-fly-production:
           requires:
             - lint
             - test

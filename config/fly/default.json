@@ -1,0 +1,39 @@
+{
+  "server": {
+    "port": 3000,
+    "forceSSL": "false"
+  },
+  "logger": {
+    "level": "info",
+    "colorize": true
+  },
+  "mqtt": {
+    "url": "mqtt://test.mosquitto.org:1883",
+    "protocol": "",
+    "port": "",
+    "userVhost": false,
+    "topic": "livemap/#"
+  },
+  "db": {
+    "url": "postgres://pguser:mysecretpgpassword@localhost",
+    "ssl": true,
+    "maintenanceInterval": 3600000
+  },
+  "sessions": {
+    "tableName": "sessions",
+    "name": "connect.sid",
+    "secret": "mycookiesecret",
+    "maxAge": 2592000000
+  },
+  "user": {
+    "nameMinLength": 4,
+    "pwdMinLength": 4,
+    "pwdSaltRounds": 10
+  },
+  "wclient": {
+    "name": "Live Map (Dev)",
+    "license": "MIT",
+    "about": "This is the development version of the Live Map demo.",
+    "showBroker": "false"
+  }
+}
