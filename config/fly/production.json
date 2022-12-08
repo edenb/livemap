@@ -1,0 +1,15 @@
+{
+  "server": {
+    "forceSSL": "true"
+  },
+  "db": {
+    "url": "postgres://pguser:mysecretpgpassword@localhost"
+  },
+  "sessions": {
+    "secret": "myproductioncookiesecret"
+  },
+  "wclient": {
+    "name": "Live Map",
+    "about": "This is the production version of the Live Map demo."
+  }
+}

@@ -1,0 +1,12 @@
+.circleci
+.dockerignore
+.env.local
+.env.*.local
+.eslintrc.json
+.git
+.gitignore
+.nyc_output
+.prettierrc
+.vscode
+node_modules
+npm-debug.log
