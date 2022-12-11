@@ -55,7 +55,7 @@ jobs:
           command: |
             wget -qO- 'https://getfly.fly.dev/linux-x86-64/flyctl.tgz' | tar xz
             ./flyctl auth docker
-            docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM .
+            DOCKER_BUILDKIT=1 docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM
             ./flyctl deploy -i registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM -a $FLY_APP_NAME_DEV
   deploy-fly-demo:
@@ -68,7 +68,7 @@ jobs:
           command: |
             wget -qO- 'https://getfly.fly.dev/linux-x86-64/flyctl.tgz' | tar xz
             ./flyctl auth docker
-            docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM .
+            DOCKER_BUILDKIT=1 docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM
             ./flyctl deploy -i registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM -a $FLY_APP_NAME_PROD
 workflows:
@@ -81,6 +81,7 @@ workflows:
           tag: $CIRCLE_SHA1,latest
           dockerfile: Dockerfile.prod
           update-description: true
+          use-buildkit: true
           requires:
             - lint
             - test
