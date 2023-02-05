@@ -1,7 +1,7 @@
 'use strict';
 const config = require('config');
 const bcrypt = require('bcrypt');
-const { customAlphabet } = require('nanoid');
+const crypto = require('crypto');
 const db = require('../database/db');
 
 // In memory list of all users with their attributes
@@ -12,13 +12,7 @@ var users = [];
 //
 
 function generateAPIkey() {
-    const alphabet =
-        '0123456789' +
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-        'abcdefghijklmnopqrstuvwxyz';
-    const nanoid = customAlphabet(alphabet, 10);
-    const newAPIkey = nanoid();
-    return newAPIkey;
+    return crypto.randomBytes(8).toString('hex').toUpperCase();
 }
 
 function checkChangesAllowed(user, modUser) {
