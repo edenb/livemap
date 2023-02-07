@@ -178,7 +178,7 @@ function getEmptyQueryRes() {
 
 // Initialize the pool
 // Get the PostgreSQL login details from the config.
-// Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE> (for Heroku add ?ssl=true when accessing from a remote server)
+// Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE>
 // To set environment variable:
 //  set DATABASE_URL=user:pass@abc.com/table (Windows)
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
