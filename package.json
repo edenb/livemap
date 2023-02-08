@@ -44,7 +44,8 @@
   "scripts": {
     "test": "nyc mocha --recursive test",
     "start": "node app.js",
-    "lint": "eslint app.js auth controllers database models routes services test utils"
+    "lint": "eslint app.js auth controllers database models routes services test utils",
+    "format": "prettier app.js auth controllers database models routes services test utils --write"
   },
   "author": "edenb",
   "license": "MIT"
