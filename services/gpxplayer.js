@@ -1,9 +1,9 @@
 'use strict';
 const config = require('config');
 const http = require('http');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
-const gpxParse = require('gpx-parse');
+const xml2js = require('xml2js');
 const logger = require('../utils/logger');
 
 class GpxPlayer {
@@ -41,8 +41,8 @@ class GpxPlayer {
                         this.dirName,
                         trackName,
                         this.destPath,
-                        this.cbPoint
-                    )
+                        this.cbPoint,
+                    ),
                 );
             }
         }
@@ -60,8 +60,8 @@ class GpxPlayer {
                             this.dirName,
                             trackName,
                             this.destPath,
-                            this.cbPoint
-                        )
+                            this.cbPoint,
+                        ),
                     );
                 }
             }
@@ -69,22 +69,15 @@ class GpxPlayer {
     }
 
     // Create a list of all gpx files in the given directory
-    loadFileList(dirName) {
-        return new Promise((resolve, reject) => {
-            fs.readdir(dirName, (err, allFiles) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    let fileList = [];
-                    allFiles.forEach((file) => {
-                        if (path.extname(file) === '.gpx') {
-                            fileList.push(path.basename(file, '.gpx'));
-                        }
-                    });
-                    resolve(fileList);
-                }
-            });
+    async loadFileList(dirName) {
+        const allFiles = await fs.readdir(dirName);
+        let fileList = [];
+        allFiles.forEach((file) => {
+            if (path.extname(file) === '.gpx') {
+                fileList.push(path.basename(file, '.gpx'));
+            }
         });
+        return fileList;
     }
 
     // Get the track with the given name
@@ -132,7 +125,7 @@ class GpxPlayer {
         const req = http.request(options, (res) => {
             if (res.statusCode >= 300) {
                 logger.error(
-                    `GPX player failed HTTP POST with status code: ${res.statusCode}`
+                    `GPX player failed HTTP POST with status code: ${res.statusCode}`,
                 );
             }
         });
@@ -152,48 +145,41 @@ class Track {
         this.name = name;
         this.destPath = destPath;
         this.cbPoint = cbPoint;
-        this.gpxData = {};
-        this.gpxIndex = 0;
+        this.points = [];
+        this.pointsIndex = 0;
         this.isRunning = true;
         this.init();
     }
 
     async init() {
         try {
-            this.gpxData = await this.loadGpxFile();
+            this.points = await this.loadGpxFile();
             this.sendGpxPoint();
         } catch (err) {
-            logger.error('Unable to open GPX file.', err);
+            logger.error('Unable to load GPX file.', err);
         }
     }
 
-    loadGpxFile() {
-        return new Promise((resolve, reject) => {
-            let fileName = this.dirName + this.name + '.gpx';
-            fs.readFile(fileName, (err, fileData) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    gpxParse.parseGpx(fileData, (err, data) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(data);
-                        }
-                    });
-                }
-            });
-        });
+    async loadGpxFile() {
+        const fileName = this.dirName + this.name + '.gpx';
+        const fileData = await fs.readFile(fileName);
+        const xmlParser = new xml2js.Parser();
+        const parsedXml = await xmlParser.parseStringPromise(fileData);
+        let points = parsedXml.gpx?.trk?.[0]?.trkseg?.[0]?.trkpt;
+        if (!points) {
+            points = [];
+        }
+        return points;
     }
 
     sendGpxPoint() {
         let curPoint = this._getPoint();
-        this.gpxIndex += 1;
+        this.pointsIndex += 1;
         let nextPoint = this._getPoint();
         if (curPoint && nextPoint) {
             let diffTime = this._getDiffTime(
                 curPoint.gps_time,
-                nextPoint.gps_time
+                nextPoint.gps_time,
             );
             setTimeout(this.sendGpxPoint.bind(this), diffTime);
             this.isRunning = true;
@@ -206,19 +192,14 @@ class Track {
     }
 
     _getPoint() {
-        if (this.gpxIndex >= this.gpxData.tracks[0].segments[0].length) {
+        if (this.pointsIndex >= this.points.length) {
             return null;
         } else {
             return {
                 device_id: this.name,
-                gps_latitude:
-                    this.gpxData.tracks[0].segments[0][this.gpxIndex].lat,
-                gps_longitude:
-                    this.gpxData.tracks[0].segments[0][this.gpxIndex].lon,
-                gps_time:
-                    this.gpxData.tracks[0].segments[0][
-                        this.gpxIndex
-                    ].time.toISOString(),
+                gps_latitude: this.points[this.pointsIndex].$.lat,
+                gps_longitude: this.points[this.pointsIndex].$.lon,
+                gps_time: this.points[this.pointsIndex].time[0],
             };
         }
     }

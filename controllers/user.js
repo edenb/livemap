@@ -33,7 +33,7 @@ exports.addUser = async (req, res) => {
     if (req.decodedToken) {
         const queryRes = await usr.addUser(
             { user_id: req.decodedToken.userId, role: req.decodedToken.role },
-            req.body
+            req.body,
         );
         if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
@@ -60,7 +60,7 @@ exports.modifyUser = async (req, res) => {
         req.body.user_id = reqUserId;
         const queryRes = await usr.modifyUser(
             { user_id: req.decodedToken.userId, role: req.decodedToken.role },
-            req.body
+            req.body,
         );
         if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
@@ -86,7 +86,7 @@ exports.removeUser = async (req, res) => {
     if (reqUserId >= 0 && req.decodedToken) {
         const queryRes = await usr.deleteUser(
             { user_id: req.decodedToken.userId, role: req.decodedToken.role },
-            { user_id: reqUserId }
+            { user_id: reqUserId },
         );
         if (queryRes.rowCount === -1) {
             res.status(500).send(`Internal Server Error`);
@@ -124,7 +124,7 @@ exports.changePassword = async (req, res) => {
                     queryRes1.rows[0],
                     req.body.curpwd,
                     req.body.newpwd,
-                    req.body.confirmpwd
+                    req.body.confirmpwd,
                 );
                 if (queryRes2.rowCount === -1) {
                     res.status(500).send(`Internal Server Error`);
@@ -161,7 +161,7 @@ exports.resetPassword = async (req, res) => {
                 queryRes2 = await usr.resetPassword(
                     queryRes1.rows[0],
                     req.body.newpwd,
-                    req.body.confirmpwd
+                    req.body.confirmpwd,
                 );
                 if (queryRes2.rowCount === -1) {
                     res.status(500).send(`Internal Server Error`);

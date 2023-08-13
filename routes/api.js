@@ -16,11 +16,11 @@ module.exports = (passport) => {
         res.header('Access-Control-Allow-Credentials', 'true');
         res.header(
             'Access-Control-Allow-Methods',
-            'GET,PUT,POST,OPTIONS,DELETE'
+            'GET,PUT,POST,OPTIONS,DELETE',
         );
         res.header(
             'Access-Control-Allow-Headers',
-            'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+            'Origin, X-Requested-With, Content-Type, Accept, Authorization',
         );
         // intercept OPTIONS method
         if (req.method === 'OPTIONS') {
@@ -51,85 +51,85 @@ module.exports = (passport) => {
     router.put(
         '/users/:userId',
         jwt.checkScopes('usr_.a..u.'),
-        users.modifyUser
+        users.modifyUser,
     );
 
     router.delete(
         '/users/:userId',
         jwt.checkScopes('usr_.a...d'),
-        users.removeUser
+        users.removeUser,
     );
 
     router.get(
         '/users/:userId',
         jwt.checkScopes('usr_o..r..'),
-        users.getUserByUserId
+        users.getUserByUserId,
     );
 
     router.post(
         '/users/:userId/password/change',
         jwt.checkScopes('usr_o...u.'),
-        users.changePassword
+        users.changePassword,
     );
 
     router.post(
         '/users/:userId/password/reset',
         jwt.checkScopes('usr_.a..u.'),
-        users.resetPassword
+        users.resetPassword,
     );
 
     router.get(
         '/users/:userId/devices',
         jwt.checkScopes('dev_o..r..'),
-        devices.getDevicesByUserId
+        devices.getDevicesByUserId,
     );
 
     router.post(
         '/users/:userId/devices',
         jwt.checkScopes('dev_o.c...'),
-        devices.addDeviceByUserId
+        devices.addDeviceByUserId,
     );
 
     router.put(
         '/users/:userId/devices/:deviceId',
         jwt.checkScopes('dev_o...u.'),
-        devices.modifyDeviceByUserId
+        devices.modifyDeviceByUserId,
     );
 
     router.delete(
         '/users/:userId/devices/:deviceIds',
         jwt.checkScopes('dev_o....d'),
-        devices.removeDevicesByUserId
+        devices.removeDevicesByUserId,
     );
 
     router.post(
         '/users/:userId/devices/:deviceIds/shareduser',
         jwt.checkScopes('sha_o.c...'),
-        devices.addSharedUserByUserId
+        devices.addSharedUserByUserId,
     );
 
     router.delete(
         '/users/:userId/devices/:deviceIds/shareduser',
         jwt.checkScopes('sha_o....d'),
-        devices.removeSharedUserByUserId
+        devices.removeSharedUserByUserId,
     );
 
     router.get(
         '/devices',
         jwt.checkScopes('dev_.a.r..'),
-        devices.getAllDevices
+        devices.getAllDevices,
     );
 
     router.get(
         '/positions',
         jwt.checkScopes('pos_o..r..'),
-        positions.getLastPositions
+        positions.getLastPositions,
     );
 
     router.get(
         '/staticlayers',
         jwt.checkScopes('lay_.a.r..'),
-        staticLayers.getStaticLayers
+        staticLayers.getStaticLayers,
     );
 
     router.get('/server/info', jwt.checkScopes('ser_.a.r..'), server.getInfo);

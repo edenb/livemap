@@ -44,7 +44,7 @@ async function getDeviceByIdentity(apiKey, identifier) {
     }
     if (i !== devices.length) {
         logger.debug(
-            'findDeviceByIdentity - from memory: ' + JSON.stringify(devices[i])
+            'findDeviceByIdentity - from memory: ' + JSON.stringify(devices[i]),
         );
         queryRes.rowCount = 1;
         queryRes.rows = [devices[i]];
@@ -62,7 +62,7 @@ async function getDeviceByIdentity(apiKey, identifier) {
         if (queryRes.rowCount === 1) {
             logger.debug(
                 'findDeviceByIdentity - new: ' +
-                    JSON.stringify(queryRes.rows[0])
+                    JSON.stringify(queryRes.rows[0]),
             );
             devices.push(queryRes.rows[0]);
         }
@@ -214,7 +214,7 @@ function splitDeviceIdentity(devIdent, dividerChar) {
             identityObj.apiKey +
             ' ' +
             identityObj.identifier +
-            ' '
+            ' ',
     );
     return identityObj;
 }

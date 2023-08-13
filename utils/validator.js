@@ -10,7 +10,7 @@ class Validator {
         this._schemaName = schemaName;
         this.ajvValidator = new ajv({ allErrors: true, coerceTypes: true });
         this.ajvValidator.addMetaSchema(
-            require('../schemas/json-schema-draft-06.json')
+            require('../schemas/json-schema-draft-06.json'),
         );
         addFormats(this.ajvValidator);
         this.loadSchema(schemaName);
@@ -30,7 +30,7 @@ class Validator {
                 logger.error(
                     'Validator <' +
                         this._schemaName +
-                        '>: Unexpected token in schema'
+                        '>: Unexpected token in schema',
                 );
                 return;
             }
@@ -46,7 +46,7 @@ class Validator {
             logger.error(
                 'Validator <' +
                     this._schemaName +
-                    '>: Schema not valid. Unable to validate'
+                    '>: Schema not valid. Unable to validate',
             );
             return false;
         }

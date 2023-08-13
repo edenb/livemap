@@ -58,7 +58,7 @@ module.exports = (passport) => {
                     token_type: 'Bearer',
                 });
             });
-        }
+        },
     );
 
     // GET Registration Page
@@ -77,7 +77,7 @@ module.exports = (passport) => {
             successRedirect: '/home',
             failureRedirect: '/signup',
             failureFlash: true,
-        })
+        }),
     );
 
     // GET Start Page
@@ -180,7 +180,7 @@ module.exports = (passport) => {
     router.get('/changedevices', ensureAuthenticated, async (req, res) => {
         const queryRes = await dev.getOwnedDevicesByField(
             'user_id',
-            req.user.user_id
+            req.user.user_id,
         );
         let userdevices = queryRes.rows;
         if (typeof queryRes.userMessage === 'undefined') {
@@ -243,14 +243,14 @@ module.exports = (passport) => {
             case 'addSharedUser':
                 queryRes = await dev.addSharedUser(
                     req.body.shareduser,
-                    req.body.checkedIds.split(',')
+                    req.body.checkedIds.split(','),
                 );
                 if (queryRes.rowCount > 0) {
                     req.flash(
                         'info',
                         req.body.checkedIds.split(',').length +
                             ' device(s) shared with user: ' +
-                            req.body.shareduser
+                            req.body.shareduser,
                     );
                     req.session.save(() => {
                         res.redirect('/changedevices');
@@ -265,14 +265,14 @@ module.exports = (passport) => {
             case 'delSharedUser':
                 queryRes = await dev.deleteSharedUser(
                     req.body.shareduser,
-                    req.body.checkedIds.split(',')
+                    req.body.checkedIds.split(','),
                 );
                 if (queryRes.rowCount > 0) {
                     req.flash(
                         'info',
                         req.body.checkedIds.split(',').length +
                             ' device(s) no longer shared with user: ' +
-                            req.body.shareduser
+                            req.body.shareduser,
                     );
                     req.session.save(() => {
                         res.redirect('/changedevices');
@@ -286,13 +286,13 @@ module.exports = (passport) => {
                 break;
             case 'delDevices':
                 queryRes = await dev.deleteDevicesById(
-                    req.body.checkedIds.split(',')
+                    req.body.checkedIds.split(','),
                 );
                 if (queryRes.rowCount > 0) {
                     req.flash(
                         'info',
                         req.body.checkedIds.split(',').length +
-                            ' device(s) removed'
+                            ' device(s) removed',
                     );
                     req.session.save(() => {
                         res.redirect('/changedevices');
@@ -329,7 +329,7 @@ module.exports = (passport) => {
                 req.user,
                 req.body.oldpassword,
                 req.body.password,
-                req.body.confirm
+                req.body.confirm,
             );
             if (queryRes.rowCount === 1) {
                 req.flash('info', 'Password changed');

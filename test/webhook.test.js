@@ -165,7 +165,7 @@ describe('Remove test user including owned devices', () => {
             try {
                 const queryRes = await usr.getUserByField(
                     'username',
-                    testUser.username
+                    testUser.username,
                 );
                 if (queryRes.rowCount > 0) {
                     testUser = queryRes.rows[0];
@@ -181,7 +181,7 @@ describe('Remove test user including owned devices', () => {
             try {
                 const queryRes = await dev.getOwnedDevicesByField(
                     'user_id',
-                    testUser.user_id
+                    testUser.user_id,
                 );
                 testDevices = queryRes.rows;
                 queryRes.rowCount.should.equal(5);

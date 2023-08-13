@@ -67,7 +67,7 @@ function storePoint(point) {
 
 function reportPoints(device_id) {
     const filteredPoints = points.filter(
-        (points) => points.device_id === device_id
+        (points) => points.device_id === device_id,
     );
     let minDelay = null;
     let maxDelay = null;
@@ -119,10 +119,10 @@ describe('GPX player', () => {
                 //gpxPlayer = new gp.GpxPlayer('./tracks/test/', '', storePoint);
                 gpxPlayer = new gp.GpxPlayer(
                     './tracks/test/',
-                    '/location/gpx/test'
+                    '/location/gpx/test',
                 );
                 const fileList = await gpxPlayer.loadFileList(
-                    gpxPlayer.dirName
+                    gpxPlayer.dirName,
                 );
                 fileList.length.should.equal(6);
             } catch (err) {
@@ -143,7 +143,7 @@ describe('GPX player', () => {
                 gpxPlayer.tracks.length.should.equal(5);
                 should.exist(gpxPlayer.getTrackByName(getTrackname(test7p1s)));
                 should.not.exist(
-                    gpxPlayer.getTrackByName('non-existing-track-name')
+                    gpxPlayer.getTrackByName('non-existing-track-name'),
                 );
             } catch (err) {
                 throw new Error(err.message);
