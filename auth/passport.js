@@ -29,7 +29,7 @@ passport.use(
             if (queryRes.rowCount > 0) {
                 const authOK = await usr.checkPassword(
                     password,
-                    queryRes.rows[0].password
+                    queryRes.rows[0].password,
                 );
                 if (authOK) {
                     return done(null, queryRes.rows[0]);
@@ -55,8 +55,8 @@ passport.use(
                     return done(null, false);
                 }
             }
-        }
-    )
+        },
+    ),
 );
 
 module.exports = passport;

@@ -9,8 +9,8 @@ const consoleLogFormat = format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     format.printf(
         (info) =>
-            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`
-    )
+            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`,
+    ),
 );
 
 const consoleLogFormatNoColor = format.combine(
@@ -18,8 +18,8 @@ const consoleLogFormatNoColor = format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     format.printf(
         (info) =>
-            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`
-    )
+            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`,
+    ),
 );
 
 const logger = createLogger({

@@ -23,7 +23,7 @@ exports.getDevicesByUserId = async (req, res) => {
     if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
         const queryRes1 = await dev.getOwnedDevicesByField(
             'user_id',
-            reqUserId
+            reqUserId,
         );
         let ownedDevices = null;
         if (queryRes1.rowCount >= 0) {
@@ -31,7 +31,7 @@ exports.getDevicesByUserId = async (req, res) => {
         }
         const queryRes2 = await dev.getSharedDevicesByField(
             'user_id',
-            reqUserId
+            reqUserId,
         );
         let sharedDevices = null;
         if (queryRes2.rowCount >= 0) {
@@ -109,7 +109,7 @@ exports.removeDevicesByUserId = async (req, res) => {
     if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
         const queryRes = await dev.deleteDevicesByUserId(
             reqUserId,
-            req.params.deviceIds.split(',')
+            req.params.deviceIds.split(','),
         );
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
@@ -138,7 +138,7 @@ exports.addSharedUserByUserId = async (req, res) => {
         const queryRes = await dev.addSharedUserByUserId(
             reqUserId,
             req.body,
-            req.params.deviceIds.split(',')
+            req.params.deviceIds.split(','),
         );
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
@@ -167,7 +167,7 @@ exports.removeSharedUserByUserId = async (req, res) => {
         const queryRes = await dev.deleteSharedUserByUserId(
             reqUserId,
             req.body,
-            req.params.deviceIds.split(',')
+            req.params.deviceIds.split(','),
         );
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);

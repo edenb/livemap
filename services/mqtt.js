@@ -34,7 +34,7 @@ async function processMessage(messageStr) {
         if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
             const queryRes = await dev.getDeviceByIdentity(
                 srcData.apikey,
-                srcData.id
+                srcData.id,
             );
             logger.info('MQTT message: ' + JSON.stringify(srcData));
             if (queryRes.rowCount === 1) {
@@ -86,7 +86,7 @@ function start() {
 
     client.on('message', async (topic, message) => {
         logger.debug(
-            'MQTT message (topic=' + topic + '): ' + message.toString()
+            'MQTT message (topic=' + topic + '): ' + message.toString(),
         );
         await dev.getAllDevices();
         await usr.getAllUsers();

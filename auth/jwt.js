@@ -46,7 +46,7 @@ function getNewToken(user) {
     let token = jsonwebtoken.sign(
         { userId: user.user_id, role: user.role, scopes: scopes },
         'replacebysecretfromconfig',
-        options
+        options,
     );
     return token;
 }
@@ -58,7 +58,7 @@ function getTokenPayload(token) {
         payload = jsonwebtoken.verify(
             token,
             'replacebysecretfromconfig',
-            options
+            options,
         );
     } catch (err) {
         payload = {};
@@ -99,7 +99,7 @@ function checkScopes(scope) {
                 let decoded = jsonwebtoken.verify(
                     token,
                     'replacebysecretfromconfig',
-                    options
+                    options,
                 );
                 req.decodedToken = decoded;
                 for (let i = 0; i < decoded.scopes.length; i++) {

@@ -41,8 +41,8 @@ class GpxPlayer {
                         this.dirName,
                         trackName,
                         this.destPath,
-                        this.cbPoint
-                    )
+                        this.cbPoint,
+                    ),
                 );
             }
         }
@@ -60,8 +60,8 @@ class GpxPlayer {
                             this.dirName,
                             trackName,
                             this.destPath,
-                            this.cbPoint
-                        )
+                            this.cbPoint,
+                        ),
                     );
                 }
             }
@@ -132,7 +132,7 @@ class GpxPlayer {
         const req = http.request(options, (res) => {
             if (res.statusCode >= 300) {
                 logger.error(
-                    `GPX player failed HTTP POST with status code: ${res.statusCode}`
+                    `GPX player failed HTTP POST with status code: ${res.statusCode}`,
                 );
             }
         });
@@ -193,7 +193,7 @@ class Track {
         if (curPoint && nextPoint) {
             let diffTime = this._getDiffTime(
                 curPoint.gps_time,
-                nextPoint.gps_time
+                nextPoint.gps_time,
             );
             setTimeout(this.sendGpxPoint.bind(this), diffTime);
             this.isRunning = true;

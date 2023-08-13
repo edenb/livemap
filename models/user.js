@@ -239,7 +239,7 @@ async function resetPassword(user, newPwd, confirmPwd) {
 async function createHash(password) {
     const passwordHash = await bcrypt.hash(
         password,
-        config.get('user.pwdSaltRounds')
+        config.get('user.pwdSaltRounds'),
     );
     return passwordHash;
 }

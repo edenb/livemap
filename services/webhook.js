@@ -19,7 +19,7 @@ async function processGpx(rawLocationData) {
     if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
         const queryRes = await dev.getDeviceByIdentity(
             identObj.apiKey,
-            identObj.identifier
+            identObj.identifier,
         ); // Todo: check device_id existance
         if (queryRes.rowCount === 1) {
             const destDevice = queryRes.rows[0];
@@ -75,17 +75,17 @@ async function processLocative(rawLocationData) {
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
             let queryRes = await dev.getDeviceByIdentity(
                 identObj.apiKey,
-                srcData.device
+                srcData.device,
             ); // Todo: check device_id existance
             if (queryRes.rowCount === 1) {
                 let destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
                 destData.loc_timestamp = new Date(
-                    srcData.timestamp * 1000
+                    srcData.timestamp * 1000,
                 ).toISOString();
                 queryRes = await dev.getDeviceByIdentity(
                     identObj.apiKey,
-                    identObj.identifier
+                    identObj.identifier,
                 ); // Todo: check id existance
                 if (queryRes.rowCount === 1) {
                     destDevice = queryRes.rows[0];
@@ -121,7 +121,7 @@ async function processLocative(rawLocationData) {
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
             const queryRes = await dev.getDeviceByIdentity(
                 identObj.apiKey,
-                srcData.device
+                srcData.device,
             );
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
@@ -130,7 +130,7 @@ async function processLocative(rawLocationData) {
                 destData.device_id_tag = null;
                 destData.alias = destDevice.alias;
                 destData.loc_timestamp = new Date(
-                    srcData.timestamp * 1000
+                    srcData.timestamp * 1000,
                 ).toISOString();
                 try {
                     destData.loc_lat = parseFloat(srcData.latitude);
@@ -174,10 +174,10 @@ async function processLocation(request, response, type) {
             'HTTP ' +
                 request.method +
                 ' query: ' +
-                new URLSearchParams(rawLocationData.query).toString()
+                new URLSearchParams(rawLocationData.query).toString(),
         );
         logger.debug(
-            'HTTP ' + request.method + ' body: ' + rawLocationData.body
+            'HTTP ' + request.method + ' body: ' + rawLocationData.body,
         );
         await dev.getAllDevices();
         await usr.getAllUsers();

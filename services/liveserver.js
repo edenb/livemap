@@ -174,7 +174,7 @@ async function sendToClients(destData) {
             .then(() => {
                 io.to(deviceRoom).emit(
                     'positionUpdate',
-                    JSON.stringify({ type: 'gps', data: destData })
+                    JSON.stringify({ type: 'gps', data: destData }),
                 );
                 logger.debug(`Clients connected: ${io.sockets.sockets.size}`);
                 pos.insertPosition([
