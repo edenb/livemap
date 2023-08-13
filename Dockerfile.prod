@@ -3,7 +3,7 @@ FROM node:18 AS build-stage
 RUN mkdir /app
 WORKDIR /app
 COPY package*.json /app/
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # production stage
 FROM node:18-alpine
