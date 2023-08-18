@@ -216,10 +216,10 @@ async function queryDbAsync(key, sqlParams) {
         // Query the database
         const pgClient = await pgPool.connect();
         try {
-            dbQueryRes = await pgClient.query({
-                text: queryDef[key].qstr,
-                values: sqlParams || [],
-            });
+            dbQueryRes = await pgClient.query(
+                queryDef[key].qstr,
+                sqlParams || [],
+            );
         } catch (err) {
             logger.error(`Database access failed: ${err.message}`);
             throw new Error(`Database access failed: ${err.message}`);
@@ -261,9 +261,7 @@ async function queryDbFromFile(fileName) {
     const pgClient = await pgPool.connect();
     let result;
     try {
-        result = await pgClient.query({
-            text: fileData.toString(),
-        });
+        result = await pgClient.query(fileData.toString());
     } finally {
         pgClient.release();
     }
