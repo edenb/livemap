@@ -1,4 +1,5 @@
 'use strict';
+const config = require('config');
 const jsonwebtoken = require('jsonwebtoken');
 
 function getScopes(user) {
@@ -41,11 +42,11 @@ function getScopes(user) {
 //
 
 function getNewToken(user) {
-    let options = { algorithm: 'HS512' };
+    let options = { algorithm: config.get('auth.tokenAlgorithm') };
     let scopes = getScopes(user);
     let token = jsonwebtoken.sign(
         { userId: user.user_id, role: user.role, scopes: scopes },
-        'replacebysecretfromconfig',
+        config.get('auth.tokenSecret'),
         options,
     );
     return token;
@@ -53,11 +54,11 @@ function getNewToken(user) {
 
 function getTokenPayload(token) {
     let payload = {};
-    let options = { algorithm: 'HS512' };
+    let options = { algorithm: config.get('auth.tokenAlgorithm') };
     try {
         payload = jsonwebtoken.verify(
             token,
-            'replacebysecretfromconfig',
+            config.get('auth.tokenSecret'),
             options,
         );
     } catch (err) {
@@ -95,10 +96,10 @@ function checkScopes(scope) {
         }
         if (token !== '') {
             try {
-                let options = { algorithm: 'HS512' };
+                let options = { algorithm: config.get('auth.tokenAlgorithm') };
                 let decoded = jsonwebtoken.verify(
                     token,
-                    'replacebysecretfromconfig',
+                    config.get('auth.tokenSecret'),
                     options,
                 );
                 req.decodedToken = decoded;
