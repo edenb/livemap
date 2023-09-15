@@ -40,7 +40,7 @@ function joinRooms(socket, token) {
     return new Promise((resolve) => {
         const payload = jwt.getTokenPayload(token);
         // Token is valid if user ID is present
-        if (payload.userId) {
+        if (payload && payload.userId) {
             socket.userId = payload.userId;
             socket.expiryTime = payload.iat; // Unix Timestamp in seconds
             dev.getAllowedDevices(socket.userId).then((queryRes) => {

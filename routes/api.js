@@ -42,97 +42,97 @@ module.exports = (passport) => {
         });
     });
 
-    router.get('/account', jwt.checkScopes('acc_o..r..'), users.getAccount);
-
-    router.get('/users', jwt.checkScopes('usr_.a.r..'), users.getAllUsers);
-
-    router.post('/users', jwt.checkScopes('usr_.ac...'), users.addUser);
-
-    router.put(
-        '/users/:userId',
-        jwt.checkScopes('usr_.a..u.'),
-        users.modifyUser,
+    router.get(
+        '/account',
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        users.getAccount,
     );
+
+    router.get('/users', jwt.isAuthorized(['admin']), users.getAllUsers);
+
+    router.post('/users', jwt.isAuthorized(['admin']), users.addUser);
+
+    router.put('/users/:userId', jwt.isAuthorized(['admin']), users.modifyUser);
 
     router.delete(
         '/users/:userId',
-        jwt.checkScopes('usr_.a...d'),
+        jwt.isAuthorized(['admin']),
         users.removeUser,
     );
 
     router.get(
         '/users/:userId',
-        jwt.checkScopes('usr_o..r..'),
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
         users.getUserByUserId,
     );
 
     router.post(
         '/users/:userId/password/change',
-        jwt.checkScopes('usr_o...u.'),
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
         users.changePassword,
     );
 
     router.post(
         '/users/:userId/password/reset',
-        jwt.checkScopes('usr_.a..u.'),
+        jwt.isAuthorized(['admin']),
         users.resetPassword,
     );
 
     router.get(
         '/users/:userId/devices',
-        jwt.checkScopes('dev_o..r..'),
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
         devices.getDevicesByUserId,
     );
 
     router.post(
         '/users/:userId/devices',
-        jwt.checkScopes('dev_o.c...'),
+        jwt.isAuthorized(['admin', 'manager']),
         devices.addDeviceByUserId,
     );
 
     router.put(
         '/users/:userId/devices/:deviceId',
-        jwt.checkScopes('dev_o...u.'),
+        jwt.isAuthorized(['admin', 'manager']),
         devices.modifyDeviceByUserId,
     );
 
     router.delete(
         '/users/:userId/devices/:deviceIds',
-        jwt.checkScopes('dev_o....d'),
+        jwt.isAuthorized(['admin', 'manager']),
         devices.removeDevicesByUserId,
     );
 
     router.post(
         '/users/:userId/devices/:deviceIds/shareduser',
-        jwt.checkScopes('sha_o.c...'),
+        jwt.isAuthorized(['admin', 'manager']),
         devices.addSharedUserByUserId,
     );
 
     router.delete(
         '/users/:userId/devices/:deviceIds/shareduser',
-        jwt.checkScopes('sha_o....d'),
+        jwt.isAuthorized(['admin', 'manager']),
         devices.removeSharedUserByUserId,
     );
 
-    router.get(
-        '/devices',
-        jwt.checkScopes('dev_.a.r..'),
-        devices.getAllDevices,
-    );
+    router.get('/devices', jwt.isAuthorized(['admin']), devices.getAllDevices);
 
     router.get(
         '/positions',
-        jwt.checkScopes('pos_o..r..'),
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
         positions.getLastPositions,
     );
 
     router.get(
         '/staticlayers',
-        jwt.checkScopes('lay_.a.r..'),
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
         staticLayers.getStaticLayers,
     );
 
-    router.get('/server/info', jwt.checkScopes('ser_.a.r..'), server.getInfo);
+    router.get(
+        '/server/info',
+        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        server.getInfo,
+    );
 
     // This middleware always at the end to catch undefined endpoints
     router.use('*', (req, res) => {

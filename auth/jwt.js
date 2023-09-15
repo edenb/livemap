@@ -2,50 +2,14 @@
 const config = require('config');
 const jsonwebtoken = require('jsonwebtoken');
 
-function getScopes(user) {
-    let scopesByRole = new Array();
-    scopesByRole['viewer'] = [
-        'acc_o--r--',
-        'pos_o--r--',
-        'dev_o--r--',
-        'usr_o--ru-',
-        'lay_-a-r--',
-        'ser_-a-r--',
-    ];
-    scopesByRole['manager'] = [
-        'acc_o--r--',
-        'pos_o--r--',
-        'dev_o-crud',
-        'usr_o--ru-',
-        'sha_o-crud',
-        'lay_-a-r--',
-        'ser_-a-r--',
-    ];
-    scopesByRole['admin'] = [
-        'acc_oacrud',
-        'pos_oacrud',
-        'dev_oacrud',
-        'usr_oacrud',
-        'sha_oacrud',
-        'lay_oacrud',
-        'ser_oacrud',
-    ];
-    if (user.role in scopesByRole) {
-        return scopesByRole[user.role];
-    } else {
-        return [];
-    }
-}
-
 //
 // Exported modules
 //
 
 function getNewToken(user) {
     let options = { algorithm: config.get('auth.tokenAlgorithm') };
-    let scopes = getScopes(user);
     let token = jsonwebtoken.sign(
-        { userId: user.user_id, role: user.role, scopes: scopes },
+        { userId: user.user_id, role: user.role },
         config.get('auth.tokenSecret'),
         options,
     );
@@ -53,7 +17,7 @@ function getNewToken(user) {
 }
 
 function getTokenPayload(token) {
-    let payload = {};
+    let payload = null;
     let options = { algorithm: config.get('auth.tokenAlgorithm') };
     try {
         payload = jsonwebtoken.verify(
@@ -62,57 +26,38 @@ function getTokenPayload(token) {
             options,
         );
     } catch (err) {
-        payload = {};
+        payload = null;
     }
     return payload;
 }
 
-function getUserId(token) {
-    // If the token comes from the authorization header remove the 'Bearer' part
-    const tokenElements = token.split(' ');
-    if (tokenElements.length === 2 && tokenElements[0] === 'Bearer') {
-        token = tokenElements[1];
-    }
-    const payload = getTokenPayload(token);
-    if (payload.userId) {
-        return parseInt(payload.userId) || -1;
-    } else {
-        return -1;
-    }
-}
-
-function checkScopes(scope) {
+function isAuthorized(rolesAllowed) {
     return (req, res, next) => {
         // Get the token from the header (API requests) or from the session (web client requests)
-        let token = '';
-        if (
-            req.headers.authorization &&
-            req.headers.authorization.split(' ')[0] === 'Bearer'
-        ) {
-            token = req.headers.authorization.split(' ')[1];
+        let token = null;
+        if (req.headers.authorization) {
+            let authorizationDirectives = req.headers.authorization.split(' ');
+            if (
+                authorizationDirectives.length === 2 &&
+                authorizationDirectives[0] === 'Bearer'
+            ) {
+                token = authorizationDirectives[1];
+            }
         }
         if (req.isAuthenticated() && req.session && req.session.token) {
             token = req.session.token;
         }
-        if (token !== '') {
-            try {
-                let options = { algorithm: config.get('auth.tokenAlgorithm') };
-                let decoded = jsonwebtoken.verify(
-                    token,
-                    config.get('auth.tokenSecret'),
-                    options,
-                );
-                req.decodedToken = decoded;
-                for (let i = 0; i < decoded.scopes.length; i++) {
-                    for (let j = 0; j < scope.length; j++) {
-                        const regexScope = RegExp(scope);
-                        if (regexScope.test(decoded.scopes[i])) return next();
-                    }
-                }
-                res.status(401).send('Unauthorized. Invalid scope');
-            } catch (err) {
+
+        if (token) {
+            let tokenPayload = getTokenPayload(token);
+            req.tokenPayload = tokenPayload;
+            if (!tokenPayload) {
                 res.status(401).send('Unauthorized. Invalid token');
             }
+            if (rolesAllowed.includes(tokenPayload.role)) {
+                return next();
+            }
+            res.status(403).send('Forbidden');
         } else {
             res.status(401).send('Unauthorized. Token required');
         }
@@ -121,5 +66,4 @@ function checkScopes(scope) {
 
 module.exports.getNewToken = getNewToken;
 module.exports.getTokenPayload = getTokenPayload;
-module.exports.getUserId = getUserId;
-module.exports.checkScopes = checkScopes;
+module.exports.isAuthorized = isAuthorized;
