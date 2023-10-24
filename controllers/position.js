@@ -2,7 +2,7 @@
 const pos = require('../models/position');
 
 exports.getLastPositions = async (req, res) => {
-    const queryRes = await pos.getLastPositions(req.decodedToken.userId);
+    const queryRes = await pos.getLastPositions(req.tokenPayload.userId);
     if (typeof queryRes.userMessage !== 'undefined') {
         res.status(500).send(`Internal Server Error`);
     } else {

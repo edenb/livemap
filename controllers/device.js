@@ -1,6 +1,18 @@
 'use strict';
 const dev = require('../models/device');
-const jwt = require('../auth/jwt');
+
+//Check if the user in the request is the same user as making the request
+function userAllowed(reqUserId, tokenUserId) {
+    if (reqUserId && tokenUserId) {
+        try {
+            return parseInt(reqUserId) === parseInt(tokenUserId);
+        } catch {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
 
 exports.getAllDevices = async (req, res) => {
     const queryRes = await dev.getAllDevices();
@@ -12,15 +24,9 @@ exports.getAllDevices = async (req, res) => {
 };
 
 exports.getDevicesByUserId = async (req, res) => {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    let tokenUserId = -1;
-    if (req.headers && req.headers.authorization) {
-        tokenUserId = jwt.getUserId(req.headers.authorization);
-    }
-    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+    const reqUserId = req.params && req.params.userId;
+    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
+    if (userAllowed(reqUserId, tokenUserId)) {
         const queryRes1 = await dev.getOwnedDevicesByField(
             'user_id',
             reqUserId,
@@ -48,15 +54,9 @@ exports.getDevicesByUserId = async (req, res) => {
 };
 
 exports.addDeviceByUserId = async (req, res) => {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    let tokenUserId = -1;
-    if (req.headers && req.headers.authorization) {
-        tokenUserId = jwt.getUserId(req.headers.authorization);
-    }
-    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+    const reqUserId = req.params && req.params.userId;
+    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
+    if (userAllowed(reqUserId, tokenUserId)) {
         const queryRes = await dev.addDeviceByUserId(reqUserId, req.body);
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
@@ -73,15 +73,9 @@ exports.addDeviceByUserId = async (req, res) => {
 };
 
 exports.modifyDeviceByUserId = async (req, res) => {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    let tokenUserId = -1;
-    if (req.headers && req.headers.authorization) {
-        tokenUserId = jwt.getUserId(req.headers.authorization);
-    }
-    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+    const reqUserId = req.params && req.params.userId;
+    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
+    if (userAllowed(reqUserId, tokenUserId)) {
         const queryRes = await dev.modifyDeviceByUserId(reqUserId, req.body);
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
@@ -98,15 +92,9 @@ exports.modifyDeviceByUserId = async (req, res) => {
 };
 
 exports.removeDevicesByUserId = async (req, res) => {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    let tokenUserId = -1;
-    if (req.headers && req.headers.authorization) {
-        tokenUserId = jwt.getUserId(req.headers.authorization);
-    }
-    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+    const reqUserId = req.params && req.params.userId;
+    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
+    if (userAllowed(reqUserId, tokenUserId)) {
         const queryRes = await dev.deleteDevicesByUserId(
             reqUserId,
             req.params.deviceIds.split(','),
@@ -126,15 +114,9 @@ exports.removeDevicesByUserId = async (req, res) => {
 };
 
 exports.addSharedUserByUserId = async (req, res) => {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    let tokenUserId = -1;
-    if (req.headers && req.headers.authorization) {
-        tokenUserId = jwt.getUserId(req.headers.authorization);
-    }
-    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+    const reqUserId = req.params && req.params.userId;
+    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
+    if (userAllowed(reqUserId, tokenUserId)) {
         const queryRes = await dev.addSharedUserByUserId(
             reqUserId,
             req.body,
@@ -155,15 +137,9 @@ exports.addSharedUserByUserId = async (req, res) => {
 };
 
 exports.removeSharedUserByUserId = async (req, res) => {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    let tokenUserId = -1;
-    if (req.headers && req.headers.authorization) {
-        tokenUserId = jwt.getUserId(req.headers.authorization);
-    }
-    if (reqUserId >= 0 && tokenUserId >= 0 && reqUserId === tokenUserId) {
+    const reqUserId = req.params && req.params.userId;
+    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
+    if (userAllowed(reqUserId, tokenUserId)) {
         const queryRes = await dev.deleteSharedUserByUserId(
             reqUserId,
             req.body,
