@@ -53,11 +53,12 @@ function isAuthorized(rolesAllowed) {
             req.tokenPayload = tokenPayload;
             if (!tokenPayload) {
                 res.status(401).send('Unauthorized. Invalid token');
+            } else {
+                if (rolesAllowed.includes(tokenPayload.role)) {
+                    return next();
+                }
+                res.status(403).send('Forbidden');
             }
-            if (rolesAllowed.includes(tokenPayload.role)) {
-                return next();
-            }
-            res.status(403).send('Forbidden');
         } else {
             res.status(401).send('Unauthorized. Token required');
         }
