@@ -42,6 +42,10 @@ function startHttpServer(port) {
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
                 res.end();
             });
+        } else {
+            // Ignore all other requests except POST
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end();
         }
     }).listen(port);
 }
