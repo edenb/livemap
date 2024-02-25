@@ -1,12 +1,13 @@
-'use strict';
-const config = require('config');
-const http = require('http');
-const fs = require('fs').promises;
-const path = require('path');
-const xml2js = require('xml2js');
-const logger = require('../utils/logger');
+import config from 'config';
+import { request } from 'http';
+import { promises as fs } from 'fs';
+import { extname, basename } from 'path';
+import { Parser } from 'xml2js';
+import Logger from '../utils/logger.js';
 
-class GpxPlayer {
+const logger = Logger(import.meta.url);
+
+export default class GpxPlayer {
     constructor(dirName, destPath, cbPoint) {
         this.dirName = dirName;
         this.destPath = destPath;
@@ -73,8 +74,8 @@ class GpxPlayer {
         const allFiles = await fs.readdir(dirName);
         let fileList = [];
         allFiles.forEach((file) => {
-            if (path.extname(file) === '.gpx') {
-                fileList.push(path.basename(file, '.gpx'));
+            if (extname(file) === '.gpx') {
+                fileList.push(basename(file, '.gpx'));
             }
         });
         return fileList;
@@ -122,7 +123,7 @@ class GpxPlayer {
             },
         };
 
-        const req = http.request(options, (res) => {
+        const req = request(options, (res) => {
             if (res.statusCode >= 300) {
                 logger.error(
                     `GPX player failed HTTP POST with status code: ${res.statusCode}`,
@@ -163,7 +164,7 @@ class Track {
     async loadGpxFile() {
         const fileName = this.dirName + this.name + '.gpx';
         const fileData = await fs.readFile(fileName);
-        const xmlParser = new xml2js.Parser();
+        const xmlParser = new Parser();
         const parsedXml = await xmlParser.parseStringPromise(fileData);
         let points = parsedXml.gpx?.trk?.[0]?.trkseg?.[0]?.trkpt;
         if (!points) {
@@ -216,5 +217,3 @@ class Track {
         return diffTime;
     }
 }
-
-module.exports.GpxPlayer = GpxPlayer;

@@ -1,12 +1,11 @@
-'use strict';
-const config = require('config');
-const jsonwebtoken = require('jsonwebtoken');
+import config from 'config';
+import jsonwebtoken from 'jsonwebtoken';
 
 //
 // Exported modules
 //
 
-function getNewToken(user) {
+export function getNewToken(user) {
     let options = { algorithm: config.get('auth.tokenAlgorithm') };
     let token = jsonwebtoken.sign(
         { userId: user.user_id, role: user.role },
@@ -16,7 +15,7 @@ function getNewToken(user) {
     return token;
 }
 
-function getTokenPayload(token) {
+export function getTokenPayload(token) {
     let payload = null;
     let options = { algorithm: config.get('auth.tokenAlgorithm') };
     try {
@@ -31,7 +30,7 @@ function getTokenPayload(token) {
     return payload;
 }
 
-function isAuthorized(rolesAllowed) {
+export function isAuthorized(rolesAllowed) {
     return (req, res, next) => {
         // Get the token from the header (API requests) or from the session (web client requests)
         let token = null;
@@ -64,7 +63,3 @@ function isAuthorized(rolesAllowed) {
         }
     };
 }
-
-module.exports.getNewToken = getNewToken;
-module.exports.getTokenPayload = getTokenPayload;
-module.exports.isAuthorized = isAuthorized;

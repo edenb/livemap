@@ -1,12 +1,12 @@
-'use strict';
-const config = require('config');
-const mqtt = require('mqtt');
-const usr = require('../models/user');
-const dev = require('../models/device');
-const livesvr = require('./liveserver');
-const JSONValidator = require('../utils/validator');
-const logger = require('../utils/logger');
+import config from 'config';
+import { connect } from 'mqtt';
+import * as usr from '../models/user.js';
+import * as dev from '../models/device.js';
+import { sendToClients } from './liveserver.js';
+import JSONValidator from '../utils/validator.js';
+import Logger from '../utils/logger.js';
 
+const logger = Logger(import.meta.url);
 const MQTTValidator = new JSONValidator('mqtt');
 
 async function processMessage(messageStr) {
@@ -71,9 +71,9 @@ async function processMessage(messageStr) {
 // Exported modules
 //
 
-function start() {
+export function start() {
     var client;
-    client = mqtt.connect(getBrokerUrl().href, { keepalive: 10 });
+    client = connect(getBrokerUrl().href, { keepalive: 10 });
 
     client.on('connect', function () {
         logger.info('Connected to MQTT broker: ' + getBrokerUrl().href);
@@ -92,7 +92,7 @@ function start() {
         await usr.getAllUsers();
         const destData = await processMessage(message.toString());
         if (destData !== null) {
-            await livesvr.sendToClients(destData);
+            await sendToClients(destData);
         }
     });
 
@@ -101,7 +101,7 @@ function start() {
     });
 }
 
-function getBrokerUrl() {
+export function getBrokerUrl() {
     let brokerUrl = new URL(config.get('mqtt.url'));
     let mqttPort = config.get('mqtt.port');
     let mqttProtocol = config.get('mqtt.protocol');
@@ -118,6 +118,3 @@ function getBrokerUrl() {
     }
     return brokerUrl;
 }
-
-module.exports.start = start;
-module.exports.getBrokerUrl = getBrokerUrl;

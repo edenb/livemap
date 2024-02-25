@@ -1,7 +1,6 @@
-'use strict';
-const slayer = require('../models/staticlayer');
+import * as slayer from '../models/staticlayer.js';
 
-exports.getStaticLayers = async (req, res) => {
+export async function getStaticLayers(req, res) {
     const staticLayers = await slayer.getStaticLayers();
     res.status(200).send(staticLayers);
-};
+}

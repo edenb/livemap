@@ -1,25 +1,25 @@
-'use strict';
-const config = require('config');
-const socketio = require('socket.io');
-const cookieParser = require('cookie-parser');
-const gp = require('./gpxplayer');
-const db = require('../database/db');
-const usr = require('../models/user');
-const dev = require('../models/device');
-const pos = require('../models/position');
-const jwt = require('../auth/jwt');
-const JSONValidator = require('../utils/validator');
-const logger = require('../utils/logger');
+import config from 'config';
+import cookieParser from 'cookie-parser';
+import { Server } from 'socket.io';
+import GpxPlayer from './gpxplayer.js';
+import { getStore } from '../database/db.js';
+import * as usr from '../models/user.js';
+import * as dev from '../models/device.js';
+import * as pos from '../models/position.js';
+import { getTokenPayload } from '../auth/jwt.js';
+import JSONValidator from '../utils/validator.js';
+import Logger from '../utils/logger.js';
 
+const logger = Logger(import.meta.url);
 const livemapValidator = new JSONValidator('livemap');
-const io = socketio();
+const io = new Server();
 let recentDeviceRooms = [];
 
-const gpxPlayer = new gp.GpxPlayer('./tracks/', '/location/gpx');
+const gpxPlayer = new GpxPlayer('./tracks/', '/location/gpx');
 
 function getSessionInfo(sid) {
     return new Promise((resolve, reject) => {
-        db.getStore().get(sid, (error, session) => {
+        getStore().get(sid, (error, session) => {
             if (session && session.passport && session.passport.user) {
                 let sessionInfo = {};
                 sessionInfo.userId = session.passport.user;
@@ -38,7 +38,7 @@ function getRoomName(deviceId) {
 
 function joinRooms(socket, token) {
     return new Promise((resolve) => {
-        const payload = jwt.getTokenPayload(token);
+        const payload = getTokenPayload(token);
         // Token is valid if user ID is present
         if (payload && payload.userId) {
             socket.userId = payload.userId;
@@ -111,7 +111,7 @@ async function startGpxPlayer(userId) {
 // Exported modules
 //
 
-function start(server) {
+export function start(server) {
     // On every incoming socket that contains a cookie get the ID of the current session.
     io.use((socket, next) => {
         // Only get the session ID if the socket contains a cookie
@@ -163,7 +163,7 @@ function start(server) {
     });
 }
 
-async function sendToClients(destData) {
+export async function sendToClients(destData) {
     // On a valid location reception:
     // 1. Send a location update to every client that is authorized for this device
     // 2. Store the location in the database
@@ -194,6 +194,3 @@ async function sendToClients(destData) {
         logger.info(`Invalid: ${livemapValidator.errorsText()}`);
     }
 }
-
-module.exports.start = start;
-module.exports.sendToClients = sendToClients;

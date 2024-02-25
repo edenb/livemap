@@ -1,8 +1,7 @@
-'use strict';
-const config = require('config');
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const db = require('../database/db');
+import config from 'config';
+import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
+import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
 
 // In memory list of all users with their attributes
 var users = [];
@@ -12,7 +11,7 @@ var users = [];
 //
 
 function generateAPIkey() {
-    return crypto.randomBytes(8).toString('hex').toUpperCase();
+    return randomBytes(8).toString('hex').toUpperCase();
 }
 
 function checkChangesAllowed(user, modUser) {
@@ -59,10 +58,10 @@ function validatePasswordInput(password) {
 // Exported modules
 //
 
-async function getAllUsers() {
-    let queryRes = db.getEmptyQueryRes();
+export async function getAllUsers() {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('getAllUsers', []);
+        queryRes = await queryDbAsync('getAllUsers', []);
         users = queryRes.rows;
         return queryRes;
     } catch (err) {
@@ -71,8 +70,8 @@ async function getAllUsers() {
     }
 }
 
-async function getUserByField(field, value) {
-    let queryRes = db.getEmptyQueryRes();
+export async function getUserByField(field, value) {
+    let queryRes = getEmptyQueryRes();
     let queryDefinition = '';
     if (field === 'user_id') {
         queryDefinition = 'getUserByUserId';
@@ -85,7 +84,7 @@ async function getUserByField(field, value) {
     }
     if (queryDefinition !== '') {
         try {
-            queryRes = await db.queryDbAsync(queryDefinition, [value]);
+            queryRes = await queryDbAsync(queryDefinition, [value]);
         } catch (err) {
             queryRes.userMessage = 'Unable to get user';
             return queryRes;
@@ -94,8 +93,8 @@ async function getUserByField(field, value) {
     return queryRes;
 }
 
-async function addUser(user, modUser) {
-    let queryRes = db.getEmptyQueryRes();
+export async function addUser(user, modUser) {
+    let queryRes = getEmptyQueryRes();
     let userMessage;
     // If the API key is empty generate one
     if (!modUser.api_key || modUser.api_key === '') {
@@ -130,7 +129,7 @@ async function addUser(user, modUser) {
         });
     if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
         try {
-            queryRes = await db.queryDbAsync('insertUser', [
+            queryRes = await queryDbAsync('insertUser', [
                 modUser.username,
                 modUser.fullname,
                 modUser.email,
@@ -145,8 +144,8 @@ async function addUser(user, modUser) {
     return queryRes;
 }
 
-async function modifyUser(user, modUser) {
-    let queryRes = db.getEmptyQueryRes();
+export async function modifyUser(user, modUser) {
+    let queryRes = getEmptyQueryRes();
     let userMessage;
     // If the API key is empty generate one
     if (modUser.api_key === '') {
@@ -165,7 +164,7 @@ async function modifyUser(user, modUser) {
         return queryRes;
     }
     try {
-        queryRes = await db.queryDbAsync('modifyUserById', [
+        queryRes = await queryDbAsync('modifyUserById', [
             modUser.user_id,
             modUser.username,
             modUser.fullname,
@@ -179,8 +178,8 @@ async function modifyUser(user, modUser) {
     return queryRes;
 }
 
-async function changePassword(user, curPwd, newPwd, confirmPwd) {
-    let queryRes = db.getEmptyQueryRes();
+export async function changePassword(user, curPwd, newPwd, confirmPwd) {
+    let queryRes = getEmptyQueryRes();
     let authOK = false;
 
     // If a user has no password yet, any current password will work (for legacy UI)
@@ -199,8 +198,8 @@ async function changePassword(user, curPwd, newPwd, confirmPwd) {
     }
 }
 
-async function resetPassword(user, newPwd, confirmPwd) {
-    let queryRes = db.getEmptyQueryRes();
+export async function resetPassword(user, newPwd, confirmPwd) {
+    let queryRes = getEmptyQueryRes();
 
     const userMessage = validatePasswordInput(newPwd);
     if (userMessage !== null) {
@@ -222,7 +221,7 @@ async function resetPassword(user, newPwd, confirmPwd) {
         return queryRes;
     }
     try {
-        queryRes = await db.queryDbAsync('changePwdByUsername', [
+        queryRes = await queryDbAsync('changePwdByUsername', [
             user.username,
             newHash,
         ]);
@@ -236,7 +235,7 @@ async function resetPassword(user, newPwd, confirmPwd) {
     return queryRes;
 }
 
-async function createHash(password) {
+export async function createHash(password) {
     const passwordHash = await bcrypt.hash(
         password,
         config.get('user.pwdSaltRounds'),
@@ -244,7 +243,7 @@ async function createHash(password) {
     return passwordHash;
 }
 
-async function checkPassword(password, passwordHash) {
+export async function checkPassword(password, passwordHash) {
     if (password === null) {
         return true;
     } else {
@@ -253,14 +252,14 @@ async function checkPassword(password, passwordHash) {
     }
 }
 
-async function deleteUser(user, modUser) {
-    let queryRes = db.getEmptyQueryRes();
+export async function deleteUser(user, modUser) {
+    let queryRes = getEmptyQueryRes();
     if (user.user_id === modUser.user_id) {
         queryRes.userMessage = 'You can not delete your own account';
         queryRes.rowCount = -2;
     } else {
         try {
-            queryRes = await db.queryDbAsync('deleteUser', [modUser.user_id]);
+            queryRes = await queryDbAsync('deleteUser', [modUser.user_id]);
         } catch (err) {
             queryRes.userMessage = 'Failed to delete user';
         }
@@ -268,7 +267,7 @@ async function deleteUser(user, modUser) {
     return queryRes;
 }
 
-function isKnownAPIkey(apiKey, ignoreUser) {
+export function isKnownAPIkey(apiKey, ignoreUser) {
     var i, ignoreId;
 
     if (ignoreUser === null) {
@@ -290,13 +289,3 @@ function isKnownAPIkey(apiKey, ignoreUser) {
         return false;
     }
 }
-
-module.exports.getAllUsers = getAllUsers;
-module.exports.getUserByField = getUserByField;
-module.exports.addUser = addUser;
-module.exports.modifyUser = modifyUser;
-module.exports.changePassword = changePassword;
-module.exports.resetPassword = resetPassword;
-module.exports.checkPassword = checkPassword;
-module.exports.deleteUser = deleteUser;
-module.exports.isKnownAPIkey = isKnownAPIkey;

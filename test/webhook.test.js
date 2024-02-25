@@ -1,12 +1,14 @@
-'use strict';
-const chai = require('chai');
-const chaihttp = require('chai-http');
-const express = require('express');
-const usr = require('../models/user');
-const dev = require('../models/device');
-const webhook = require('../services/webhook');
+import * as chai from 'chai';
+import chaiHttp from 'chai-http';
+import express from 'express';
+import * as usr from '../models/user.js';
+import * as dev from '../models/device.js';
+import { processLocation } from '../services/webhook.js';
 
-chai.use(chaihttp);
+chai.should();
+// Below is a temporary workaround because latest versions of chai do not support plugins like chai-http
+// When fixed should be replaced by: chai.use(chaiHttp);
+const { request } = chai.use(chaiHttp);
 
 // Setup test user
 let testUser = {
@@ -36,11 +38,11 @@ const loc_tag1_exit =
 const app = express();
 
 app.post('/location/gpx', (req, res) => {
-    webhook.processLocation(req, res, 'gpx');
+    processLocation(req, res, 'gpx');
 });
 
 app.post('/location/locative', (req, res) => {
-    webhook.processLocation(req, res, 'locative');
+    processLocation(req, res, 'locative');
 });
 
 describe('Setup test user', () => {
@@ -59,7 +61,7 @@ describe('Setup test user', () => {
 describe('Webhook', () => {
     describe('/post gpx with valid location data in query string parameters', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/gpx?' + gpx1)
                 .send('')
                 .end((err, res) => {
@@ -70,7 +72,7 @@ describe('Webhook', () => {
     });
     describe('/post gpx with valid location data in body', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/gpx')
                 .send(gpx2)
                 .end((err, res) => {
@@ -81,7 +83,7 @@ describe('Webhook', () => {
     });
     describe('/post gpx without location data', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/gpx')
                 .send('')
                 .end((err, res) => {
@@ -92,7 +94,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with valid location data in query string parameters', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/locative?' + loc_dev1)
                 .send('')
                 .end((err, res) => {
@@ -103,7 +105,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with valid location data in body', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/locative')
                 .send(loc_dev2)
                 .end((err, res) => {
@@ -114,7 +116,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with entering tag data in query string parameters', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/locative?' + loc_tag1_enter)
                 .send('')
                 .end((err, res) => {
@@ -125,7 +127,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with entering tag data in body', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/locative')
                 .send(loc_tag1_enter)
                 .end((err, res) => {
@@ -136,7 +138,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with exiting tag data in query string parameters', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/locative?' + loc_tag1_exit)
                 .send('')
                 .end((err, res) => {
@@ -147,7 +149,7 @@ describe('Webhook', () => {
     });
     describe('/post locative with exiting tag data in body', () => {
         it('should respond with HTTP status 200', (done) => {
-            chai.request(app)
+            request(app)
                 .post('/location/locative')
                 .send(loc_tag1_exit)
                 .end((err, res) => {

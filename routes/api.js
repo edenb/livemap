@@ -1,14 +1,13 @@
-'use strict';
-const express = require('express');
-const jwt = require('../auth/jwt');
-const users = require('../controllers/user');
-const devices = require('../controllers/device');
-const positions = require('../controllers/position');
-const staticLayers = require('../controllers/staticlayer');
-const server = require('../controllers/server');
+import { Router } from 'express';
+import { getNewToken, isAuthorized } from '../auth/jwt.js';
+import * as users from '../controllers/user.js';
+import * as devices from '../controllers/device.js';
+import * as positions from '../controllers/position.js';
+import * as staticLayers from '../controllers/staticlayer.js';
+import * as server from '../controllers/server.js';
 
-module.exports = (passport) => {
-    const router = express.Router();
+export default (passport) => {
+    const router = Router();
 
     // Enable CORS for API
     router.use((req, res, next) => {
@@ -35,7 +34,7 @@ module.exports = (passport) => {
     });
 
     router.post('/login', passport.authenticate('local'), (req, res) => {
-        let token = jwt.getNewToken(req.user);
+        let token = getNewToken(req.user);
         res.status(200).json({
             access_token: token,
             token_type: 'Bearer',
@@ -44,93 +43,89 @@ module.exports = (passport) => {
 
     router.get(
         '/account',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         users.getAccount,
     );
 
-    router.get('/users', jwt.isAuthorized(['admin']), users.getAllUsers);
+    router.get('/users', isAuthorized(['admin']), users.getAllUsers);
 
-    router.post('/users', jwt.isAuthorized(['admin']), users.addUser);
+    router.post('/users', isAuthorized(['admin']), users.addUser);
 
-    router.put('/users/:userId', jwt.isAuthorized(['admin']), users.modifyUser);
+    router.put('/users/:userId', isAuthorized(['admin']), users.modifyUser);
 
-    router.delete(
-        '/users/:userId',
-        jwt.isAuthorized(['admin']),
-        users.removeUser,
-    );
+    router.delete('/users/:userId', isAuthorized(['admin']), users.removeUser);
 
     router.get(
         '/users/:userId',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         users.getUserByUserId,
     );
 
     router.post(
         '/users/:userId/password/change',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         users.changePassword,
     );
 
     router.post(
         '/users/:userId/password/reset',
-        jwt.isAuthorized(['admin']),
+        isAuthorized(['admin']),
         users.resetPassword,
     );
 
     router.get(
         '/users/:userId/devices',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         devices.getDevicesByUserId,
     );
 
     router.post(
         '/users/:userId/devices',
-        jwt.isAuthorized(['admin', 'manager']),
+        isAuthorized(['admin', 'manager']),
         devices.addDeviceByUserId,
     );
 
     router.put(
         '/users/:userId/devices/:deviceId',
-        jwt.isAuthorized(['admin', 'manager']),
+        isAuthorized(['admin', 'manager']),
         devices.modifyDeviceByUserId,
     );
 
     router.delete(
         '/users/:userId/devices/:deviceIds',
-        jwt.isAuthorized(['admin', 'manager']),
+        isAuthorized(['admin', 'manager']),
         devices.removeDevicesByUserId,
     );
 
     router.post(
         '/users/:userId/devices/:deviceIds/shareduser',
-        jwt.isAuthorized(['admin', 'manager']),
+        isAuthorized(['admin', 'manager']),
         devices.addSharedUserByUserId,
     );
 
     router.delete(
         '/users/:userId/devices/:deviceIds/shareduser',
-        jwt.isAuthorized(['admin', 'manager']),
+        isAuthorized(['admin', 'manager']),
         devices.removeSharedUserByUserId,
     );
 
-    router.get('/devices', jwt.isAuthorized(['admin']), devices.getAllDevices);
+    router.get('/devices', isAuthorized(['admin']), devices.getAllDevices);
 
     router.get(
         '/positions',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         positions.getLastPositions,
     );
 
     router.get(
         '/staticlayers',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         staticLayers.getStaticLayers,
     );
 
     router.get(
         '/server/info',
-        jwt.isAuthorized(['admin', 'manager', 'viewer']),
+        isAuthorized(['admin', 'manager', 'viewer']),
         server.getInfo,
     );
 

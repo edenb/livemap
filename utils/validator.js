@@ -1,24 +1,24 @@
-'use strict';
-const ajv = require('ajv').default;
-const addFormats = require('ajv-formats');
-const fs = require('fs');
-const logger = require('./logger');
+import ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import { readFile, readFileSync } from 'fs';
+import logger from './logger.js';
 
-class Validator {
+export default class Validator {
     constructor(schemaName) {
         this._schemaValid = false;
         this._schemaName = schemaName;
         this.ajvValidator = new ajv({ allErrors: true, coerceTypes: true });
-        this.ajvValidator.addMetaSchema(
-            require('../schemas/json-schema-draft-06.json'),
+        const jsonSchemaDraft06 = JSON.parse(
+            readFileSync('schemas/json-schema-draft-06.json', 'utf8'),
         );
+        this.ajvValidator.addMetaSchema(jsonSchemaDraft06);
         addFormats(this.ajvValidator);
         this.loadSchema(schemaName);
     }
 
     loadSchema(schemaName) {
         this._schemaName = schemaName;
-        fs.readFile('./schemas/' + schemaName + '.json', (err, data) => {
+        readFile('./schemas/' + schemaName + '.json', (err, data) => {
             if (err) {
                 this._schemaValid = false;
                 logger.error('Validator <' + this._schemaName + '>: ' + err);
@@ -60,5 +60,3 @@ class Validator {
         }
     }
 }
-
-module.exports = Validator;

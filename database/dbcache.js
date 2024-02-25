@@ -17,7 +17,7 @@ function getIndexOf(qry, param) {
     return null;
 }
 
-function save(qry, param, result) {
+export function save(qry, param, result) {
     // Don't re-save the query if it's already cached
     let idx = getIndexOf(qry, param);
     if (idx === null) {
@@ -33,7 +33,7 @@ function save(qry, param, result) {
     }
 }
 
-function load(qry, param) {
+export function load(qry, param) {
     let idx = getIndexOf(qry, param);
     if (idx !== null) {
         return cache[idx].result;
@@ -41,7 +41,7 @@ function load(qry, param) {
     return null;
 }
 
-function invalidate(qry) {
+export function invalidate(qry) {
     for (let i = 0; i < qry.writeTables.length; i += 1) {
         let j = 0;
         while (j < cache.length) {
@@ -54,11 +54,6 @@ function invalidate(qry) {
     }
 }
 
-function clearAll() {
+export function clearAll() {
     cache = [];
 }
-
-module.exports.save = save;
-module.exports.load = load;
-module.exports.invalidate = invalidate;
-module.exports.clearAll = clearAll;
