@@ -1,13 +1,13 @@
-'use strict';
-const config = require('config');
-const { Pool } = require('pg');
-const { parse } = require('pg-connection-string');
-const pgStore = require('connect-pg-simple');
-const memoryStore = require('memorystore');
-const fs = require('fs');
-const dbcache = require('./dbcache');
-const logger = require('../utils/logger');
+import config from 'config';
+import pg from 'pg';
+import pgConnectionString from 'pg-connection-string';
+import pgStore from 'connect-pg-simple';
+import memoryStore from 'memorystore';
+import { readFile } from 'fs';
+import { load, invalidate, save } from './dbcache.js';
+import Logger from '../utils/logger.js';
 
+const logger = Logger(import.meta.url);
 var sessionStore;
 var queryDef = [];
 
@@ -168,7 +168,7 @@ queryDef.getNumberOfTables = {
     cached: false,
 };
 
-function getEmptyQueryRes() {
+export function getEmptyQueryRes() {
     const emptyQueryRes = {
         rows: [],
         rowCount: -1,
@@ -182,12 +182,12 @@ function getEmptyQueryRes() {
 // To set environment variable:
 //  set DATABASE_URL=user:pass@abc.com/table (Windows)
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
-const dbConfig = parse(config.get('db.url'));
+const dbConfig = pgConnectionString.parse(config.get('db.url'));
 // Overwrite tls.connect options to allow self signed certs
 if (config.get('db.ssl') === true) {
     dbConfig.ssl = { rejectUnauthorized: false };
 }
-const pgPool = new Pool(dbConfig);
+const pgPool = new pg.Pool(dbConfig);
 
 // The pool emits an error if a backend or network error occurs
 // on any idle client. This is fatal so exit
@@ -200,13 +200,13 @@ pgPool.on('error', (err) => {
 // Database operations with predefined queries
 //
 
-async function queryDbAsync(key, sqlParams) {
+export async function queryDbAsync(key, sqlParams) {
     let dbQueryRes = getEmptyQueryRes();
 
     if (typeof queryDef[key] !== 'undefined') {
         // Try to get the query result from cache
         if (queryDef[key].cached) {
-            const cachedQueryRes = dbcache.load(queryDef[key], sqlParams);
+            const cachedQueryRes = load(queryDef[key], sqlParams);
             if (cachedQueryRes !== null) {
                 logger.debug(`queryDb - cached: ${key}`);
                 return cachedQueryRes;
@@ -228,9 +228,9 @@ async function queryDbAsync(key, sqlParams) {
         }
 
         // Update cache
-        dbcache.invalidate(queryDef[key]);
+        invalidate(queryDef[key]);
         if (queryDef[key].cached) {
-            dbcache.save(queryDef[key], sqlParams, dbQueryRes);
+            save(queryDef[key], sqlParams, dbQueryRes);
         }
     } else {
         logger.error(`Database query failed. No query for key: ${key}`);
@@ -246,7 +246,7 @@ async function queryDbAsync(key, sqlParams) {
 
 function readQueryFromFile(fileName) {
     return new Promise((resolve, reject) => {
-        fs.readFile(fileName, (fileError, fileData) => {
+        readFile(fileName, (fileError, fileData) => {
             if (fileError === null) {
                 resolve(fileData);
             } else {
@@ -273,7 +273,7 @@ async function queryDbFromFile(fileName) {
 // Sessions
 //
 
-function bindStore(session, type) {
+export function bindStore(session, type) {
     switch (type) {
         case 'memory':
             sessionStore = new (memoryStore(session))({
@@ -294,7 +294,7 @@ function bindStore(session, type) {
     }
 }
 
-function getStore() {
+export function getStore() {
     return sessionStore;
 }
 
@@ -302,7 +302,7 @@ function getStore() {
 // Database maintenance
 //
 
-async function checkDbUp() {
+export async function checkDbUp() {
     try {
         let queryRes = await queryDbAsync('getNumberOfTables', []);
         logger.info(
@@ -330,14 +330,7 @@ async function removeOldestPositions() {
     }
 }
 
-function startMaintenance() {
+export function startMaintenance() {
     removeOldestPositions();
     setInterval(removeOldestPositions, config.get('db.maintenanceInterval'));
 }
-
-module.exports.getEmptyQueryRes = getEmptyQueryRes;
-module.exports.queryDbAsync = queryDbAsync;
-module.exports.bindStore = bindStore;
-module.exports.getStore = getStore;
-module.exports.checkDbUp = checkDbUp;
-module.exports.startMaintenance = startMaintenance;

@@ -1,14 +1,13 @@
-'use strict';
-const db = require('../database/db');
+import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
 
 //
 // Exported modules
 //
 
-async function getLastPositions(userId) {
-    let queryRes = db.getEmptyQueryRes();
+export async function getLastPositions(userId) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('getLastPositions', [userId]);
+        queryRes = await queryDbAsync('getLastPositions', [userId]);
         return queryRes;
     } catch (err) {
         // On error return the initial (empty) array
@@ -16,16 +15,13 @@ async function getLastPositions(userId) {
     }
 }
 
-async function insertPosition(position) {
-    let queryRes = db.getEmptyQueryRes();
+export async function insertPosition(position) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('insertPosition', position);
+        queryRes = await queryDbAsync('insertPosition', position);
         return queryRes;
     } catch (err) {
         // On error return the initial (empty) array
         return queryRes;
     }
 }
-
-module.exports.getLastPositions = getLastPositions;
-module.exports.insertPosition = insertPosition;

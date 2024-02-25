@@ -1,17 +1,17 @@
-'use strict';
-const db = require('../database/db');
-const logger = require('../utils/logger');
+import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
+import Logger from '../utils/logger.js';
 
+const logger = Logger(import.meta.url);
 var devices = [];
 
 //
 // Exported modules
 //
 
-async function getAllDevices() {
-    let queryRes = db.getEmptyQueryRes();
+export async function getAllDevices() {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('getAllDevices', []);
+        queryRes = await queryDbAsync('getAllDevices', []);
         devices = queryRes.rows;
         return queryRes;
     } catch (err) {
@@ -20,10 +20,10 @@ async function getAllDevices() {
     }
 }
 
-async function getAllowedDevices(userId) {
-    let queryRes = db.getEmptyQueryRes();
+export async function getAllowedDevices(userId) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('getAllowedDevices', [userId]);
+        queryRes = await queryDbAsync('getAllowedDevices', [userId]);
         devices = queryRes.rows;
         return queryRes;
     } catch (err) {
@@ -32,8 +32,8 @@ async function getAllowedDevices(userId) {
     }
 }
 
-async function getDeviceByIdentity(apiKey, identifier) {
-    let queryRes = db.getEmptyQueryRes();
+export async function getDeviceByIdentity(apiKey, identifier) {
+    let queryRes = getEmptyQueryRes();
     // Check if the device is already loaded in memory
     let i = 0;
     while (
@@ -51,7 +51,7 @@ async function getDeviceByIdentity(apiKey, identifier) {
     } else {
         logger.debug('findDeviceByIdentity - from DB: ' + apiKey);
         try {
-            queryRes = await db.queryDbAsync('insertDevice', [
+            queryRes = await queryDbAsync('insertDevice', [
                 apiKey,
                 identifier,
                 identifier,
@@ -70,15 +70,15 @@ async function getDeviceByIdentity(apiKey, identifier) {
     return queryRes;
 }
 
-async function getOwnedDevicesByField(field, value) {
-    let queryRes = db.getEmptyQueryRes();
+export async function getOwnedDevicesByField(field, value) {
+    let queryRes = getEmptyQueryRes();
     let queryDefinition = '';
     if (field === 'user_id') {
         queryDefinition = 'getOwnedDevicesByUserId';
     }
     if (queryDefinition !== '') {
         try {
-            queryRes = await db.queryDbAsync(queryDefinition, [value]);
+            queryRes = await queryDbAsync(queryDefinition, [value]);
         } catch (err) {
             queryRes.userMessage = 'Unable to find devices.';
         }
@@ -86,15 +86,15 @@ async function getOwnedDevicesByField(field, value) {
     return queryRes;
 }
 
-async function getSharedDevicesByField(field, value) {
-    let queryRes = db.getEmptyQueryRes();
+export async function getSharedDevicesByField(field, value) {
+    let queryRes = getEmptyQueryRes();
     let queryDefinition = '';
     if (field === 'user_id') {
         queryDefinition = 'getSharedDevicesByUserId';
     }
     if (queryDefinition !== '') {
         try {
-            queryRes = await db.queryDbAsync(queryDefinition, [value]);
+            queryRes = await queryDbAsync(queryDefinition, [value]);
         } catch (err) {
             queryRes.userMessage = 'Unable to find devices.';
         }
@@ -102,10 +102,10 @@ async function getSharedDevicesByField(field, value) {
     return queryRes;
 }
 
-async function addDevice(device) {
-    let queryRes = db.getEmptyQueryRes();
+export async function addDevice(device) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('insertDevice', [
+        queryRes = await queryDbAsync('insertDevice', [
             device.api_key,
             device.identifier,
             device.alias,
@@ -119,10 +119,10 @@ async function addDevice(device) {
     return queryRes;
 }
 
-async function addDeviceByUserId(userId, device) {
-    let queryRes = db.getEmptyQueryRes();
+export async function addDeviceByUserId(userId, device) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('addDeviceByUserId', [
+        queryRes = await queryDbAsync('addDeviceByUserId', [
             userId,
             device.identifier,
             device.alias,
@@ -138,10 +138,10 @@ async function addDeviceByUserId(userId, device) {
     return queryRes;
 }
 
-async function modifyDevice(device) {
-    let queryRes = db.getEmptyQueryRes();
+export async function modifyDevice(device) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('modifyDeviceById', [
+        queryRes = await queryDbAsync('modifyDeviceById', [
             device.device_id,
             device.alias,
             device.fixed_loc_lat,
@@ -156,10 +156,10 @@ async function modifyDevice(device) {
     return queryRes;
 }
 
-async function modifyDeviceByUserId(userId, device) {
-    let queryRes = db.getEmptyQueryRes();
+export async function modifyDeviceByUserId(userId, device) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('modifyDeviceByUserId', [
+        queryRes = await queryDbAsync('modifyDeviceByUserId', [
             userId,
             device.device_id,
             device.alias,
@@ -175,7 +175,7 @@ async function modifyDeviceByUserId(userId, device) {
     return queryRes;
 }
 
-function splitDeviceIdentity(devIdent, dividerChar) {
+export function splitDeviceIdentity(devIdent, dividerChar) {
     let dividerIdx;
     let identityObj = {};
 
@@ -219,11 +219,11 @@ function splitDeviceIdentity(devIdent, dividerChar) {
     return identityObj;
 }
 
-async function addSharedUser(sharedUser, ids) {
+export async function addSharedUser(sharedUser, ids) {
     // ToDo: check for valid sharedUser and ids ?
-    let queryRes = db.getEmptyQueryRes();
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('addSharedUser', [sharedUser, ids]);
+        queryRes = await queryDbAsync('addSharedUser', [sharedUser, ids]);
         if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No shared users were added';
         }
@@ -233,10 +233,10 @@ async function addSharedUser(sharedUser, ids) {
     return queryRes;
 }
 
-async function addSharedUserByUserId(userId, sharedUser, ids) {
-    let queryRes = db.getEmptyQueryRes();
+export async function addSharedUserByUserId(userId, sharedUser, ids) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('addSharedUserByUserId', [
+        queryRes = await queryDbAsync('addSharedUserByUserId', [
             userId,
             sharedUser.username,
             ids,
@@ -250,10 +250,10 @@ async function addSharedUserByUserId(userId, sharedUser, ids) {
     return queryRes;
 }
 
-async function deleteSharedUser(sharedUser, ids) {
-    let queryRes = db.getEmptyQueryRes();
+export async function deleteSharedUser(sharedUser, ids) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('deleteSharedUser', [sharedUser, ids]);
+        queryRes = await queryDbAsync('deleteSharedUser', [sharedUser, ids]);
         if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No shared users were deleted';
         }
@@ -263,10 +263,10 @@ async function deleteSharedUser(sharedUser, ids) {
     return queryRes;
 }
 
-async function deleteSharedUserByUserId(userId, sharedUser, ids) {
-    let queryRes = db.getEmptyQueryRes();
+export async function deleteSharedUserByUserId(userId, sharedUser, ids) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('deleteSharedUserByUserId', [
+        queryRes = await queryDbAsync('deleteSharedUserByUserId', [
             userId,
             sharedUser.username,
             ids,
@@ -280,10 +280,10 @@ async function deleteSharedUserByUserId(userId, sharedUser, ids) {
     return queryRes;
 }
 
-async function deleteDevicesById(ids) {
-    let queryRes = db.getEmptyQueryRes();
+export async function deleteDevicesById(ids) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('deleteDevices', [ids]);
+        queryRes = await queryDbAsync('deleteDevices', [ids]);
         if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No devices were deleted';
         }
@@ -293,13 +293,10 @@ async function deleteDevicesById(ids) {
     return queryRes;
 }
 
-async function deleteDevicesByUserId(userId, ids) {
-    let queryRes = db.getEmptyQueryRes();
+export async function deleteDevicesByUserId(userId, ids) {
+    let queryRes = getEmptyQueryRes();
     try {
-        queryRes = await db.queryDbAsync('deleteDevicesByUserId', [
-            userId,
-            ids,
-        ]);
+        queryRes = await queryDbAsync('deleteDevicesByUserId', [userId, ids]);
         if (queryRes.rowCount <= 0) {
             queryRes.userMessage = 'No devices were deleted';
         }
@@ -308,20 +305,3 @@ async function deleteDevicesByUserId(userId, ids) {
     }
     return queryRes;
 }
-
-module.exports.getAllDevices = getAllDevices;
-module.exports.getAllowedDevices = getAllowedDevices;
-module.exports.getDeviceByIdentity = getDeviceByIdentity;
-module.exports.getOwnedDevicesByField = getOwnedDevicesByField;
-module.exports.getSharedDevicesByField = getSharedDevicesByField;
-module.exports.addDevice = addDevice;
-module.exports.addDeviceByUserId = addDeviceByUserId;
-module.exports.modifyDevice = modifyDevice;
-module.exports.modifyDeviceByUserId = modifyDeviceByUserId;
-module.exports.splitDeviceIdentity = splitDeviceIdentity;
-module.exports.addSharedUser = addSharedUser;
-module.exports.addSharedUserByUserId = addSharedUserByUserId;
-module.exports.deleteSharedUser = deleteSharedUser;
-module.exports.deleteSharedUserByUserId = deleteSharedUserByUserId;
-module.exports.deleteDevicesById = deleteDevicesById;
-module.exports.deleteDevicesByUserId = deleteDevicesByUserId;

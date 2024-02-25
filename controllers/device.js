@@ -1,5 +1,4 @@
-'use strict';
-const dev = require('../models/device');
+import * as dev from '../models/device.js';
 
 //Check if the user in the request is the same user as making the request
 function userAllowed(reqUserId, tokenUserId) {
@@ -14,16 +13,16 @@ function userAllowed(reqUserId, tokenUserId) {
     }
 }
 
-exports.getAllDevices = async (req, res) => {
+export async function getAllDevices(req, res) {
     const queryRes = await dev.getAllDevices();
     if (queryRes.rowCount < 0) {
         res.status(500).send(`Internal Server Error`);
     } else {
         res.status(200).send(queryRes.rows);
     }
-};
+}
 
-exports.getDevicesByUserId = async (req, res) => {
+export async function getDevicesByUserId(req, res) {
     const reqUserId = req.params && req.params.userId;
     const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
     if (userAllowed(reqUserId, tokenUserId)) {
@@ -51,9 +50,9 @@ exports.getDevicesByUserId = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.addDeviceByUserId = async (req, res) => {
+export async function addDeviceByUserId(req, res) {
     const reqUserId = req.params && req.params.userId;
     const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
     if (userAllowed(reqUserId, tokenUserId)) {
@@ -70,9 +69,9 @@ exports.addDeviceByUserId = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.modifyDeviceByUserId = async (req, res) => {
+export async function modifyDeviceByUserId(req, res) {
     const reqUserId = req.params && req.params.userId;
     const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
     if (userAllowed(reqUserId, tokenUserId)) {
@@ -89,9 +88,9 @@ exports.modifyDeviceByUserId = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.removeDevicesByUserId = async (req, res) => {
+export async function removeDevicesByUserId(req, res) {
     const reqUserId = req.params && req.params.userId;
     const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
     if (userAllowed(reqUserId, tokenUserId)) {
@@ -111,9 +110,9 @@ exports.removeDevicesByUserId = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.addSharedUserByUserId = async (req, res) => {
+export async function addSharedUserByUserId(req, res) {
     const reqUserId = req.params && req.params.userId;
     const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
     if (userAllowed(reqUserId, tokenUserId)) {
@@ -134,9 +133,9 @@ exports.addSharedUserByUserId = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.removeSharedUserByUserId = async (req, res) => {
+export async function removeSharedUserByUserId(req, res) {
     const reqUserId = req.params && req.params.userId;
     const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
     if (userAllowed(reqUserId, tokenUserId)) {
@@ -157,4 +156,4 @@ exports.removeSharedUserByUserId = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}

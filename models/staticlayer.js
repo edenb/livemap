@@ -1,5 +1,4 @@
-'use strict';
-const fs = require('fs');
+import fs from 'fs';
 
 function readDir(dirName) {
     return new Promise((resolve, reject) => {
@@ -29,7 +28,7 @@ function readFile(fileName) {
 // Exported modules
 //
 
-async function getStaticLayers() {
+export async function getStaticLayers() {
     let staticLayerList = [];
     try {
         let allFiles = await readDir('./staticlayers/');
@@ -50,5 +49,3 @@ async function getStaticLayers() {
         return [];
     }
 }
-
-module.exports.getStaticLayers = getStaticLayers;

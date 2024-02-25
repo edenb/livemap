@@ -1,8 +1,7 @@
-'use strict';
-const config = require('config');
-const http = require('http');
-const chai = require('chai');
-const gp = require('../services/gpxplayer');
+import config from 'config';
+import { createServer } from 'http';
+import * as chai from 'chai';
+import GpxPlayer from '../services/gpxplayer.js';
 
 const should = chai.should();
 
@@ -24,29 +23,31 @@ function getTrackname(testDevice) {
 
 // Create a server that receives the requests from the gpx player
 function startHttpServer(port) {
-    server = http
-        .createServer((req, res) => {
-            if (req.method === 'POST') {
-                req.on('error', (err) => {
-                    if (err) {
-                        res.writeHead(500, { 'Content-Type': 'text/html' });
-                        res.write('An error occurred');
-                        res.end();
-                    }
-                });
-                let body = '';
-                req.on('data', (chunk) => {
-                    body += chunk.toString();
-                });
-                req.on('end', () => {
-                    let point = Object.fromEntries(new URLSearchParams(body));
-                    storePoint(point);
-                    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    server = createServer((req, res) => {
+        if (req.method === 'POST') {
+            req.on('error', (err) => {
+                if (err) {
+                    res.writeHead(500, { 'Content-Type': 'text/html' });
+                    res.write('An error occurred');
                     res.end();
-                });
-            }
-        })
-        .listen(port);
+                }
+            });
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk.toString();
+            });
+            req.on('end', () => {
+                let point = Object.fromEntries(new URLSearchParams(body));
+                storePoint(point);
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end();
+            });
+        } else {
+            // Ignore all other requests except POST
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end();
+        }
+    }).listen(port);
 }
 
 function stopHttpServer() {
@@ -116,8 +117,7 @@ describe('GPX player', () => {
         it('should find all 6 gpx test files', async () => {
             try {
                 startHttpServer(config.get('server.port'));
-                //gpxPlayer = new gp.GpxPlayer('./tracks/test/', '', storePoint);
-                gpxPlayer = new gp.GpxPlayer(
+                gpxPlayer = new GpxPlayer(
                     './tracks/test/',
                     '/location/gpx/test',
                 );

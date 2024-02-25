@@ -1,12 +1,12 @@
-const config = require('config');
-const express = require('express');
-require('connect-flash');
-const jwt = require('../auth/jwt');
-const usr = require('../models/user');
-const dev = require('../models/device');
-const mqtt = require('../services/mqtt');
+import config from 'config';
+import { Router } from 'express';
+import 'connect-flash';
+import { getNewToken } from '../auth/jwt.js';
+import * as usr from '../models/user.js';
+import * as dev from '../models/device.js';
+import { getBrokerUrl } from '../services/mqtt.js';
 
-const router = express.Router();
+const router = Router();
 
 function isNumber(num) {
     if (parseInt(num) == num || parseFloat(num) == num) {
@@ -31,7 +31,7 @@ function ensureAuthenticated(req, res, next) {
     }
 }
 
-module.exports = (passport) => {
+export default (passport) => {
     // GET login page
     router.get('/', (req, res) => {
         // Save the remote IP address in the session store
@@ -39,7 +39,7 @@ module.exports = (passport) => {
         req.session.save(() => {
             res.render('landing', {
                 wclient: config.get('wclient'),
-                broker: mqtt.getBrokerUrl(),
+                broker: getBrokerUrl(),
                 flash: req.flash(),
             });
         });
@@ -49,7 +49,7 @@ module.exports = (passport) => {
         '/login',
         passport.authenticate('local', { failureRedirect: '/' }),
         (req, res) => {
-            let token = jwt.getNewToken(req.user);
+            let token = getNewToken(req.user);
             req.session.token = token;
             // Wait for the authentication result is stored in the session, otherwise ensureAuthenticated() may fail
             req.session.save(() => {
@@ -65,7 +65,7 @@ module.exports = (passport) => {
     router.get('/signup', (req, res) => {
         res.render('register', {
             wclient: config.get('wclient'),
-            broker: mqtt.getBrokerUrl(),
+            broker: getBrokerUrl(),
             flash: req.flash(),
         });
     });
@@ -84,7 +84,7 @@ module.exports = (passport) => {
     router.get('/main', ensureAuthenticated, (req, res) => {
         res.render('main', {
             wclient: config.get('wclient'),
-            broker: mqtt.getBrokerUrl(),
+            broker: getBrokerUrl(),
             flash: req.flash(),
             user: req.user,
         });
@@ -106,7 +106,7 @@ module.exports = (passport) => {
             let allUsers = queryRes.rows;
             res.render('changedetails', {
                 wclient: config.get('wclient'),
-                broker: mqtt.getBrokerUrl(),
+                broker: getBrokerUrl(),
                 flash: req.flash(),
                 user: req.user,
                 users: allUsers,
@@ -114,7 +114,7 @@ module.exports = (passport) => {
         } else {
             res.render('changedetails', {
                 wclient: config.get('wclient'),
-                broker: mqtt.getBrokerUrl(),
+                broker: getBrokerUrl(),
                 flash: req.flash(),
                 user: req.user,
                 users: null,
@@ -186,7 +186,7 @@ module.exports = (passport) => {
         if (typeof queryRes.userMessage === 'undefined') {
             res.render('changedevices', {
                 wclient: config.get('wclient'),
-                broker: mqtt.getBrokerUrl(),
+                broker: getBrokerUrl(),
                 flash: req.flash(),
                 user: req.user,
                 userdevices: userdevices,
@@ -314,7 +314,7 @@ module.exports = (passport) => {
     router.get('/changepassword', ensureAuthenticated, (req, res) => {
         res.render('changepassword', {
             wclient: config.get('wclient'),
-            broker: mqtt.getBrokerUrl(),
+            broker: getBrokerUrl(),
             flash: req.flash(),
             user: req.user,
         });

@@ -1,16 +1,26 @@
-'use strict';
-const config = require('config');
-const express = require('express');
-const favicon = require('serve-favicon');
-const flash = require('connect-flash');
-const morgan = require('morgan');
-const session = require('express-session');
-const passport = require('./auth/passport');
-const db = require('./database/db');
-const livesvr = require('./services/liveserver');
-const webhook = require('./services/webhook');
-const mqtt = require('./services/mqtt');
-const logger = require('./utils/logger');
+import config from 'config';
+import express from 'express';
+import favicon from 'serve-favicon';
+import flash from 'connect-flash';
+import morgan from 'morgan';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import session from 'express-session';
+import passport from './auth/passport.js';
+import routesApi from './routes/api.js';
+import routesIndex from './routes/index.js';
+import {
+    bindStore,
+    getStore,
+    checkDbUp,
+    startMaintenance,
+} from './database/db.js';
+import { start } from './services/liveserver.js';
+import { processLocation } from './services/webhook.js';
+import * as mqtt from './services/mqtt.js';
+import Logger from './utils/logger.js';
+
+const logger = Logger(import.meta.url);
 
 //
 // Application
@@ -33,6 +43,10 @@ if (config.get('server.forceSSL') === 'true') {
     });
 }
 
+// Directory and filename of this module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Static route for JavaScript libraries, css files, etc.
 app.use(express.static(__dirname + '/public'));
 
@@ -40,11 +54,11 @@ app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 // Handle posted positions
 app.post('/location/gpx', (req, res) => {
-    webhook.processLocation(req, res, 'gpx');
+    processLocation(req, res, 'gpx');
 });
 
 app.post('/location/locative', (req, res) => {
-    webhook.processLocation(req, res, 'locative');
+    processLocation(req, res, 'locative');
 });
 
 // View engine set-up
@@ -58,12 +72,12 @@ app.use(express.urlencoded({ extended: true }));
 app.enable('trust proxy');
 
 // Sessions stored in 'memory' or 'pg' (database)
-db.bindStore(session, 'memory');
+bindStore(session, 'memory');
 // Don't use sessions for API calls,
 // i.e. a token is given in the header (Authorization: <some_token>)
 const sessionMiddleware = session({
     name: config.get('sessions.name'),
-    store: db.getStore(),
+    store: getStore(),
     secret: config.get('sessions.secret'),
     cookie: { maxAge: config.get('sessions.maxAge'), sameSite: 'strict' },
     resave: false,
@@ -81,18 +95,16 @@ app.use(flash());
 // Set-up authentication with persistent login sessions
 app.use(passport.session());
 
-let indexRoutes = require('./routes/index')(passport);
-let apiRoutes = require('./routes/api')(passport);
-app.use('/', indexRoutes);
-app.use('/api/v1', apiRoutes);
+app.use('/', routesIndex(passport));
+app.use('/api/v1', routesApi(passport));
 
 async function allUp() {
-    if (await db.checkDbUp()) {
+    if (await checkDbUp()) {
         const port = config.get('server.port');
         let server = app.listen(port);
 
-        db.startMaintenance();
-        livesvr.start(server);
+        startMaintenance();
+        start(server);
         mqtt.start();
 
         logger.info('Server started on port ' + port);

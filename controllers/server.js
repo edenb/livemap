@@ -1,11 +1,10 @@
-'use strict';
-const config = require('config');
-const mqtt = require('../services/mqtt');
+import config from 'config';
+import { getBrokerUrl } from '../services/mqtt.js';
 
-exports.getInfo = (req, res) => {
+export function getInfo(req, res) {
     const info = { ...getApplicationInfo(), ...getMqttInfo() };
     res.status(200).send(info);
-};
+}
 
 function getApplicationInfo() {
     const applicationInfo = {
@@ -20,7 +19,7 @@ function getApplicationInfo() {
 
 function getMqttInfo() {
     if (config.get('wclient.showBroker') === 'true') {
-        const broker = mqtt.getBrokerUrl();
+        const broker = getBrokerUrl();
         const mqttInfo = {
             mqtt: {
                 url: `${broker.protocol}//${broker.hostname}`,

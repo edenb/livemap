@@ -1,8 +1,9 @@
-'use strict';
-const usr = require('../models/user');
-const dev = require('../models/device');
-const livesvr = require('./liveserver');
-const logger = require('../utils/logger');
+import * as usr from '../models/user.js';
+import * as dev from '../models/device.js';
+import { sendToClients } from './liveserver.js';
+import Logger from '../utils/logger.js';
+
+const logger = Logger(import.meta.url);
 
 async function processGpx(rawLocationData) {
     let srcData = {},
@@ -160,7 +161,7 @@ async function processLocative(rawLocationData) {
 // Exported modules
 //
 
-async function processLocation(request, response, type) {
+export async function processLocation(request, response, type) {
     let rawLocationData = {};
     rawLocationData.body = '';
     rawLocationData.query = request.query;
@@ -187,14 +188,14 @@ async function processLocation(request, response, type) {
             case 'gpx':
                 destData = await processGpx(rawLocationData);
                 if (destData !== null) {
-                    await livesvr.sendToClients(destData);
+                    await sendToClients(destData);
                 }
                 response.sendStatus(200);
                 break;
             case 'locative':
                 destData = await processLocative(rawLocationData);
                 if (destData !== null) {
-                    await livesvr.sendToClients(destData);
+                    await sendToClients(destData);
                 }
                 response.sendStatus(200);
                 break;
@@ -203,5 +204,3 @@ async function processLocation(request, response, type) {
         }
     });
 }
-
-module.exports.processLocation = processLocation;

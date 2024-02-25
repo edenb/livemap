@@ -5,8 +5,8 @@
 .eslintrc.json
 .git
 .gitignore
-.nyc_output
 .prettierrc
 .vscode
+coverage
 node_modules
 npm-debug.log

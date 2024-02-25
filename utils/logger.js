@@ -1,45 +1,53 @@
-'use strict';
-const config = require('config');
-const { createLogger, format, transports } = require('winston');
-const path = require('path');
+import config from 'config';
+import { fileURLToPath } from 'url';
+import { createLogger, format, transports } from 'winston';
 
-const consoleLogFormat = format.combine(
-    format.colorize(),
-    format.label({ label: path.basename(process.mainModule.filename) }),
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    format.printf(
-        (info) =>
-            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`,
-    ),
-);
+export default (meta_url) => {
+    let filename = '';
+    if (meta_url) {
+        const file = fileURLToPath(new URL(meta_url));
+        const fileSplit = file.split(/[/\\]/);
+        filename = fileSplit[fileSplit.length - 1];
+    }
 
-const consoleLogFormatNoColor = format.combine(
-    format.label({ label: path.basename(process.mainModule.filename) }),
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    format.printf(
-        (info) =>
-            `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`,
-    ),
-);
+    const consoleLogFormat = format.combine(
+        format.colorize(),
+        format.label({ label: filename }),
+        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        format.printf(
+            (info) =>
+                `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`,
+        ),
+    );
 
-const logger = createLogger({
-    transports: [
-        new transports.Console({
-            format: config.get('logger.colorize')
-                ? consoleLogFormat
-                : consoleLogFormatNoColor,
-            level: config.get('logger.level'),
-            handleExceptions: true,
-            json: false,
-        }),
-    ],
-});
+    const consoleLogFormatNoColor = format.combine(
+        format.label({ label: filename }),
+        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        format.printf(
+            (info) =>
+                `${info.timestamp} ${info.level} [${info.label}]: ${info.message}`,
+        ),
+    );
 
-logger.stream = {
-    write: function (message) {
-        // Trim message to remove empty line
-        logger.info(message.trim());
-    },
+    const loggerInstance = createLogger({
+        transports: [
+            new transports.Console({
+                format: config.get('logger.colorize')
+                    ? consoleLogFormat
+                    : consoleLogFormatNoColor,
+                level: config.get('logger.level'),
+                handleExceptions: true,
+                json: false,
+            }),
+        ],
+    });
+
+    loggerInstance.stream = {
+        write: function (message) {
+            // Trim message to remove empty line
+            loggerInstance.info(message.trim());
+        },
+    };
+
+    return loggerInstance;
 };
-
-module.exports = logger;

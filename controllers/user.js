@@ -1,7 +1,6 @@
-'use strict';
-const usr = require('../models/user');
+import * as usr from '../models/user.js';
 
-exports.getAllUsers = async (req, res) => {
+export async function getAllUsers(req, res) {
     const queryRes = await usr.getAllUsers();
     if (queryRes.rowCount === -1) {
         res.status(500).send(`Internal Server Error`);
@@ -10,9 +9,9 @@ exports.getAllUsers = async (req, res) => {
     } else {
         res.status(200).send(queryRes.rows);
     }
-};
+}
 
-exports.getUserByUserId = async (req, res) => {
+export async function getUserByUserId(req, res) {
     const userId = parseInt(req.params.userId);
     if (!Number.isInteger(userId)) {
         res.status(400).send(`Bad Request`);
@@ -26,9 +25,9 @@ exports.getUserByUserId = async (req, res) => {
             res.status(200).send(queryRes.rows);
         }
     }
-};
+}
 
-exports.addUser = async (req, res) => {
+export async function addUser(req, res) {
     if (req.tokenPayload) {
         const queryRes = await usr.addUser(
             { user_id: req.tokenPayload.userId, role: req.tokenPayload.role },
@@ -48,9 +47,9 @@ exports.addUser = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.modifyUser = async (req, res) => {
+export async function modifyUser(req, res) {
     let reqUserId = -1;
     if (req.params && req.params.userId) {
         reqUserId = parseInt(req.params.userId) || -1;
@@ -75,9 +74,9 @@ exports.modifyUser = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.removeUser = async (req, res) => {
+export async function removeUser(req, res) {
     let reqUserId = -1;
     if (req.params && req.params.userId) {
         reqUserId = parseInt(req.params.userId) || -1;
@@ -101,9 +100,9 @@ exports.removeUser = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.changePassword = async (req, res) => {
+export async function changePassword(req, res) {
     let reqUserId = -1;
     if (req.params && req.params.userId) {
         reqUserId = parseInt(req.params.userId) || -1;
@@ -143,9 +142,9 @@ exports.changePassword = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.resetPassword = async (req, res) => {
+export async function resetPassword(req, res) {
     let reqUserId = -1;
     if (req.params && req.params.userId) {
         reqUserId = parseInt(req.params.userId) || -1;
@@ -180,9 +179,9 @@ exports.resetPassword = async (req, res) => {
     } else {
         res.status(403).send();
     }
-};
+}
 
-exports.getAccount = async (req, res) => {
+export async function getAccount(req, res) {
     const queryRes = await usr.getUserByField(
         'user_id',
         req.tokenPayload.userId,
@@ -201,4 +200,4 @@ exports.getAccount = async (req, res) => {
         response.email = queryRes.rows[0].email;
         res.status(200).send(response);
     }
-};
+}

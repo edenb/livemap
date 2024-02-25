@@ -2,7 +2,8 @@
   "name": "livemap",
   "version": "1.0.0",
   "description": "Web server for live map viewing",
-  "main": "app.js",
+  "exports": "./app.js",
+  "type": "module",
   "dependencies": {
     "ajv": "^8.7.1",
     "ajv-formats": "^2.1.1",
@@ -16,8 +17,8 @@
     "jsonwebtoken": "~9.0.0",
     "memorystore": "^1.6.5",
     "morgan": "~1.10.0",
-    "mqtt": "^5.0.0",
-    "passport": "~0.6.0",
+    "mqtt": "^5.3.5",
+    "passport": "~0.7.0",
     "passport-local": "~1.0.0",
     "path": "~0.12.0",
     "pg": "^8.7.1",
@@ -29,23 +30,29 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "chai": "^4.3.3",
+    "c8": "^9.1.0",
+    "chai": "^5.1.0",
     "chai-http": "^4.3.0",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "mocha": "^10.0.0",
-    "nyc": "^15.1.0",
     "prettier": "^3.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "nyc mocha --recursive test",
-    "start": "node app.js",
+    "format": "prettier app.js auth controllers database models routes services test utils --write",
     "lint": "eslint app.js auth controllers database models routes services test utils",
-    "format": "prettier app.js auth controllers database models routes services test utils --write"
+    "start": "node app.js",
+    "test": "mocha test",
+    "test:coverage": "c8 --check-coverage npm run test"
+  },
+  "c8": {
+    "all": true,
+    "include": ["app.js", "auth/**", "controllers/**", "database/**", "models/**", "routes/**", "services/**", "utils/**"],
+    "reporter": ["html", "text"]
   },
   "author": "edenb",
   "license": "MIT"
