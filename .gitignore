@@ -1,7 +1,7 @@
 *.log
+coverage
 node_modules
 .vscode
-.nyc_output
 .DS_Store
 
 # local env files
