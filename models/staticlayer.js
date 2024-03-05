@@ -34,7 +34,7 @@ export async function getStaticLayers() {
         let allFiles = await readDir('./staticlayers/');
         // Sort filenames in alphabatical order
         allFiles.sort((a, b) => {
-            return a < b ? -1 : 1;
+            return a.localeCompare(b, undefined, { sensitivity: 'base' });
         });
         for (let fileName of allFiles) {
             let fileNameParts = fileName.split('.');
