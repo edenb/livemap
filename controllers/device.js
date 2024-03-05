@@ -23,21 +23,14 @@ export async function getAllDevices(req, res) {
 }
 
 export async function getDevicesByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
-        const queryRes1 = await dev.getOwnedDevicesByField(
-            'user_id',
-            reqUserId,
-        );
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
+        const queryRes1 = await dev.getOwnedDevicesByField('user_id', userId);
         let ownedDevices = null;
         if (queryRes1.rowCount >= 0) {
             ownedDevices = queryRes1.rows;
         }
-        const queryRes2 = await dev.getSharedDevicesByField(
-            'user_id',
-            reqUserId,
-        );
+        const queryRes2 = await dev.getSharedDevicesByField('user_id', userId);
         let sharedDevices = null;
         if (queryRes2.rowCount >= 0) {
             sharedDevices = queryRes2.rows;
