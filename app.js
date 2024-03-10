@@ -33,11 +33,8 @@ app.disable('x-powered-by');
 // Force HTTPS
 if (config.get('server.forceSSL') === 'true') {
     app.use((req, res, next) => {
-        if (
-            req.headers['x-forwarded-proto'] &&
-            req.headers['x-forwarded-proto'] !== 'https'
-        ) {
-            res.redirect('https://' + req.headers.host + req.url);
+        if (req.protocol === 'http') {
+            return res.redirect(301, `https://${req.headers.host}${req.url}`);
         } else {
             next();
         }
