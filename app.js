@@ -28,6 +28,7 @@ const logger = Logger(import.meta.url);
 
 // Express set-up
 const app = express();
+app.disable('x-powered-by');
 
 // Force HTTPS
 if (config.get('server.forceSSL') === 'true') {
