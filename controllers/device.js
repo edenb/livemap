@@ -1,18 +1,5 @@
 import * as dev from '../models/device.js';
 
-//Check if the user in the request is the same user as making the request
-function userAllowed(reqUserId, tokenUserId) {
-    if (reqUserId && tokenUserId) {
-        try {
-            return parseInt(reqUserId) === parseInt(tokenUserId);
-        } catch {
-            return false;
-        }
-    } else {
-        return false;
-    }
-}
-
 export async function getAllDevices(req, res) {
     const queryRes = await dev.getAllDevices();
     if (queryRes.rowCount < 0) {
@@ -23,21 +10,14 @@ export async function getAllDevices(req, res) {
 }
 
 export async function getDevicesByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
-        const queryRes1 = await dev.getOwnedDevicesByField(
-            'user_id',
-            reqUserId,
-        );
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
+        const queryRes1 = await dev.getOwnedDevicesByField('user_id', userId);
         let ownedDevices = null;
         if (queryRes1.rowCount >= 0) {
             ownedDevices = queryRes1.rows;
         }
-        const queryRes2 = await dev.getSharedDevicesByField(
-            'user_id',
-            reqUserId,
-        );
+        const queryRes2 = await dev.getSharedDevicesByField('user_id', userId);
         let sharedDevices = null;
         if (queryRes2.rowCount >= 0) {
             sharedDevices = queryRes2.rows;
@@ -53,10 +33,9 @@ export async function getDevicesByUserId(req, res) {
 }
 
 export async function addDeviceByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
-        const queryRes = await dev.addDeviceByUserId(reqUserId, req.body);
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
+        const queryRes = await dev.addDeviceByUserId(userId, req.body);
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
         } else {
@@ -72,10 +51,9 @@ export async function addDeviceByUserId(req, res) {
 }
 
 export async function modifyDeviceByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
-        const queryRes = await dev.modifyDeviceByUserId(reqUserId, req.body);
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
+        const queryRes = await dev.modifyDeviceByUserId(userId, req.body);
         if (queryRes.rowCount < 0) {
             res.status(500).send(`Internal Server Error`);
         } else {
@@ -91,11 +69,10 @@ export async function modifyDeviceByUserId(req, res) {
 }
 
 export async function removeDevicesByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
         const queryRes = await dev.deleteDevicesByUserId(
-            reqUserId,
+            userId,
             req.params.deviceIds.split(','),
         );
         if (queryRes.rowCount < 0) {
@@ -113,11 +90,10 @@ export async function removeDevicesByUserId(req, res) {
 }
 
 export async function addSharedUserByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
         const queryRes = await dev.addSharedUserByUserId(
-            reqUserId,
+            userId,
             req.body,
             req.params.deviceIds.split(','),
         );
@@ -136,11 +112,10 @@ export async function addSharedUserByUserId(req, res) {
 }
 
 export async function removeSharedUserByUserId(req, res) {
-    const reqUserId = req.params && req.params.userId;
-    const tokenUserId = req.tokenPayload && req.tokenPayload.userId;
-    if (userAllowed(reqUserId, tokenUserId)) {
+    const userId = req.tokenPayload && req.tokenPayload.userId;
+    if (userId) {
         const queryRes = await dev.deleteSharedUserByUserId(
-            reqUserId,
+            userId,
             req.body,
             req.params.deviceIds.split(','),
         );

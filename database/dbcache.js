@@ -22,7 +22,7 @@ export function save(qry, param, result) {
     let idx = getIndexOf(qry, param);
     if (idx === null) {
         // A query should contain at least 1 table otherwise it's not a valid select statement
-        if (qry.readTables !== []) {
+        if (qry.readTables.length > 0) {
             let cacheItem = {};
             cacheItem.qry = qry;
             cacheItem.param = param;

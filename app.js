@@ -28,6 +28,7 @@ const logger = Logger(import.meta.url);
 
 // Express set-up
 const app = express();
+app.disable('x-powered-by');
 
 // Force HTTPS
 if (config.get('server.forceSSL') === 'true') {
@@ -36,7 +37,7 @@ if (config.get('server.forceSSL') === 'true') {
             req.headers['x-forwarded-proto'] &&
             req.headers['x-forwarded-proto'] !== 'https'
         ) {
-            res.redirect('https://' + req.headers.host + req.url);
+            return res.redirect(301, `https://${req.headers.host}${req.url}`);
         } else {
             next();
         }
