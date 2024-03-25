@@ -12,7 +12,7 @@
     "connect-flash": "~0.1.0",
     "connect-pg-simple": "~9.0.0",
     "cookie-parser": "^1.4.5",
-    "express": "~4.19.0",
+    "express": "~4.19.2",
     "express-session": "^1.17.3",
     "jsonwebtoken": "~9.0.0",
     "memorystore": "^1.6.5",
@@ -51,8 +51,20 @@
   },
   "c8": {
     "all": true,
-    "include": ["app.js", "auth/**", "controllers/**", "database/**", "models/**", "routes/**", "services/**", "utils/**"],
-    "reporter": ["html", "text"]
+    "include": [
+      "app.js",
+      "auth/**",
+      "controllers/**",
+      "database/**",
+      "models/**",
+      "routes/**",
+      "services/**",
+      "utils/**"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ]
   },
   "author": "edenb",
   "license": "MIT"
