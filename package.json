@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "ajv": "^8.7.1",
-    "ajv-formats": "^2.1.1",
+    "ajv-formats": "^3.0.0",
     "bcrypt": "^5.0.1",
     "config": "^3.3.6",
     "connect-flash": "~0.1.0",
