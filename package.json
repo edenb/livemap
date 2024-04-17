@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "ajv": "^8.7.1",
-    "ajv-formats": "^2.1.1",
+    "ajv-formats": "^3.0.0",
     "bcrypt": "^5.0.1",
     "config": "^3.3.6",
     "connect-flash": "~0.1.0",
@@ -33,7 +33,7 @@
     "c8": "^9.1.0",
     "chai": "^5.1.0",
     "chai-http": "^4.3.0",
-    "eslint": "^8.17.0",
+    "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "mocha": "^10.0.0",
