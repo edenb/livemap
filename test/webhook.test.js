@@ -3,7 +3,7 @@ import chaiHttp from 'chai-http';
 import express from 'express';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
-import { processLocation } from '../services/webhook.js';
+import routesWebhook from '../routes/webhook.js';
 
 chai.should();
 // Below is a temporary workaround because latest versions of chai do not support plugins like chai-http
@@ -25,6 +25,7 @@ const gpx1 =
     'device_id=testkey_testdevice1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
 const gpx2 =
     'device_id=testkey_testdevice2&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
+const gpx3 = 'this_is_an_invalid_gpx_string';
 const loc_dev1 =
     'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=testkey&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
 const loc_dev2 =
@@ -36,14 +37,7 @@ const loc_tag1_exit =
 
 // Setup express web server
 const app = express();
-
-app.post('/location/gpx', (req, res) => {
-    processLocation(req, res, 'gpx');
-});
-
-app.post('/location/locative', (req, res) => {
-    processLocation(req, res, 'locative');
-});
+app.use('/location', routesWebhook());
 
 describe('Setup test user', () => {
     describe('#changeDetails', () => {
@@ -81,13 +75,24 @@ describe('Webhook', () => {
                 });
         });
     });
+    describe('/post gpx with invalid location data in query string parameters', () => {
+        it('should respond with HTTP status 422', (done) => {
+            request(app)
+                .post('/location/gpx?' + gpx3)
+                .send('')
+                .end((err, res) => {
+                    res.should.have.status(422);
+                    done();
+                });
+        });
+    });
     describe('/post gpx without location data', () => {
-        it('should respond with HTTP status 200', (done) => {
+        it('should respond with HTTP status 422', (done) => {
             request(app)
                 .post('/location/gpx')
                 .send('')
                 .end((err, res) => {
-                    res.should.have.status(200);
+                    res.should.have.status(422);
                     done();
                 });
         });

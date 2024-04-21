@@ -1,22 +1,15 @@
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
-import { sendToClients } from './liveserver.js';
+import { sendToClients } from '../services/liveserver.js';
 import Logger from '../utils/logger.js';
 
 const logger = Logger(import.meta.url);
 
-async function processGpx(rawLocationData) {
-    let srcData = {},
-        destData = {},
+async function processGpx(payload) {
+    let destData = {},
         identObj = '';
 
-    if (Object.keys(rawLocationData.query).length !== 0) {
-        srcData = rawLocationData.query;
-    } else if (rawLocationData.body !== '') {
-        srcData = Object.fromEntries(new URLSearchParams(rawLocationData.body));
-    }
-
-    identObj = dev.splitDeviceIdentity(srcData.device_id, '_');
+    identObj = dev.splitDeviceIdentity(payload.device_id, '_');
     if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
         const queryRes = await dev.getDeviceByIdentity(
             identObj.apiKey,
@@ -31,21 +24,17 @@ async function processGpx(rawLocationData) {
             destData.device_id_tag = null;
             destData.api_key_tag = null;
             destData.identifier_tag = null;
-            destData.loc_timestamp = srcData.gps_time;
-            try {
-                destData.loc_lat = parseFloat(srcData.gps_latitude);
-                destData.loc_lon = parseFloat(srcData.gps_longitude);
-            } catch (err) {
-                return null;
-            }
+            destData.loc_timestamp = payload.gps_time;
+            destData.loc_lat = parseFloat(payload.gps_latitude);
+            destData.loc_lon = parseFloat(payload.gps_longitude);
             destData.loc_type = 'rec';
             destData.loc_attr = null;
             return destData;
         } else {
-            return null;
+            throw new Error('No device found.');
         }
     } else {
-        return null;
+        throw new Error('No API key and/or identity found.');
     }
 }
 
@@ -58,31 +47,24 @@ async function processGpx(rawLocationData) {
 // trigger: exit, enter or test
 // identity geofence - id:device
 // identity iBeacon - id1:device  id1:id2
-async function processLocative(rawLocationData) {
-    let srcData = {},
-        destData = {},
+async function processLocative(payload) {
+    let destData = {},
         identObj = '',
         identity = '';
 
-    if (Object.keys(rawLocationData.query).length !== 0) {
-        srcData = rawLocationData.query;
-    } else if (rawLocationData.body !== '') {
-        srcData = Object.fromEntries(new URLSearchParams(rawLocationData.body));
-    }
-
     // Determine if it's a detection of an iBeacon (lon and lat are '0') or the location of a device
-    if (srcData.latitude === '0' && srcData.longitude === '0') {
-        identObj = dev.splitDeviceIdentity(srcData.id, ':');
+    if (payload.latitude === '0' && payload.longitude === '0') {
+        identObj = dev.splitDeviceIdentity(payload.id, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
             let queryRes = await dev.getDeviceByIdentity(
                 identObj.apiKey,
-                srcData.device,
+                payload.device,
             ); // Todo: check device_id existance
             if (queryRes.rowCount === 1) {
                 let destDevice = queryRes.rows[0];
                 destData.device_id = destDevice.device_id;
                 destData.loc_timestamp = new Date(
-                    srcData.timestamp * 1000,
+                    payload.timestamp * 1000,
                 ).toISOString();
                 queryRes = await dev.getDeviceByIdentity(
                     identObj.apiKey,
@@ -98,31 +80,31 @@ async function processLocative(rawLocationData) {
                     destData.loc_attr = null;
                     destData.loc_type = null;
                     if (
-                        srcData.trigger === 'enter' ||
-                        srcData.trigger === 'test'
+                        payload.trigger === 'enter' ||
+                        payload.trigger === 'test'
                     ) {
                         destData.loc_type = 'now';
                     }
-                    if (srcData.trigger === 'exit') {
+                    if (payload.trigger === 'exit') {
                         destData.loc_type = 'left';
                     }
                     return destData;
                 } else {
-                    return null;
+                    throw new Error('No device found.');
                 }
             } else {
-                return null;
+                throw new Error('No device found.');
             }
         } else {
-            return null;
+            throw new Error('No API key and/or identity found.');
         }
     } else {
-        identity = srcData.id + ':' + srcData.device;
+        identity = payload.id + ':' + payload.device;
         identObj = dev.splitDeviceIdentity(identity, ':');
         if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
             const queryRes = await dev.getDeviceByIdentity(
                 identObj.apiKey,
-                srcData.device,
+                payload.device,
             );
             if (queryRes.rowCount === 1) {
                 const destDevice = queryRes.rows[0];
@@ -131,28 +113,24 @@ async function processLocative(rawLocationData) {
                 destData.device_id_tag = null;
                 destData.alias = destDevice.alias;
                 destData.loc_timestamp = new Date(
-                    srcData.timestamp * 1000,
+                    payload.timestamp * 1000,
                 ).toISOString();
-                try {
-                    destData.loc_lat = parseFloat(srcData.latitude);
-                    destData.loc_lon = parseFloat(srcData.longitude);
-                } catch (err) {
-                    return null;
-                }
+                destData.loc_lat = parseFloat(payload.latitude);
+                destData.loc_lon = parseFloat(payload.longitude);
                 destData.loc_attr = null;
                 destData.loc_type = null;
-                if (srcData.trigger === 'enter' || srcData.trigger === 'test') {
+                if (payload.trigger === 'enter' || payload.trigger === 'test') {
                     destData.loc_type = 'now';
                 }
-                if (srcData.trigger === 'exit') {
+                if (payload.trigger === 'exit') {
                     destData.loc_type = 'left';
                 }
                 return destData;
             } else {
-                return null;
+                throw new Error('No device found.');
             }
         } else {
-            return null;
+            throw new Error('No API key and/or identity found.');
         }
     }
 }
@@ -161,46 +139,17 @@ async function processLocative(rawLocationData) {
 // Exported modules
 //
 
-export async function processLocation(request, response, type) {
-    let rawLocationData = {};
-    rawLocationData.body = '';
-    rawLocationData.query = request.query;
+export async function processLocation(format, payload) {
+    // Retrieve latest information about users and devices
+    await dev.getAllDevices();
+    await usr.getAllUsers();
 
-    request.on('data', (chunk) => {
-        rawLocationData.body += chunk.toString();
-    });
-
-    request.on('end', async () => {
-        logger.debug(
-            'HTTP ' +
-                request.method +
-                ' query: ' +
-                new URLSearchParams(rawLocationData.query).toString(),
-        );
-        logger.debug(
-            'HTTP ' + request.method + ' body: ' + rawLocationData.body,
-        );
-        await dev.getAllDevices();
-        await usr.getAllUsers();
-
-        let destData;
-        switch (type) {
-            case 'gpx':
-                destData = await processGpx(rawLocationData);
-                if (destData !== null) {
-                    await sendToClients(destData);
-                }
-                response.sendStatus(200);
-                break;
-            case 'locative':
-                destData = await processLocative(rawLocationData);
-                if (destData !== null) {
-                    await sendToClients(destData);
-                }
-                response.sendStatus(200);
-                break;
-            default:
-                response.sendStatus(422);
-        }
-    });
+    switch (format) {
+        case 'gpx':
+            sendToClients(await processGpx(payload));
+            break;
+        case 'locative':
+            sendToClients(await processLocative(payload));
+            break;
+    }
 }

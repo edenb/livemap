@@ -163,7 +163,7 @@ export function start(server) {
     });
 }
 
-export async function sendToClients(destData) {
+export function sendToClients(destData) {
     // On a valid location reception:
     // 1. Send a location update to every client that is authorized for this device
     // 2. Store the location in the database
