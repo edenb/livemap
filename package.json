@@ -30,6 +30,7 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "aedes": "^0.51.0",
     "c8": "^9.1.0",
     "chai": "^5.1.0",
     "chai-http": "^4.3.0",
@@ -51,8 +52,20 @@
   },
   "c8": {
     "all": true,
-    "include": ["app.js", "auth/**", "controllers/**", "database/**", "models/**", "routes/**", "services/**", "utils/**"],
-    "reporter": ["html", "text"]
+    "include": [
+      "app.js",
+      "auth/**",
+      "controllers/**",
+      "database/**",
+      "models/**",
+      "routes/**",
+      "services/**",
+      "utils/**"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ]
   },
   "author": "edenb",
   "license": "MIT"
