@@ -5,7 +5,7 @@
   "exports": "./app.js",
   "type": "module",
   "dependencies": {
-    "ajv": "^8.7.1",
+    "ajv": "^8.13.0",
     "ajv-formats": "^3.0.0",
     "bcrypt": "^5.0.1",
     "config": "^3.3.6",
@@ -51,8 +51,20 @@
   },
   "c8": {
     "all": true,
-    "include": ["app.js", "auth/**", "controllers/**", "database/**", "models/**", "routes/**", "services/**", "utils/**"],
-    "reporter": ["html", "text"]
+    "include": [
+      "app.js",
+      "auth/**",
+      "controllers/**",
+      "database/**",
+      "models/**",
+      "routes/**",
+      "services/**",
+      "utils/**"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ]
   },
   "author": "edenb",
   "license": "MIT"
