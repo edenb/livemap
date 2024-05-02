@@ -17,7 +17,7 @@
     "jsonwebtoken": "~9.0.0",
     "memorystore": "^1.6.5",
     "morgan": "~1.10.0",
-    "mqtt": "^5.3.5",
+    "mqtt": "^5.5.5",
     "passport": "~0.7.0",
     "passport-local": "~1.0.0",
     "path": "~0.12.0",
@@ -51,8 +51,20 @@
   },
   "c8": {
     "all": true,
-    "include": ["app.js", "auth/**", "controllers/**", "database/**", "models/**", "routes/**", "services/**", "utils/**"],
-    "reporter": ["html", "text"]
+    "include": [
+      "app.js",
+      "auth/**",
+      "controllers/**",
+      "database/**",
+      "models/**",
+      "routes/**",
+      "services/**",
+      "utils/**"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ]
   },
   "author": "edenb",
   "license": "MIT"
