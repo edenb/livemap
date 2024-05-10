@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "c8": "^9.1.0",
-    "chai": "^5.1.0",
+    "chai": "^5.1.1",
     "chai-http": "^4.3.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
@@ -51,8 +51,20 @@
   },
   "c8": {
     "all": true,
-    "include": ["app.js", "auth/**", "controllers/**", "database/**", "models/**", "routes/**", "services/**", "utils/**"],
-    "reporter": ["html", "text"]
+    "include": [
+      "app.js",
+      "auth/**",
+      "controllers/**",
+      "database/**",
+      "models/**",
+      "routes/**",
+      "services/**",
+      "utils/**"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ]
   },
   "author": "edenb",
   "license": "MIT"
