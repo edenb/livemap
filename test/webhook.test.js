@@ -200,10 +200,7 @@ describe('Remove test user including owned devices', () => {
     describe('#deleteDevicesById', () => {
         it('should delete 5 devices', async () => {
             try {
-                let ids = [];
-                testDevices.forEach((element) => {
-                    ids.push(element.device_id);
-                });
+                const ids = testDevices.map(({ device_id }) => device_id);
                 const queryRes = await dev.deleteDevicesById(ids);
                 queryRes.rowCount.should.equal(5);
             } catch (err) {
