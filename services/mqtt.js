@@ -71,34 +71,24 @@ async function processMessage(messageStr) {
 // Exported modules
 //
 
-export function start() {
-    var client;
-    client = connect(getBrokerUrl().href, { keepalive: 10 });
+export function start(onMessage) {
+    const client = connect(getBrokerUrl().href, { keepalive: 10 });
 
-    client.on('connect', function () {
+    client.on('connect', () => {
         logger.info('Connected to MQTT broker: ' + getBrokerUrl().href);
         client.subscribe(config.get('mqtt.topic'));
         logger.info('MQTT client started');
-        // Test
-        //var timeStamp = new Date().toISOString();
-        //client.publish(config.get('mqtt.topic'), '{"id":"test2", "apikey":"apikey1", "timestamp":"' + timeStamp + '", "lat":"52.123", "lon":"5.123"}');
     });
 
     client.on('message', async (topic, message) => {
-        logger.debug(
-            'MQTT message (topic=' + topic + '): ' + message.toString(),
-        );
-        await dev.getAllDevices();
-        await usr.getAllUsers();
-        const destData = await processMessage(message.toString());
-        if (destData !== null) {
-            await sendToClients(destData);
-        }
+        onMessage(topic, message);
     });
 
-    client.on('error', function (error) {
+    client.on('error', (error) => {
         logger.info('MQTT broker error: ' + error);
     });
+
+    return client;
 }
 
 export function getBrokerUrl() {
@@ -117,4 +107,15 @@ export function getBrokerUrl() {
         brokerUrl.username = `${brokerUrl.username}:${brokerUrl.username}`;
     }
     return brokerUrl;
+}
+
+// ToDo: move onMessage() to ingester
+export async function onMessage(topic, message) {
+    logger.debug('MQTT message (topic=' + topic + '): ' + message.toString());
+    await dev.getAllDevices();
+    await usr.getAllUsers();
+    const destData = await processMessage(message.toString());
+    if (destData !== null) {
+        sendToClients(destData);
+    }
 }

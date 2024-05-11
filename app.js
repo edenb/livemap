@@ -17,7 +17,7 @@ import {
     startMaintenance,
 } from './database/db.js';
 import { start } from './services/liveserver.js';
-import * as mqtt from './services/mqtt.js';
+import * as mqttService from './services/mqtt.js';
 import Logger from './utils/logger.js';
 
 const logger = Logger(import.meta.url);
@@ -102,7 +102,7 @@ async function allUp() {
 
         startMaintenance();
         start(server);
-        mqtt.start();
+        mqttService.start(mqttService.onMessage);
 
         logger.info('Server started on port ' + port);
     } else {
