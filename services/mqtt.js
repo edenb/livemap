@@ -71,7 +71,7 @@ async function processMessage(messageStr) {
 // Exported modules
 //
 
-export function start(onMessage) {
+export function start(onLocation) {
     const client = connect(getBrokerUrl().href, { keepalive: 10 });
 
     client.on('connect', () => {
@@ -80,8 +80,8 @@ export function start(onMessage) {
         logger.info('MQTT client started');
     });
 
-    client.on('message', async (topic, message) => {
-        onMessage(topic, message);
+    client.on('message', (topic, message) => {
+        onLocation(topic, message);
     });
 
     client.on('error', (error) => {

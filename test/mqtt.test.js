@@ -1,7 +1,8 @@
 import Aedes from 'aedes';
 import { expect } from 'chai';
-import { createServer } from 'node:net';
 import mqtt from 'mqtt';
+import { createServer } from 'node:net';
+import { createSandbox } from 'sinon';
 //import { queryDbAsync } from '../database/db.js';
 import * as mqttService from '../services/mqtt.js';
 
@@ -64,26 +65,16 @@ function createMqttClient() {
     });
 }
 
-function publishTestMessage(client, topic, message) {
-    client.publishAsync(topic, message);
-}
-
-function waitForMessage(client) {
-    return new Promise(function (resolve, reject) {
-        try {
-            client.on('message', function (topic, message) {
-                resolve({ topic: topic, message: message });
-            });
-        } catch (err) {
-            reject(err);
-        }
-    });
+async function publishMessage(client, topic, message) {
+    await client.publishAsync(topic, message, { qos: 2 });
 }
 
 describe('MQTT service', function () {
     let mqttServer;
     let mqttTestClient;
     let mqttServiceClient;
+    const sandbox = createSandbox();
+    const spy = sandbox.spy();
     //let user_id;
 
     this.timeout(500);
@@ -95,7 +86,7 @@ describe('MQTT service', function () {
                 mqttService.getBrokerUrl().port,
             );
             // Start the MQTT client service
-            mqttServiceClient = mqttService.start(function () {});
+            mqttServiceClient = mqttService.start(spy);
             // Start an MQTT test client
             mqttTestClient = createMqttClient();
         } catch (err) {
@@ -114,6 +105,10 @@ describe('MQTT service', function () {
         } catch (err) {
             throw new Error(err.message);
         }
+    });
+
+    afterEach(function () {
+        sandbox.resetHistory();
     });
 
     // describe('Create a new test user', function () {
@@ -166,10 +161,14 @@ describe('MQTT service', function () {
     describe('Publish a message with livemap topic', function () {
         it('should receive the published message', async function () {
             try {
-                publishTestMessage(mqttTestClient, 'livemap/test', testMessage);
-                const received = await waitForMessage(mqttServiceClient);
-                expect(received.message.toString()).to.equal(testMessage);
-                expect(received.topic).to.equal('livemap/test');
+                await publishMessage(
+                    mqttTestClient,
+                    'livemap/test',
+                    testMessage,
+                );
+                expect(spy.calledOnce).to.equal(true);
+                expect(spy.args[0][0]).to.equal('livemap/test');
+                expect(spy.args[0][1].toString()).to.equal(testMessage);
             } catch (err) {
                 throw new Error(err.message);
             }
