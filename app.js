@@ -18,6 +18,7 @@ import {
 } from './database/db.js';
 import { start } from './services/liveserver.js';
 import * as mqttService from './services/mqtt.js';
+import { processLocation } from './utils/ingester.js';
 import Logger from './utils/logger.js';
 
 const logger = Logger(import.meta.url);
@@ -49,7 +50,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Add http routes for location ingestion
-app.use('/location', routesWebhook());
+app.use('/location', routesWebhook(processLocation));
 
 // Static route for JavaScript libraries, css files, etc.
 app.use(express.static(__dirname + '/public'));

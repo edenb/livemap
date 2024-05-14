@@ -1,7 +1,6 @@
 import { Router, urlencoded } from 'express';
-import { processLocation } from '../utils/ingester.js';
 
-export default () => {
+export default (onLocation) => {
     const router = Router();
 
     router.post('/gpx', urlencoded({ extended: false }), async (req, res) => {
@@ -18,7 +17,7 @@ export default () => {
 
         if (payload) {
             try {
-                await processLocation('gpx', payload);
+                await onLocation('gpx', payload);
                 res.sendStatus(200);
             } catch {
                 res.sendStatus(422);
@@ -43,7 +42,7 @@ export default () => {
 
             if (payload) {
                 try {
-                    await processLocation('locative', payload);
+                    await onLocation('locative', payload);
                     res.sendStatus(200);
                 } catch {
                     res.sendStatus(422);

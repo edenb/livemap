@@ -1,14 +1,14 @@
-import * as chai from 'chai';
+import { expect, use } from 'chai';
 import chaiHttp from 'chai-http';
 import express from 'express';
+import { parse } from 'node:querystring';
+import { createSandbox } from 'sinon';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import routesWebhook from '../routes/webhook.js';
+import { processLocation } from '../utils/ingester.js';
 
-chai.should();
-// Below is a temporary workaround because latest versions of chai do not support plugins like chai-http
-// When fixed should be replaced by: chai.use(chaiHttp);
-const { request } = chai.use(chaiHttp);
+const { request } = use(chaiHttp);
 
 // Setup test user
 let testUser = {
@@ -25,7 +25,7 @@ const gpx1 =
     'device_id=testkey_testdevice1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
 const gpx2 =
     'device_id=testkey_testdevice2&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
-const gpx3 = 'this_is_an_invalid_gpx_string';
+const gpx3 = '&&';
 const loc_dev1 =
     'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=testkey&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
 const loc_dev2 =
@@ -35,187 +35,211 @@ const loc_tag1_enter =
 const loc_tag1_exit =
     'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=testkey:tag1&latitude=0&longitude=0&timestamp=1571508472.691251&trigger=exit';
 
-// Setup express web server
-const app = express();
-app.use('/location', routesWebhook());
+describe('Webhooks', function () {
+    let app;
+    const sandbox = createSandbox();
+    const spy = sandbox.spy();
 
-describe('Setup test user', () => {
-    describe('#changeDetails', () => {
-        it('should create 1 user', async () => {
-            try {
-                const queryRes = await usr.addUser(0, testUser);
-                queryRes.rowCount.should.equal(1);
-            } catch (err) {
-                throw new Error(err.message);
-            }
-        });
+    before(function () {
+        app = express();
+        app.use('/location', routesWebhook(spy));
     });
-});
 
-describe('Webhook', () => {
-    describe('/post gpx with valid location data in query string parameters', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/gpx?' + gpx1)
-                .send('')
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
+    after(function () {
+        // Destroy express?
     });
-    describe('/post gpx with valid location data in body', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
+
+    beforeEach(function () {
+        //sandbox.spy(processLocation);
+    });
+
+    afterEach(function () {
+        sandbox.resetHistory();
+    });
+
+    // describe('Setup test user', function () {
+    //     describe('#changeDetails', function () {
+    //         it('should create 1 user', async function () {
+    //             try {
+    //                 const queryRes = await usr.addUser(0, testUser);
+    //                 queryRes.rowCount.should.equal(1);
+    //             } catch (err) {
+    //                 throw new Error(err.message);
+    //             }
+    //         });
+    //     });
+    // });
+
+    describe('/post gpx with valid location data in query string parameters', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
                 .post('/location/gpx')
-                .send(gpx2)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
+                .query(gpx1)
+                .send('');
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('gpx');
+            expect(spy.args[0][1]).to.deep.equal(parse(gpx1));
         });
     });
-    describe('/post gpx with invalid location data in query string parameters', () => {
-        it('should respond with HTTP status 422', (done) => {
-            request(app)
-                .post('/location/gpx?' + gpx3)
-                .send('')
-                .end((err, res) => {
-                    res.should.have.status(422);
-                    done();
-                });
-        });
-    });
-    describe('/post gpx without location data', () => {
-        it('should respond with HTTP status 422', (done) => {
-            request(app)
-                .post('/location/gpx')
-                .send('')
-                .end((err, res) => {
-                    res.should.have.status(422);
-                    done();
-                });
-        });
-    });
-    describe('/post locative with valid location data in query string parameters', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/locative?' + loc_dev1)
-                .send('')
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
-    });
-    describe('/post locative with valid location data in body', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/locative')
-                .send(loc_dev2)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
-    });
-    describe('/post locative with entering tag data in query string parameters', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/locative?' + loc_tag1_enter)
-                .send('')
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
-    });
-    describe('/post locative with entering tag data in body', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/locative')
-                .send(loc_tag1_enter)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
-    });
-    describe('/post locative with exiting tag data in query string parameters', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/locative?' + loc_tag1_exit)
-                .send('')
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
-    });
-    describe('/post locative with exiting tag data in body', () => {
-        it('should respond with HTTP status 200', (done) => {
-            request(app)
-                .post('/location/locative')
-                .send(loc_tag1_exit)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
-                });
-        });
-    });
-});
 
-describe('Remove test user including owned devices', () => {
-    let testDevices = [];
-    describe('#getUserByField', () => {
-        it('should return 1 user', async () => {
-            try {
-                const queryRes = await usr.getUserByField(
-                    'username',
-                    testUser.username,
-                );
-                if (queryRes.rowCount > 0) {
-                    testUser = queryRes.rows[0];
-                }
-                queryRes.rowCount.should.equal(1);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+    describe('/post gpx with valid location data in body', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app).post('/location/gpx').send(gpx2);
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('gpx');
+            expect(spy.args[0][1]).to.deep.equal(parse(gpx2));
         });
     });
-    describe('#getOwnedDevicesByField', () => {
-        it('should return 5 devices', async () => {
-            try {
-                const queryRes = await dev.getOwnedDevicesByField(
-                    'user_id',
-                    testUser.user_id,
-                );
-                testDevices = queryRes.rows;
-                queryRes.rowCount.should.equal(5);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+
+    describe('/post gpx with invalid location data in query string parameters', function () {
+        it('should respond with HTTP status 422', async function () {
+            const res = await request(app)
+                .post('/location/gpx')
+                .query(gpx3)
+                .send('');
+            expect(res).have.status(422);
         });
     });
-    describe('#deleteDevicesById', () => {
-        it('should delete 5 devices', async () => {
-            try {
-                const ids = testDevices.map(({ device_id }) => device_id);
-                const queryRes = await dev.deleteDevicesById(ids);
-                queryRes.rowCount.should.equal(5);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+
+    describe('/post gpx without location data', function () {
+        it('should respond with HTTP status 422', async function () {
+            const res = await request(app).post('/location/gpx').send('');
+            expect(res).have.status(422);
         });
     });
-    describe('#deleteUser', () => {
-        it('should delete 1 user', async () => {
-            try {
-                const queryRes = await usr.deleteUser(0, testUser);
-                queryRes.rowCount.should.equal(1);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+
+    describe('/post locative with valid location data in query string parameters', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .query(loc_dev1)
+                .send('');
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('locative');
+            expect(spy.args[0][1]).to.deep.equal(parse(loc_dev1));
         });
     });
+
+    describe('/post locative with valid location data in body', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .send(loc_dev2);
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('locative');
+            expect(spy.args[0][1]).to.deep.equal(parse(loc_dev2));
+        });
+    });
+
+    describe('/post locative with entering tag data in query string parameters', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .query(loc_tag1_enter)
+                .send('');
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('locative');
+            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
+        });
+    });
+
+    describe('/post locative with entering tag data in body', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .send(loc_tag1_enter);
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('locative');
+            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
+        });
+    });
+
+    describe('/post locative with exiting tag data in query string parameters', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .query(loc_tag1_exit)
+                .send('');
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('locative');
+            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
+        });
+    });
+
+    describe('/post locative with exiting tag data in body', function () {
+        it('should respond with HTTP status 200', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .send(loc_tag1_exit);
+            expect(res).have.status(200);
+            expect(spy.calledOnce).to.equal(true);
+            expect(spy.args[0][0]).to.equal('locative');
+            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
+        });
+    });
+
+    // describe('Remove test user including owned devices', function () {
+    //     let testDevices = [];
+    //     describe('#getUserByField', function () {
+    //         it('should return 1 user', async function () {
+    //             try {
+    //                 const queryRes = await usr.getUserByField(
+    //                     'username',
+    //                     testUser.username,
+    //                 );
+    //                 if (queryRes.rowCount > 0) {
+    //                     testUser = queryRes.rows[0];
+    //                 }
+    //                 queryRes.rowCount.should.equal(1);
+    //             } catch (err) {
+    //                 throw new Error(err.message);
+    //             }
+    //         });
+    //     });
+
+    //     describe('#getOwnedDevicesByField', function () {
+    //         it('should return 5 devices', async function () {
+    //             try {
+    //                 const queryRes = await dev.getOwnedDevicesByField(
+    //                     'user_id',
+    //                     testUser.user_id,
+    //                 );
+    //                 testDevices = queryRes.rows;
+    //                 queryRes.rowCount.should.equal(5);
+    //             } catch (err) {
+    //                 throw new Error(err.message);
+    //             }
+    //         });
+    //     });
+
+    //     describe('#deleteDevicesById', function () {
+    //         it('should delete 5 devices', async function () {
+    //             try {
+    //                 const ids = testDevices.map(({ device_id }) => device_id);
+    //                 const queryRes = await dev.deleteDevicesById(ids);
+    //                 queryRes.rowCount.should.equal(5);
+    //             } catch (err) {
+    //                 throw new Error(err.message);
+    //             }
+    //         });
+    //     });
+
+    //     describe('#deleteUser', function () {
+    //         it('should delete 1 user', async function () {
+    //             try {
+    //                 const queryRes = await usr.deleteUser(0, testUser);
+    //                 queryRes.rowCount.should.equal(1);
+    //             } catch (err) {
+    //                 throw new Error(err.message);
+    //             }
+    //         });
+    //     });
+    //});
 });
