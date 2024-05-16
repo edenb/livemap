@@ -118,4 +118,5 @@ export async function onMessage(topic, message) {
     if (destData !== null) {
         sendToClients(destData);
     }
+    return destData;
 }
