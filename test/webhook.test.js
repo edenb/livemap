@@ -2,11 +2,8 @@ import { expect, use } from 'chai';
 import chaiHttp from 'chai-http';
 import express from 'express';
 import { parse } from 'node:querystring';
-import { createSandbox } from 'sinon';
-import * as usr from '../models/user.js';
-import * as dev from '../models/device.js';
+import { spy } from 'sinon';
 import routesWebhook from '../routes/webhook.js';
-import { processLocation } from '../utils/ingester.js';
 
 const { request } = use(chaiHttp);
 
@@ -37,38 +34,20 @@ const loc_tag1_exit =
 
 describe('Webhooks', function () {
     let app;
-    const sandbox = createSandbox();
-    const spy = sandbox.spy();
+    const callbackSpy = spy();
 
     before(function () {
         app = express();
-        app.use('/location', routesWebhook(spy));
+        app.use('/location', routesWebhook(callbackSpy));
     });
 
     after(function () {
         // Destroy express?
     });
 
-    beforeEach(function () {
-        //sandbox.spy(processLocation);
-    });
-
     afterEach(function () {
-        sandbox.resetHistory();
+        callbackSpy.resetHistory();
     });
-
-    // describe('Setup test user', function () {
-    //     describe('#changeDetails', function () {
-    //         it('should create 1 user', async function () {
-    //             try {
-    //                 const queryRes = await usr.addUser(0, testUser);
-    //                 queryRes.rowCount.should.equal(1);
-    //             } catch (err) {
-    //                 throw new Error(err.message);
-    //             }
-    //         });
-    //     });
-    // });
 
     describe('/post gpx with valid location data in query string parameters', function () {
         it('should respond with HTTP status 200', async function () {
@@ -77,9 +56,9 @@ describe('Webhooks', function () {
                 .query(gpx1)
                 .send('');
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('gpx');
-            expect(spy.args[0][1]).to.deep.equal(parse(gpx1));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('gpx');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(gpx1));
         });
     });
 
@@ -87,9 +66,9 @@ describe('Webhooks', function () {
         it('should respond with HTTP status 200', async function () {
             const res = await request(app).post('/location/gpx').send(gpx2);
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('gpx');
-            expect(spy.args[0][1]).to.deep.equal(parse(gpx2));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('gpx');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(gpx2));
         });
     });
 
@@ -117,9 +96,9 @@ describe('Webhooks', function () {
                 .query(loc_dev1)
                 .send('');
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('locative');
-            expect(spy.args[0][1]).to.deep.equal(parse(loc_dev1));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('locative');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_dev1));
         });
     });
 
@@ -129,9 +108,9 @@ describe('Webhooks', function () {
                 .post('/location/locative')
                 .send(loc_dev2);
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('locative');
-            expect(spy.args[0][1]).to.deep.equal(parse(loc_dev2));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('locative');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_dev2));
         });
     });
 
@@ -142,9 +121,9 @@ describe('Webhooks', function () {
                 .query(loc_tag1_enter)
                 .send('');
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('locative');
-            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('locative');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
         });
     });
 
@@ -154,9 +133,9 @@ describe('Webhooks', function () {
                 .post('/location/locative')
                 .send(loc_tag1_enter);
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('locative');
-            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('locative');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
         });
     });
 
@@ -167,9 +146,9 @@ describe('Webhooks', function () {
                 .query(loc_tag1_exit)
                 .send('');
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('locative');
-            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('locative');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
         });
     });
 
@@ -179,67 +158,9 @@ describe('Webhooks', function () {
                 .post('/location/locative')
                 .send(loc_tag1_exit);
             expect(res).have.status(200);
-            expect(spy.calledOnce).to.equal(true);
-            expect(spy.args[0][0]).to.equal('locative');
-            expect(spy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('locative');
+            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
         });
     });
-
-    // describe('Remove test user including owned devices', function () {
-    //     let testDevices = [];
-    //     describe('#getUserByField', function () {
-    //         it('should return 1 user', async function () {
-    //             try {
-    //                 const queryRes = await usr.getUserByField(
-    //                     'username',
-    //                     testUser.username,
-    //                 );
-    //                 if (queryRes.rowCount > 0) {
-    //                     testUser = queryRes.rows[0];
-    //                 }
-    //                 queryRes.rowCount.should.equal(1);
-    //             } catch (err) {
-    //                 throw new Error(err.message);
-    //             }
-    //         });
-    //     });
-
-    //     describe('#getOwnedDevicesByField', function () {
-    //         it('should return 5 devices', async function () {
-    //             try {
-    //                 const queryRes = await dev.getOwnedDevicesByField(
-    //                     'user_id',
-    //                     testUser.user_id,
-    //                 );
-    //                 testDevices = queryRes.rows;
-    //                 queryRes.rowCount.should.equal(5);
-    //             } catch (err) {
-    //                 throw new Error(err.message);
-    //             }
-    //         });
-    //     });
-
-    //     describe('#deleteDevicesById', function () {
-    //         it('should delete 5 devices', async function () {
-    //             try {
-    //                 const ids = testDevices.map(({ device_id }) => device_id);
-    //                 const queryRes = await dev.deleteDevicesById(ids);
-    //                 queryRes.rowCount.should.equal(5);
-    //             } catch (err) {
-    //                 throw new Error(err.message);
-    //             }
-    //         });
-    //     });
-
-    //     describe('#deleteUser', function () {
-    //         it('should delete 1 user', async function () {
-    //             try {
-    //                 const queryRes = await usr.deleteUser(0, testUser);
-    //                 queryRes.rowCount.should.equal(1);
-    //             } catch (err) {
-    //                 throw new Error(err.message);
-    //             }
-    //         });
-    //     });
-    //});
 });
