@@ -45,7 +45,14 @@ export function createMqttClient() {
     });
 }
 
-export async function publishMessage(client, topic, message) {
-    await client.publishAsync(topic, message, { qos: 2 });
-    console.log('Published:', topic, message);
+export function publishMessage(sendClient, receiveClient, topic, message) {
+    return new Promise(function (resolve) {
+        console.log('Add mqtt message listener');
+        receiveClient.on('message', function () {
+            console.log('resolved');
+            resolve();
+        });
+        sendClient.publish(topic, message, { qos: 0 });
+        console.log('Published:', topic, message);
+    });
 }

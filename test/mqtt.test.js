@@ -44,6 +44,7 @@ describe('MQTT service', function () {
             try {
                 await publishMessage(
                     mqttTestClient,
+                    mqttServiceClient,
                     'livemap/test',
                     testMessage,
                 );
