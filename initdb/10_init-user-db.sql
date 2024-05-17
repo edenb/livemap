@@ -1,4 +1,4 @@
 CREATE DATABASE livemapdb;
 CREATE USER livemap WITH ENCRYPTED PASSWORD 'livemap';
 GRANT ALL PRIVILEGES ON DATABASE livemapdb TO livemap;
-GRANT ALL ON SCHEMA public TO livemap;
+ALTER DATABASE livemapdb OWNER TO livemap;
