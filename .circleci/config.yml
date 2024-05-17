@@ -4,7 +4,7 @@ orbs:
 jobs:
   lint:
     docker:
-      - image: cimg/node:18.12
+      - image: cimg/node:22.2
     steps:
       - checkout
       - run:
@@ -15,7 +15,7 @@ jobs:
           command: npm run lint
   test:
     docker:
-      - image: cimg/node:18.12
+      - image: cimg/node:22.2
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
       - image: cimg/postgres:16.3
