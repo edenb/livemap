@@ -47,4 +47,5 @@ export function createMqttClient() {
 
 export async function publishMessage(client, topic, message) {
     await client.publishAsync(topic, message, { qos: 2 });
+    console.log('Published:', topic, message);
 }

@@ -49,8 +49,6 @@ describe('Integrations', function () {
     let mqttServiceClient;
     const onMessageSpy = spy(mqttService.onMessage);
 
-    this.timeout(1000);
-
     before(async function () {
         // Create a test user and add test devices
         await addUserAndDevices(testUser, [testDevice]);
