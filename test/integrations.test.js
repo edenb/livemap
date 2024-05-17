@@ -49,8 +49,6 @@ describe('Integrations', function () {
     let mqttServiceClient;
     const onMessageSpy = spy(mqttService.onMessage);
 
-    this.timeout(1000);
-
     before(async function () {
         // Create a test user and add test devices
         await addUserAndDevices(testUser, [testDevice]);
@@ -79,7 +77,12 @@ describe('Integrations', function () {
 
     describe('Process an MQTT message', function () {
         it('should successfully process the received message', async function () {
-            await publishMessage(mqttTestClient, 'livemap/test', testMessage);
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                testMessage,
+            );
             expect(onMessageSpy.calledOnce).to.equal(true);
             expect(onMessageSpy.args[0][0]).to.equal('livemap/test');
             expect(onMessageSpy.args[0][1].toString()).to.equal(testMessage);

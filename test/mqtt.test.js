@@ -17,8 +17,6 @@ describe('MQTT service', function () {
     let mqttServiceClient;
     const callbackSpy = spy();
 
-    this.timeout(1000);
-
     before(async function () {
         // Create a local MQTT server
         mqttServer = await createMqttServer(mqttService.getBrokerUrl().port);
@@ -46,6 +44,7 @@ describe('MQTT service', function () {
             try {
                 await publishMessage(
                     mqttTestClient,
+                    mqttServiceClient,
                     'livemap/test',
                     testMessage,
                 );
