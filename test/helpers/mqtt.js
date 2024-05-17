@@ -47,12 +47,9 @@ export function createMqttClient() {
 
 export function publishMessage(sendClient, receiveClient, topic, message) {
     return new Promise(function (resolve) {
-        console.log('Add mqtt message listener');
         receiveClient.on('message', function () {
-            console.log('resolved');
             resolve();
         });
         sendClient.publish(topic, message, { qos: 0 });
-        console.log('Published:', topic, message);
     });
 }

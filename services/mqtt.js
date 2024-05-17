@@ -81,7 +81,6 @@ export function start(onLocation) {
     });
 
     client.on('message', (topic, message) => {
-        console.log('Received:', topic, message);
         onLocation(topic, message);
     });
 
