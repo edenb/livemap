@@ -2,8 +2,10 @@ import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import { sendToClients } from '../services/liveserver.js';
 import Logger from '../utils/logger.js';
+import JSONValidator from '../utils/validator.js';
 
 const logger = Logger(import.meta.url);
+const MQTTValidator = new JSONValidator('mqtt');
 
 async function processGpx(payload) {
     let destData = {},
@@ -135,6 +137,64 @@ async function processLocative(payload) {
     }
 }
 
+async function processMqtt(payload) {
+    var srcData,
+        destData = {};
+
+    // Convert JSON string to object
+    // Required: id, apikey, timestamp, lat, lon
+    // Optional: tagid, tagapikey, type, attr
+    try {
+        srcData = JSON.parse(payload);
+    } catch (e) {
+        srcData = null;
+    }
+
+    if (srcData !== null) {
+        if (!MQTTValidator.validate(srcData)) {
+            logger.info('Invalid: ' + MQTTValidator.errorsText());
+            // Invalidate MQTT message
+            srcData = null;
+        }
+    }
+
+    if (srcData !== null) {
+        if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
+            const queryRes = await dev.getDeviceByIdentity(
+                srcData.apikey,
+                srcData.id,
+            );
+            logger.info('MQTT message: ' + JSON.stringify(srcData));
+            if (queryRes.rowCount === 1) {
+                const destDevice = queryRes.rows[0];
+                destData.device_id = destDevice.device_id;
+                destData.api_key = destDevice.api_key;
+                destData.identifier = srcData.id;
+                destData.device_id_tag = null;
+                destData.identifier_tag = null;
+                destData.api_key_tag = null;
+                destData.alias = destDevice.alias;
+                destData.loc_timestamp = srcData.timestamp;
+                destData.loc_lat = srcData.lat;
+                destData.loc_lon = srcData.lon;
+                destData.loc_type = null; // Deprecated for MQTT
+                destData.loc_attr = srcData.attr;
+                logger.debug('Converted message: ' + JSON.stringify(destData));
+                return destData;
+            } else {
+                logger.debug('Unable to find device');
+                return null;
+            }
+        } else {
+            logger.debug('Unknown API key: ' + srcData.apikey);
+            return null;
+        }
+    } else {
+        logger.debug('Invalid MQTT message: ' + payload);
+        return null;
+    }
+}
+
 //
 // Exported modules
 //
@@ -144,12 +204,20 @@ export async function processLocation(format, payload) {
     await dev.getAllDevices();
     await usr.getAllUsers();
 
+    let destData = null;
     switch (format) {
         case 'gpx':
-            sendToClients(await processGpx(payload));
+            destData = await processGpx(payload);
             break;
         case 'locative':
-            sendToClients(await processLocative(payload));
+            destData = await processLocative(payload);
+            break;
+        case 'mqtt':
+            destData = await processMqtt(payload);
             break;
     }
+    if (destData) {
+        sendToClients(destData);
+    }
+    return destData;
 }

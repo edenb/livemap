@@ -13,8 +13,8 @@ const testMessage =
 
 describe('MQTT service', function () {
     let mqttServer;
-    let mqttTestClient;
     let mqttServiceClient;
+    let mqttTestClient;
     const callbackSpy = spy();
 
     before(async function () {
@@ -49,7 +49,7 @@ describe('MQTT service', function () {
                     testMessage,
                 );
                 expect(callbackSpy.calledOnce).to.equal(true);
-                expect(callbackSpy.args[0][0]).to.equal('livemap/test');
+                expect(callbackSpy.args[0][0]).to.equal('mqtt');
                 expect(callbackSpy.args[0][1].toString()).to.equal(testMessage);
             } catch (err) {
                 throw new Error(err.message);

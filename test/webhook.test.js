@@ -1,21 +1,14 @@
-import { expect, use } from 'chai';
-import chaiHttp from 'chai-http';
+import { expect } from 'chai';
 import express from 'express';
 import { parse } from 'node:querystring';
 import { spy } from 'sinon';
+import request from './helpers/chai.js';
+import {
+    addRouter,
+    createWebServer,
+    destroyWebServer,
+} from './helpers/webserver.js';
 import routesWebhook from '../routes/webhook.js';
-
-const { request } = use(chaiHttp);
-
-// Setup test user
-let testUser = {
-    username: 'testuser_webhook',
-    fullname: 'User Webhook',
-    email: 'test@user1',
-    role: 'user',
-    api_key: 'testkey',
-    password: 'testuser_webhook',
-};
 
 // Setup HTTP querystrings
 const gpx1 =
@@ -33,16 +26,19 @@ const loc_tag1_exit =
     'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=testkey:tag1&latitude=0&longitude=0&timestamp=1571508472.691251&trigger=exit';
 
 describe('Webhooks', function () {
-    let app;
+    let webServer;
+    const app = express();
     const callbackSpy = spy();
 
-    before(function () {
-        app = express();
-        app.use('/location', routesWebhook(callbackSpy));
+    before(async function () {
+        // Start a webserver
+        webServer = await createWebServer(app, 3000);
+        addRouter(app, '/location', routesWebhook(callbackSpy));
     });
 
-    after(function () {
-        // Destroy express?
+    after(async function () {
+        // Destroy the webserver
+        await destroyWebServer(webServer);
     });
 
     afterEach(function () {

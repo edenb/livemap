@@ -103,7 +103,7 @@ async function allUp() {
 
         startMaintenance();
         start(server);
-        mqttService.start(mqttService.onMessage);
+        mqttService.start(processLocation);
 
         logger.info('Server started on port ' + port);
     } else {

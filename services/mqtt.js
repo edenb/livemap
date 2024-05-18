@@ -1,71 +1,8 @@
 import config from 'config';
 import { connect } from 'mqtt';
-import * as usr from '../models/user.js';
-import * as dev from '../models/device.js';
-import { sendToClients } from './liveserver.js';
-import JSONValidator from '../utils/validator.js';
 import Logger from '../utils/logger.js';
 
 const logger = Logger(import.meta.url);
-const MQTTValidator = new JSONValidator('mqtt');
-
-async function processMessage(messageStr) {
-    var srcData,
-        destData = {};
-
-    // Convert JSON string to object
-    // Required: id, apikey, timestamp, lat, lon
-    // Optional: tagid, tagapikey, type, attr
-    try {
-        srcData = JSON.parse(messageStr);
-    } catch (e) {
-        srcData = null;
-    }
-
-    if (srcData !== null) {
-        if (!MQTTValidator.validate(srcData)) {
-            logger.info('Invalid: ' + MQTTValidator.errorsText());
-            // Invalidate MQTT message
-            srcData = null;
-        }
-    }
-
-    if (srcData !== null) {
-        if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
-            const queryRes = await dev.getDeviceByIdentity(
-                srcData.apikey,
-                srcData.id,
-            );
-            logger.info('MQTT message: ' + JSON.stringify(srcData));
-            if (queryRes.rowCount === 1) {
-                const destDevice = queryRes.rows[0];
-                destData.device_id = destDevice.device_id;
-                destData.api_key = destDevice.api_key;
-                destData.identifier = srcData.id;
-                destData.device_id_tag = null;
-                destData.identifier_tag = null;
-                destData.api_key_tag = null;
-                destData.alias = destDevice.alias;
-                destData.loc_timestamp = srcData.timestamp;
-                destData.loc_lat = srcData.lat;
-                destData.loc_lon = srcData.lon;
-                destData.loc_type = null; // Deprecated for MQTT
-                destData.loc_attr = srcData.attr;
-                logger.debug('Converted message: ' + JSON.stringify(destData));
-                return destData;
-            } else {
-                logger.debug('Unable to find device');
-                return null;
-            }
-        } else {
-            logger.debug('Unknown API key: ' + srcData.apikey);
-            return null;
-        }
-    } else {
-        logger.debug('Invalid MQTT message: ' + messageStr);
-        return null;
-    }
-}
 
 //
 // Exported modules
@@ -80,8 +17,8 @@ export function start(onLocation) {
         logger.info('MQTT client started');
     });
 
-    client.on('message', (topic, message) => {
-        onLocation(topic, message);
+    client.on('message', (_, message) => {
+        onLocation('mqtt', message.toString());
     });
 
     client.on('error', (error) => {
@@ -107,16 +44,4 @@ export function getBrokerUrl() {
         brokerUrl.username = `${brokerUrl.username}:${brokerUrl.username}`;
     }
     return brokerUrl;
-}
-
-// ToDo: move onMessage() to ingester
-export async function onMessage(topic, message) {
-    logger.debug('MQTT message (topic=' + topic + '): ' + message.toString());
-    await dev.getAllDevices();
-    await usr.getAllUsers();
-    const destData = await processMessage(message.toString());
-    if (destData !== null) {
-        sendToClients(destData);
-    }
-    return destData;
 }
