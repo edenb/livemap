@@ -5,6 +5,7 @@ import Logger from '../utils/logger.js';
 import JSONValidator from '../utils/validator.js';
 
 const logger = Logger(import.meta.url);
+const livemapValidator = new JSONValidator('livemap');
 const MQTTValidator = new JSONValidator('mqtt');
 
 async function processGpx(payload) {
@@ -216,8 +217,13 @@ export async function processLocation(format, payload) {
             destData = await processMqtt(payload);
             break;
     }
+
     if (destData) {
-        sendToClients(destData);
+        if (livemapValidator.validate(destData)) {
+            sendToClients(destData);
+        } else {
+            logger.info(`Invalid: ${livemapValidator.errorsText()}`);
+        }
     }
     return destData;
 }
