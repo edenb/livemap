@@ -1,11 +1,12 @@
 import { expect } from 'chai';
-import config from 'config';
-import { createServer } from 'http';
+import express from 'express';
+import {
+    addRouter,
+    createWebServer,
+    destroyWebServer,
+} from './helpers/webserver.js';
 import GpxPlayer from '../services/gpxplayer.js';
 
-let server;
-let gpxPlayer = {};
-let points = [];
 const test7p1s = { api_key: 'testkey', identifier: '7p1s' };
 const test4p2s = { api_key: 'testkey', identifier: '4p2s' };
 const test3p3s = { api_key: 'testkey', identifier: '3p3s' };
@@ -23,53 +24,26 @@ const trackTest7p1s = {
     isRunning: true,
 };
 
+let points = [];
+
 function getTrackname(testDevice) {
     return `${testDevice.api_key}_${testDevice.identifier}`;
 }
 
-// Create a server that receives the requests from the gpx player
-function startHttpServer(port) {
-    server = createServer(function (req, res) {
-        if (req.method === 'POST') {
-            req.on('error', function (err) {
-                if (err) {
-                    res.writeHead(500, { 'Content-Type': 'text/html' });
-                    res.write('An error occurred');
-                    res.end();
-                }
-            });
-            let body = '';
-            req.on('data', function (chunk) {
-                body += chunk.toString();
-            });
-            req.on('end', function () {
-                let point = Object.fromEntries(new URLSearchParams(body));
-                storePoint(point);
-                res.writeHead(200, { 'Content-Type': 'text/plain' });
-                res.end();
-            });
-        } else {
-            // Ignore all other requests except POST
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end();
-        }
-    }).listen(port);
-}
+function routerGpxPoint() {
+    const router = express.Router();
 
-function stopHttpServer() {
-    server.close();
-}
+    router.post(
+        '/',
+        express.urlencoded({ extended: false }),
+        async function (req, res) {
+            const now = new Date().toISOString();
+            points.push({ ts: now, ...req.query });
+            res.sendStatus(200);
+        },
+    );
 
-// Logger for points. Can be used as callback for GpxPlayer
-// Point: {
-//    device_id: 'testkey_test',
-//    gps_latitude: 0.2,
-//    gps_longitude: -0.2,
-//    gps_time: '2000-01-01T00:00:01.000Z'
-//  }
-function storePoint(point) {
-    const now = new Date().toISOString();
-    points.push({ ts: now, ...point });
+    return router;
 }
 
 function reportPoints(device_id) {
@@ -119,9 +93,23 @@ function waitForTimeout(delay) {
 }
 
 describe('GPX player', function () {
+    let gpxPlayer;
+    let webServer;
+    const app = express();
+
+    before(async function () {
+        // Start a webserver
+        webServer = await createWebServer(app, 3000);
+        addRouter(app, '/location/gpx/test', routerGpxPoint());
+    });
+
+    after(async function () {
+        // Destroy the webserver
+        await destroyWebServer(webServer);
+    });
+
     describe('create gpx player', function () {
         it('should find all 6 gpx test files', async function () {
-            startHttpServer(config.get('server.port'));
             gpxPlayer = new GpxPlayer('./tracks/test/', '/location/gpx/test');
             const fileList = await gpxPlayer.loadFileList(gpxPlayer.dirName);
             expect(fileList.length).to.equal(6);
@@ -145,7 +133,6 @@ describe('GPX player', function () {
             const noTrack = gpxPlayer.getTrackByName('non-existing-track');
             expect(noTrack).to.be.null;
         });
-        // !!! this.timeout() doesn't work with arrow functions. Use function() syntax. !!!
         it('should wait for playing of 5 devices to finish', async function () {
             this.timeout(8000);
             await waitForTimeout(7000);
@@ -156,7 +143,6 @@ describe('GPX player', function () {
                 }
             });
             expect(totalRunning).to.equal(0);
-            stopHttpServer();
         });
         it('should report 7 points and 1 second delay (testkey_7p1s.gpx)', function () {
             const report = reportPoints(getTrackname(test7p1s));
