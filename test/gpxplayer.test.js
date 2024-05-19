@@ -1,9 +1,7 @@
+import { expect } from 'chai';
 import config from 'config';
 import { createServer } from 'http';
-import * as chai from 'chai';
 import GpxPlayer from '../services/gpxplayer.js';
-
-const should = chai.should();
 
 let server;
 let gpxPlayer = {};
@@ -15,6 +13,14 @@ const test2p6s = { api_key: 'testkey', identifier: '2p6s' };
 const test_delay_too_short = {
     api_key: 'testkey',
     identifier: 'delay-too-short',
+};
+const trackTest7p1s = {
+    dirName: './tracks/test/',
+    name: 'testkey_7p1s',
+    destPath: '/location/gpx/test',
+    points: [],
+    pointsIndex: 0,
+    isRunning: true,
 };
 
 function getTrackname(testDevice) {
@@ -124,7 +130,7 @@ describe('GPX player', () => {
                 const fileList = await gpxPlayer.loadFileList(
                     gpxPlayer.dirName,
                 );
-                fileList.length.should.equal(6);
+                expect(fileList.length).to.equal(6);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -140,11 +146,13 @@ describe('GPX player', () => {
                     test2p6s,
                     test_delay_too_short,
                 ]);
-                gpxPlayer.tracks.length.should.equal(5);
-                should.exist(gpxPlayer.getTrackByName(getTrackname(test7p1s)));
-                should.not.exist(
-                    gpxPlayer.getTrackByName('non-existing-track-name'),
-                );
+                expect(gpxPlayer.tracks.length).to.equal(5);
+                const aTrack = gpxPlayer.getTrackByName(getTrackname(test7p1s));
+                expect(aTrack).to.deep.include(trackTest7p1s);
+                expect(aTrack).to.have.property('cbPoint');
+                expect(aTrack.cbPoint).to.be.a('function');
+                const noTrack = gpxPlayer.getTrackByName('non-existing-track');
+                expect(noTrack).to.be.null;
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -160,7 +168,7 @@ describe('GPX player', () => {
                         totalRunning = totalRunning + 1;
                     }
                 });
-                totalRunning.should.equal(0);
+                expect(totalRunning).to.equal(0);
                 stopHttpServer();
             } catch (err) {
                 throw new Error(err.message);
@@ -169,10 +177,10 @@ describe('GPX player', () => {
         it('should report 7 points and 1 second delay (testkey_7p1s.gpx)', () => {
             try {
                 const report = reportPoints(getTrackname(test7p1s));
-                report.totalPoints.should.equal(7);
-                report.minDelay.should.be.within(800, 1200);
-                report.maxDelay.should.be.within(800, 1200);
-                report.duration.should.be.within(5500, 6500);
+                expect(report.totalPoints).to.equal(7);
+                expect(report.minDelay).to.be.within(800, 1200);
+                expect(report.maxDelay).to.be.within(800, 1200);
+                expect(report.duration).to.be.within(5500, 6500);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -180,10 +188,10 @@ describe('GPX player', () => {
         it('should report 4 points and 2 seconds delay (testkey_4p2s.gpx)', () => {
             try {
                 const report = reportPoints(getTrackname(test4p2s));
-                report.totalPoints.should.equal(4);
-                report.minDelay.should.be.within(1800, 2200);
-                report.maxDelay.should.be.within(1800, 2200);
-                report.duration.should.be.within(5500, 6500);
+                expect(report.totalPoints).to.equal(4);
+                expect(report.minDelay).to.be.within(1800, 2200);
+                expect(report.maxDelay).to.be.within(1800, 2200);
+                expect(report.duration).to.be.within(5500, 6500);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -191,10 +199,10 @@ describe('GPX player', () => {
         it('should report 3 points and 3 seconds delay (testkey_3p3s.gpx)', () => {
             try {
                 const report = reportPoints(getTrackname(test3p3s));
-                report.totalPoints.should.equal(3);
-                report.minDelay.should.be.within(2800, 3200);
-                report.maxDelay.should.be.within(2800, 3200);
-                report.duration.should.be.within(5500, 6500);
+                expect(report.totalPoints).to.equal(3);
+                expect(report.minDelay).to.be.within(2800, 3200);
+                expect(report.maxDelay).to.be.within(2800, 3200);
+                expect(report.duration).to.be.within(5500, 6500);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -202,10 +210,10 @@ describe('GPX player', () => {
         it('should report 2 points and 6 seconds delay (testkey_2p6s.gpx)', () => {
             try {
                 const report = reportPoints(getTrackname(test2p6s));
-                report.totalPoints.should.equal(2);
-                report.minDelay.should.be.within(5800, 6200);
-                report.maxDelay.should.be.within(5800, 6200);
-                report.duration.should.be.within(5500, 6500);
+                expect(report.totalPoints).to.equal(2);
+                expect(report.minDelay).to.be.within(5800, 6200);
+                expect(report.maxDelay).to.be.within(5800, 6200);
+                expect(report.duration).to.be.within(5500, 6500);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -213,10 +221,10 @@ describe('GPX player', () => {
         it('should report 7 points and 1 second delay (testkey_delay-too-short.gpx)', () => {
             try {
                 const report = reportPoints(getTrackname(test_delay_too_short));
-                report.totalPoints.should.equal(7);
-                report.minDelay.should.be.within(800, 1200);
-                report.maxDelay.should.be.within(800, 1200);
-                report.duration.should.be.within(5500, 6500);
+                expect(report.totalPoints).to.equal(7);
+                expect(report.minDelay).to.be.within(800, 1200);
+                expect(report.maxDelay).to.be.within(800, 1200);
+                expect(report.duration).to.be.within(5500, 6500);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -224,7 +232,7 @@ describe('GPX player', () => {
         it('should cleanup all tracks', () => {
             try {
                 gpxPlayer.cleanupTracks();
-                gpxPlayer.tracks.length.should.equal(0);
+                expect(gpxPlayer.tracks.length).to.equal(0);
             } catch (err) {
                 throw new Error(err.message);
             }

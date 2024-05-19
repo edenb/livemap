@@ -1,7 +1,5 @@
-import * as chai from 'chai';
+import { expect } from 'chai';
 import { queryDbAsync } from '../database/db.js';
-
-chai.should();
 
 const testUser = {
     username: 'testuser1',
@@ -19,8 +17,8 @@ describe('Database', () => {
         it('should respond with 5 as the number of tables', async () => {
             try {
                 const queryRes = await queryDbAsync('getNumberOfTables', []);
-                queryRes.rowCount.should.equal(1);
-                queryRes.rows[0].count.should.equal('5');
+                expect(queryRes.rowCount).to.equal(1);
+                expect(queryRes.rows[0].count).to.equal('5');
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -51,9 +49,9 @@ describe('Database', () => {
                     testUser_Id,
                 ]);
                 if (testUser_Id === null) {
-                    queryRes.rowCount.should.equal(0);
+                    expect(queryRes.rowCount).to.equal(0);
                 } else {
-                    queryRes.rowCount.should.equal(1);
+                    expect(queryRes.rowCount).to.equal(1);
                 }
             } catch (err) {
                 throw new Error(err.message);
@@ -72,7 +70,7 @@ describe('Database', () => {
                     testUser.api_key,
                     testUser.password,
                 ]);
-                queryRes.rowCount.should.equal(1);
+                expect(queryRes.rowCount).to.equal(1);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -90,7 +88,7 @@ describe('Database', () => {
                 } else {
                     testUser_Id = null;
                 }
-                queryRes.rowCount.should.equal(1);
+                expect(queryRes.rowCount).to.equal(1);
             } catch (err) {
                 throw new Error(err.message);
             }
@@ -103,7 +101,7 @@ describe('Database', () => {
                 const queryRes = await queryDbAsync('deleteUser', [
                     testUser_Id,
                 ]);
-                queryRes.rowCount.should.equal(1);
+                expect(queryRes.rowCount).to.equal(1);
             } catch (err) {
                 throw new Error(err.message);
             }
