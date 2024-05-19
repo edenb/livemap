@@ -12,17 +12,17 @@ const testUser = {
 
 let testUser_Id = null;
 
-describe('Database', () => {
-    describe('#getNumberOfTables', () => {
-        it('should respond with 5 as the number of tables', async () => {
+describe('Database', function () {
+    describe('#getNumberOfTables', function () {
+        it('should respond with 5 as the number of tables', async function () {
             const queryRes = await queryDbAsync('getNumberOfTables', []);
             expect(queryRes.rowCount).to.equal(1);
             expect(queryRes.rows[0].count).to.equal('5');
         });
     });
 
-    describe('#getUserByUsername', () => {
-        it('should respond with no errors', async () => {
+    describe('#getUserByUsername', function () {
+        it('should respond with no errors', async function () {
             const queryRes = await queryDbAsync('getUserByUsername', [
                 testUser.username,
             ]);
@@ -34,8 +34,8 @@ describe('Database', () => {
         });
     });
 
-    describe('#deleteUser', () => {
-        it('should respond with no errors', async () => {
+    describe('#deleteUser', function () {
+        it('should respond with no errors', async function () {
             const queryRes = await queryDbAsync('deleteUser', [testUser_Id]);
             if (testUser_Id === null) {
                 expect(queryRes.rowCount).to.equal(0);
@@ -45,8 +45,8 @@ describe('Database', () => {
         });
     });
 
-    describe('#insertUser', () => {
-        it('should create 1 user', async () => {
+    describe('#insertUser', function () {
+        it('should create 1 user', async function () {
             const queryRes = await queryDbAsync('insertUser', [
                 testUser.username,
                 testUser.fullName,
@@ -59,8 +59,8 @@ describe('Database', () => {
         });
     });
 
-    describe('#getUserByUsername', () => {
-        it('should return 1 user', async () => {
+    describe('#getUserByUsername', function () {
+        it('should return 1 user', async function () {
             const queryRes = await queryDbAsync('getUserByUsername', [
                 testUser.username,
             ]);
@@ -73,8 +73,8 @@ describe('Database', () => {
         });
     });
 
-    describe('#deleteUser', () => {
-        it('should delete 1 user', async () => {
+    describe('#deleteUser', function () {
+        it('should delete 1 user', async function () {
             const queryRes = await queryDbAsync('deleteUser', [testUser_Id]);
             expect(queryRes.rowCount).to.equal(1);
         });

@@ -29,9 +29,9 @@ function getTrackname(testDevice) {
 
 // Create a server that receives the requests from the gpx player
 function startHttpServer(port) {
-    server = createServer((req, res) => {
+    server = createServer(function (req, res) {
         if (req.method === 'POST') {
-            req.on('error', (err) => {
+            req.on('error', function (err) {
                 if (err) {
                     res.writeHead(500, { 'Content-Type': 'text/html' });
                     res.write('An error occurred');
@@ -39,10 +39,10 @@ function startHttpServer(port) {
                 }
             });
             let body = '';
-            req.on('data', (chunk) => {
+            req.on('data', function (chunk) {
                 body += chunk.toString();
             });
-            req.on('end', () => {
+            req.on('end', function () {
                 let point = Object.fromEntries(new URLSearchParams(body));
                 storePoint(point);
                 res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -113,14 +113,14 @@ function reportPoints(device_id) {
 
 // Delay in msec
 function waitForTimeout(delay) {
-    return new Promise((resolve) => {
+    return new Promise(function (resolve) {
         setTimeout(resolve, delay);
     });
 }
 
-describe('GPX player', () => {
-    describe('create gpx player', () => {
-        it('should find all 6 gpx test files', async () => {
+describe('GPX player', function () {
+    describe('create gpx player', function () {
+        it('should find all 6 gpx test files', async function () {
             startHttpServer(config.get('server.port'));
             gpxPlayer = new GpxPlayer('./tracks/test/', '/location/gpx/test');
             const fileList = await gpxPlayer.loadFileList(gpxPlayer.dirName);
@@ -128,8 +128,8 @@ describe('GPX player', () => {
         });
     });
 
-    describe('play tracks from file and validate results', () => {
-        it('should load and play the gpx test files of 5 devices', () => {
+    describe('play tracks from file and validate results', function () {
+        it('should load and play the gpx test files of 5 devices', function () {
             gpxPlayer.addTracksByDevice([
                 test7p1s,
                 test4p2s,
@@ -150,7 +150,7 @@ describe('GPX player', () => {
             this.timeout(8000);
             await waitForTimeout(7000);
             let totalRunning = 0;
-            gpxPlayer.tracks.forEach((track) => {
+            gpxPlayer.tracks.forEach(function (track) {
                 if (track.isRunning) {
                     totalRunning = totalRunning + 1;
                 }
@@ -158,42 +158,42 @@ describe('GPX player', () => {
             expect(totalRunning).to.equal(0);
             stopHttpServer();
         });
-        it('should report 7 points and 1 second delay (testkey_7p1s.gpx)', () => {
+        it('should report 7 points and 1 second delay (testkey_7p1s.gpx)', function () {
             const report = reportPoints(getTrackname(test7p1s));
             expect(report.totalPoints).to.equal(7);
             expect(report.minDelay).to.be.within(800, 1200);
             expect(report.maxDelay).to.be.within(800, 1200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 4 points and 2 seconds delay (testkey_4p2s.gpx)', () => {
+        it('should report 4 points and 2 seconds delay (testkey_4p2s.gpx)', function () {
             const report = reportPoints(getTrackname(test4p2s));
             expect(report.totalPoints).to.equal(4);
             expect(report.minDelay).to.be.within(1800, 2200);
             expect(report.maxDelay).to.be.within(1800, 2200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 3 points and 3 seconds delay (testkey_3p3s.gpx)', () => {
+        it('should report 3 points and 3 seconds delay (testkey_3p3s.gpx)', function () {
             const report = reportPoints(getTrackname(test3p3s));
             expect(report.totalPoints).to.equal(3);
             expect(report.minDelay).to.be.within(2800, 3200);
             expect(report.maxDelay).to.be.within(2800, 3200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 2 points and 6 seconds delay (testkey_2p6s.gpx)', () => {
+        it('should report 2 points and 6 seconds delay (testkey_2p6s.gpx)', function () {
             const report = reportPoints(getTrackname(test2p6s));
             expect(report.totalPoints).to.equal(2);
             expect(report.minDelay).to.be.within(5800, 6200);
             expect(report.maxDelay).to.be.within(5800, 6200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 7 points and 1 second delay (testkey_delay-too-short.gpx)', () => {
+        it('should report 7 points and 1 second delay (testkey_delay-too-short.gpx)', function () {
             const report = reportPoints(getTrackname(test_delay_too_short));
             expect(report.totalPoints).to.equal(7);
             expect(report.minDelay).to.be.within(800, 1200);
             expect(report.maxDelay).to.be.within(800, 1200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should cleanup all tracks', () => {
+        it('should cleanup all tracks', function () {
             gpxPlayer.cleanupTracks();
             expect(gpxPlayer.tracks.length).to.equal(0);
         });
