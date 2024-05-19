@@ -121,121 +121,81 @@ function waitForTimeout(delay) {
 describe('GPX player', () => {
     describe('create gpx player', () => {
         it('should find all 6 gpx test files', async () => {
-            try {
-                startHttpServer(config.get('server.port'));
-                gpxPlayer = new GpxPlayer(
-                    './tracks/test/',
-                    '/location/gpx/test',
-                );
-                const fileList = await gpxPlayer.loadFileList(
-                    gpxPlayer.dirName,
-                );
-                expect(fileList.length).to.equal(6);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            startHttpServer(config.get('server.port'));
+            gpxPlayer = new GpxPlayer('./tracks/test/', '/location/gpx/test');
+            const fileList = await gpxPlayer.loadFileList(gpxPlayer.dirName);
+            expect(fileList.length).to.equal(6);
         });
     });
+
     describe('play tracks from file and validate results', () => {
         it('should load and play the gpx test files of 5 devices', () => {
-            try {
-                gpxPlayer.addTracksByDevice([
-                    test7p1s,
-                    test4p2s,
-                    test3p3s,
-                    test2p6s,
-                    test_delay_too_short,
-                ]);
-                expect(gpxPlayer.tracks.length).to.equal(5);
-                const aTrack = gpxPlayer.getTrackByName(getTrackname(test7p1s));
-                expect(aTrack).to.deep.include(trackTest7p1s);
-                expect(aTrack).to.have.property('cbPoint');
-                expect(aTrack.cbPoint).to.be.a('function');
-                const noTrack = gpxPlayer.getTrackByName('non-existing-track');
-                expect(noTrack).to.be.null;
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            gpxPlayer.addTracksByDevice([
+                test7p1s,
+                test4p2s,
+                test3p3s,
+                test2p6s,
+                test_delay_too_short,
+            ]);
+            expect(gpxPlayer.tracks.length).to.equal(5);
+            const aTrack = gpxPlayer.getTrackByName(getTrackname(test7p1s));
+            expect(aTrack).to.deep.include(trackTest7p1s);
+            expect(aTrack).to.have.property('cbPoint');
+            expect(aTrack.cbPoint).to.be.a('function');
+            const noTrack = gpxPlayer.getTrackByName('non-existing-track');
+            expect(noTrack).to.be.null;
         });
         // !!! this.timeout() doesn't work with arrow functions. Use function() syntax. !!!
         it('should wait for playing of 5 devices to finish', async function () {
-            try {
-                this.timeout(8000);
-                await waitForTimeout(7000);
-                let totalRunning = 0;
-                gpxPlayer.tracks.forEach((track) => {
-                    if (track.isRunning) {
-                        totalRunning = totalRunning + 1;
-                    }
-                });
-                expect(totalRunning).to.equal(0);
-                stopHttpServer();
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            this.timeout(8000);
+            await waitForTimeout(7000);
+            let totalRunning = 0;
+            gpxPlayer.tracks.forEach((track) => {
+                if (track.isRunning) {
+                    totalRunning = totalRunning + 1;
+                }
+            });
+            expect(totalRunning).to.equal(0);
+            stopHttpServer();
         });
         it('should report 7 points and 1 second delay (testkey_7p1s.gpx)', () => {
-            try {
-                const report = reportPoints(getTrackname(test7p1s));
-                expect(report.totalPoints).to.equal(7);
-                expect(report.minDelay).to.be.within(800, 1200);
-                expect(report.maxDelay).to.be.within(800, 1200);
-                expect(report.duration).to.be.within(5500, 6500);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            const report = reportPoints(getTrackname(test7p1s));
+            expect(report.totalPoints).to.equal(7);
+            expect(report.minDelay).to.be.within(800, 1200);
+            expect(report.maxDelay).to.be.within(800, 1200);
+            expect(report.duration).to.be.within(5500, 6500);
         });
         it('should report 4 points and 2 seconds delay (testkey_4p2s.gpx)', () => {
-            try {
-                const report = reportPoints(getTrackname(test4p2s));
-                expect(report.totalPoints).to.equal(4);
-                expect(report.minDelay).to.be.within(1800, 2200);
-                expect(report.maxDelay).to.be.within(1800, 2200);
-                expect(report.duration).to.be.within(5500, 6500);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            const report = reportPoints(getTrackname(test4p2s));
+            expect(report.totalPoints).to.equal(4);
+            expect(report.minDelay).to.be.within(1800, 2200);
+            expect(report.maxDelay).to.be.within(1800, 2200);
+            expect(report.duration).to.be.within(5500, 6500);
         });
         it('should report 3 points and 3 seconds delay (testkey_3p3s.gpx)', () => {
-            try {
-                const report = reportPoints(getTrackname(test3p3s));
-                expect(report.totalPoints).to.equal(3);
-                expect(report.minDelay).to.be.within(2800, 3200);
-                expect(report.maxDelay).to.be.within(2800, 3200);
-                expect(report.duration).to.be.within(5500, 6500);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            const report = reportPoints(getTrackname(test3p3s));
+            expect(report.totalPoints).to.equal(3);
+            expect(report.minDelay).to.be.within(2800, 3200);
+            expect(report.maxDelay).to.be.within(2800, 3200);
+            expect(report.duration).to.be.within(5500, 6500);
         });
         it('should report 2 points and 6 seconds delay (testkey_2p6s.gpx)', () => {
-            try {
-                const report = reportPoints(getTrackname(test2p6s));
-                expect(report.totalPoints).to.equal(2);
-                expect(report.minDelay).to.be.within(5800, 6200);
-                expect(report.maxDelay).to.be.within(5800, 6200);
-                expect(report.duration).to.be.within(5500, 6500);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            const report = reportPoints(getTrackname(test2p6s));
+            expect(report.totalPoints).to.equal(2);
+            expect(report.minDelay).to.be.within(5800, 6200);
+            expect(report.maxDelay).to.be.within(5800, 6200);
+            expect(report.duration).to.be.within(5500, 6500);
         });
         it('should report 7 points and 1 second delay (testkey_delay-too-short.gpx)', () => {
-            try {
-                const report = reportPoints(getTrackname(test_delay_too_short));
-                expect(report.totalPoints).to.equal(7);
-                expect(report.minDelay).to.be.within(800, 1200);
-                expect(report.maxDelay).to.be.within(800, 1200);
-                expect(report.duration).to.be.within(5500, 6500);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            const report = reportPoints(getTrackname(test_delay_too_short));
+            expect(report.totalPoints).to.equal(7);
+            expect(report.minDelay).to.be.within(800, 1200);
+            expect(report.maxDelay).to.be.within(800, 1200);
+            expect(report.duration).to.be.within(5500, 6500);
         });
         it('should cleanup all tracks', () => {
-            try {
-                gpxPlayer.cleanupTracks();
-                expect(gpxPlayer.tracks.length).to.equal(0);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            gpxPlayer.cleanupTracks();
+            expect(gpxPlayer.tracks.length).to.equal(0);
         });
     });
 });

@@ -41,19 +41,15 @@ describe('MQTT service', function () {
 
     describe('Publish a message with livemap topic', function () {
         it('should receive the published message', async function () {
-            try {
-                await publishMessage(
-                    mqttTestClient,
-                    mqttServiceClient,
-                    'livemap/test',
-                    testMessage,
-                );
-                expect(callbackSpy.calledOnce).to.equal(true);
-                expect(callbackSpy.args[0][0]).to.equal('mqtt');
-                expect(callbackSpy.args[0][1].toString()).to.equal(testMessage);
-            } catch (err) {
-                throw new Error(err.message);
-            }
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                testMessage,
+            );
+            expect(callbackSpy.calledOnce).to.equal(true);
+            expect(callbackSpy.args[0][0]).to.equal('mqtt');
+            expect(callbackSpy.args[0][1].toString()).to.equal(testMessage);
         });
     });
 });
