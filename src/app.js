@@ -9,6 +9,7 @@ import session from 'express-session';
 import passport from './auth/passport.js';
 import routesApi from './routes/api.js';
 import routesIndex from './routes/index.js';
+import routesWebhook from './routes/webhook.js';
 import {
     bindStore,
     getStore,
@@ -16,8 +17,8 @@ import {
     startMaintenance,
 } from './database/db.js';
 import { start } from './services/liveserver.js';
-import { processLocation } from './services/webhook.js';
-import * as mqtt from './services/mqtt.js';
+import * as mqttService from './services/mqtt.js';
+import { processLocation } from './utils/ingester.js';
 import Logger from './utils/logger.js';
 
 const logger = Logger(import.meta.url);
@@ -48,22 +49,17 @@ if (config.get('server.forceSSL') === 'true') {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Add http routes for location ingestion
+app.use('/location', routesWebhook(processLocation));
+
 // Static route for JavaScript libraries, css files, etc.
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/../public'));
 
-app.use(favicon(__dirname + '/public/images/favicon.ico'));
-
-// Handle posted positions
-app.post('/location/gpx', (req, res) => {
-    processLocation(req, res, 'gpx');
-});
-
-app.post('/location/locative', (req, res) => {
-    processLocation(req, res, 'locative');
-});
+// Set favicon
+app.use(favicon(__dirname + '/../public/images/favicon.ico'));
 
 // View engine set-up
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/../views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application
@@ -96,6 +92,7 @@ app.use(flash());
 // Set-up authentication with persistent login sessions
 app.use(passport.session());
 
+// Add http routes for index (original UI) and  API (used by modern UI)
 app.use('/', routesIndex(passport));
 app.use('/api/v1', routesApi(passport));
 
@@ -106,7 +103,7 @@ async function allUp() {
 
         startMaintenance();
         start(server);
-        mqtt.start();
+        mqttService.start(processLocation);
 
         logger.info('Server started on port ' + port);
     } else {

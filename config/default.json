@@ -12,7 +12,7 @@
     "colorize": true
   },
   "mqtt": {
-    "url": "mqtt://test.mosquitto.org:1883",
+    "url": "mqtt://127.0.0.1:1883",
     "protocol": "",
     "port": "",
     "userVhost": false,

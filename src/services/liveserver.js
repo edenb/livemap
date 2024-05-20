@@ -7,11 +7,9 @@ import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import * as pos from '../models/position.js';
 import { getTokenPayload } from '../auth/jwt.js';
-import JSONValidator from '../utils/validator.js';
 import Logger from '../utils/logger.js';
 
 const logger = Logger(import.meta.url);
-const livemapValidator = new JSONValidator('livemap');
 const io = new Server();
 let recentDeviceRooms = [];
 
@@ -163,34 +161,28 @@ export function start(server) {
     });
 }
 
-export async function sendToClients(destData) {
-    // On a valid location reception:
-    // 1. Send a location update to every client that is authorized for this device
-    // 2. Store the location in the database
-    if (livemapValidator.validate(destData)) {
-        // Send location to room of the device
-        let deviceRoom = getRoomName(destData.device_id);
-        addRoom(io.sockets, destData)
-            .then(() => {
-                io.to(deviceRoom).emit(
-                    'positionUpdate',
-                    JSON.stringify({ type: 'gps', data: destData }),
-                );
-                logger.debug(`Clients connected: ${io.sockets.sockets.size}`);
-                pos.insertPosition([
-                    destData.device_id,
-                    destData.device_id_tag,
-                    destData.loc_timestamp,
-                    destData.loc_lat,
-                    destData.loc_lon,
-                    destData.loc_type,
-                    destData.loc_attr,
-                ]);
-            })
-            .catch((err) => {
-                logger.error(`Send to clients: ${err.message}`);
-            });
-    } else {
-        logger.info(`Invalid: ${livemapValidator.errorsText()}`);
-    }
+export function sendToClients(destData) {
+    // Send a location update to every client that is authorized for this device
+    // and store the location in the database
+    let deviceRoom = getRoomName(destData.device_id);
+    addRoom(io.sockets, destData)
+        .then(() => {
+            io.to(deviceRoom).emit(
+                'positionUpdate',
+                JSON.stringify({ type: 'gps', data: destData }),
+            );
+            logger.debug(`Clients connected: ${io.sockets.sockets.size}`);
+            pos.insertPosition([
+                destData.device_id,
+                destData.device_id_tag,
+                destData.loc_timestamp,
+                destData.loc_lat,
+                destData.loc_lon,
+                destData.loc_type,
+                destData.loc_attr,
+            ]);
+        })
+        .catch((err) => {
+            logger.error(`Send to clients: ${err.message}`);
+        });
 }
