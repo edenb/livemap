@@ -53,13 +53,13 @@ const __dirname = dirname(__filename);
 app.use('/location', routesWebhook(processLocation));
 
 // Static route for JavaScript libraries, css files, etc.
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/../public'));
 
 // Set favicon
-app.use(favicon(__dirname + '/public/images/favicon.ico'));
+app.use(favicon(__dirname + '/../public/images/favicon.ico'));
 
 // View engine set-up
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/../views');
 app.set('view engine', 'pug');
 
 // Set up the UI part of our express application

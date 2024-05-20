@@ -2,7 +2,6 @@
   "name": "livemap",
   "version": "1.0.0",
   "description": "Web server for live map viewing",
-  "exports": "./app.js",
   "type": "module",
   "dependencies": {
     "ajv": "^8.7.1",
@@ -45,23 +44,16 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "format": "prettier app.js auth controllers database models routes services test utils --write",
-    "lint": "eslint app.js auth controllers database models routes services test utils",
-    "start": "node app.js",
-    "test": "mocha test --exit",
+    "format": "prettier src tests --write",
+    "lint": "eslint src tests",
+    "start": "node src/app.js",
+    "test": "mocha tests --exit",
     "test:coverage": "c8 --check-coverage npm run test"
   },
   "c8": {
     "all": true,
     "include": [
-      "app.js",
-      "auth/**",
-      "controllers/**",
-      "database/**",
-      "models/**",
-      "routes/**",
-      "services/**",
-      "utils/**"
+      "src/**"
     ],
     "reporter": [
       "html",

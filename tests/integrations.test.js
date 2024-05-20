@@ -15,9 +15,9 @@ import {
     createWebServer,
     destroyWebServer,
 } from './helpers/webserver.js';
-import routesWebhook from '../routes/webhook.js';
-import * as mqttService from '../services/mqtt.js';
-import { processLocation } from '../utils/ingester.js';
+import routesWebhook from '../src/routes/webhook.js';
+import * as mqttService from '../src/services/mqtt.js';
+import { processLocation } from '../src/utils/ingester.js';
 
 const mqttMessage =
     '{"id":"test2", "apikey":"12345678", "timestamp":"2024-05-10T15:14:31.191Z", "lat":"32.123", "lon":"-110.123"}';

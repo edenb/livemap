@@ -1,7 +1,7 @@
 import Aedes from 'aedes';
 import mqtt from 'mqtt';
 import { createServer } from 'node:net';
-import * as mqttService from '../../services/mqtt.js';
+import * as mqttService from '../../src/services/mqtt.js';
 
 export function createMqttServer(port) {
     return new Promise(function (resolve, reject) {

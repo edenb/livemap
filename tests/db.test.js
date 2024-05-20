@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { queryDbAsync } from '../database/db.js';
+import { queryDbAsync } from '../src/database/db.js';
 
 const testUser = {
     username: 'testuser1',

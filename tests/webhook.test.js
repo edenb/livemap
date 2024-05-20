@@ -8,7 +8,7 @@ import {
     createWebServer,
     destroyWebServer,
 } from './helpers/webserver.js';
-import routesWebhook from '../routes/webhook.js';
+import routesWebhook from '../src/routes/webhook.js';
 
 // Setup HTTP querystrings
 const gpx1 =

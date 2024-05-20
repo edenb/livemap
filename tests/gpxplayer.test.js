@@ -5,7 +5,7 @@ import {
     createWebServer,
     destroyWebServer,
 } from './helpers/webserver.js';
-import GpxPlayer from '../services/gpxplayer.js';
+import GpxPlayer from '../src/services/gpxplayer.js';
 
 const test7p1s = { api_key: 'testkey', identifier: '7p1s' };
 const test4p2s = { api_key: 'testkey', identifier: '4p2s' };

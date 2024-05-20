@@ -1,5 +1,5 @@
-import * as dev from '../../models/device.js';
-import * as usr from '../../models/user.js';
+import * as dev from '../../src/models/device.js';
+import * as usr from '../../src/models/user.js';
 
 const requestUser = {
     user_id: 0,

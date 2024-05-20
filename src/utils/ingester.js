@@ -1,8 +1,8 @@
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import { sendToClients } from '../services/liveserver.js';
-import Logger from '../utils/logger.js';
-import JSONValidator from '../utils/validator.js';
+import Logger from './logger.js';
+import JSONValidator from './validator.js';
 
 const logger = Logger(import.meta.url);
 const livemapValidator = new JSONValidator('livemap');
