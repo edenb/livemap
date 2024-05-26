@@ -1,14 +1,6 @@
 import { expect } from 'chai';
+import { vwr1 } from './helpers/fixtures.js';
 import { queryDbAsync } from '../src/database/db.js';
-
-const testUser = {
-    username: 'testuser1',
-    fullName: 'Test User1',
-    email: 'test@user1',
-    role: 'user',
-    api_key: '12345678',
-    password: 'testuser1',
-};
 
 let testUser_Id = null;
 
@@ -24,7 +16,7 @@ describe('Database', function () {
     describe('#getUserByUsername', function () {
         it('should respond with no errors', async function () {
             const queryRes = await queryDbAsync('getUserByUsername', [
-                testUser.username,
+                vwr1.username,
             ]);
             if (queryRes.rowCount > 0) {
                 testUser_Id = queryRes.rows[0].user_id;
@@ -48,12 +40,12 @@ describe('Database', function () {
     describe('#insertUser', function () {
         it('should create 1 user', async function () {
             const queryRes = await queryDbAsync('insertUser', [
-                testUser.username,
-                testUser.fullName,
-                testUser.email,
-                testUser.role,
-                testUser.api_key,
-                testUser.password,
+                vwr1.username,
+                vwr1.fullName,
+                vwr1.email,
+                vwr1.role,
+                vwr1.api_key,
+                vwr1.password,
             ]);
             expect(queryRes.rowCount).to.equal(1);
         });
@@ -62,7 +54,7 @@ describe('Database', function () {
     describe('#getUserByUsername', function () {
         it('should return 1 user', async function () {
             const queryRes = await queryDbAsync('getUserByUsername', [
-                testUser.username,
+                vwr1.username,
             ]);
             if (queryRes.rowCount > 0) {
                 testUser_Id = queryRes.rows[0].user_id;
