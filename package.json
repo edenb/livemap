@@ -4,7 +4,7 @@
   "description": "Web server for live map viewing",
   "type": "module",
   "dependencies": {
-    "ajv": "^8.7.1",
+    "ajv": "^8.14.0",
     "ajv-formats": "^3.0.0",
     "bcrypt": "^5.0.1",
     "config": "^3.3.6",
