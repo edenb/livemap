@@ -96,6 +96,7 @@ export async function getUserByField(field, value) {
 export async function addUser(user, modUser) {
     let queryRes = getEmptyQueryRes();
     let userMessage;
+    let hash;
     // If the API key is empty generate one
     if (!modUser.api_key || modUser.api_key === '') {
         modUser.api_key = generateAPIkey();
@@ -118,15 +119,13 @@ export async function addUser(user, modUser) {
         queryRes.rowCount = -2;
         return queryRes;
     }
-    await createHash(modUser.password)
-        .then((hash) => {
-            modUser.password = hash;
-        })
-        .catch(() => {
-            queryRes.userMessage = 'Hashing failed';
-            queryRes.rowCount = -2;
-            return queryRes;
-        });
+    try {
+        hash = await createHash(modUser.password);
+    } catch (err) {
+        queryRes.userMessage = 'Hashing failed';
+        queryRes.rowCount = -2;
+        return queryRes;
+    }
     if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
         try {
             queryRes = await queryDbAsync('insertUser', [
@@ -135,7 +134,7 @@ export async function addUser(user, modUser) {
                 modUser.email,
                 modUser.role,
                 modUser.api_key,
-                modUser.password,
+                hash,
             ]);
         } catch (err) {
             queryRes.userMessage = 'Unable to add user';
