@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import express from 'express';
 import { parse } from 'node:querystring';
 import { spy } from 'sinon';
-import request from './helpers/chai.js';
+import { request } from './helpers/chai.js';
 import {
     addRouter,
     createWebServer,

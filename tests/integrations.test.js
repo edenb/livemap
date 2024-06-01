@@ -2,8 +2,9 @@ import { expect } from 'chai';
 import express from 'express';
 import { parse } from 'node:querystring';
 import { spy } from 'sinon';
-import request from './helpers/chai.js';
+import { request } from './helpers/chai.js';
 import { addUserAndDevices, removeUserAndDevices } from './helpers/database.js';
+import { vwr1Auth, vwr1, vwr1Devs } from './helpers/fixtures.js';
 import {
     createMqttClient,
     createMqttServer,
@@ -20,15 +21,15 @@ import * as mqttService from '../src/services/mqtt.js';
 import { processLocation } from '../src/utils/ingester.js';
 
 const mqttMessage =
-    '{"id":"test2", "apikey":"12345678", "timestamp":"2024-05-10T15:14:31.191Z", "lat":"32.123", "lon":"-110.123"}';
+    '{"id":"vwr1Dev1", "apikey":"apikey-vwr1", "timestamp":"2024-05-10T15:14:31.191Z", "lat":"32.123", "lon":"-110.123"}';
 
 const mqttMessageProcessed = {
-    api_key: '12345678',
-    identifier: 'test2',
+    api_key: 'apikey-vwr1',
+    identifier: 'vwr1Dev1',
     device_id_tag: null,
     identifier_tag: null,
     api_key_tag: null,
-    alias: 'test2',
+    alias: 'Viewer 1 device 1',
     loc_timestamp: '2024-05-10T15:14:31.191Z',
     loc_lat: 32.123,
     loc_lon: -110.123,
@@ -37,12 +38,12 @@ const mqttMessageProcessed = {
 };
 
 const gpxMessage =
-    'device_id=12345678_testdevice1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
+    'device_id=apikey-vwr1_vwr1Dev1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
 
 const gpxMessageProcessed = {
-    api_key: '12345678',
-    identifier: 'testdevice1',
-    alias: 'Test device 1',
+    api_key: 'apikey-vwr1',
+    identifier: 'vwr1Dev1',
+    alias: 'Viewer 1 device 1',
     device_id_tag: null,
     api_key_tag: null,
     identifier_tag: null,
@@ -54,12 +55,12 @@ const gpxMessageProcessed = {
 };
 
 const locDevMessage =
-    'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=12345678&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
+    'device=apikey-vwr1-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=apikey-vwr1&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
 
 const locDevMessageProcessed = {
-    api_key: '12345678',
+    api_key: 'apikey-vwr1',
     device_id_tag: null,
-    alias: '12345678-ABCD-1234-ABCD-123456789ABC',
+    alias: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
     loc_timestamp: '2019-08-22T15:11:00.187Z',
     loc_lat: 40.7579747,
     loc_lon: -73.9855426,
@@ -68,32 +69,16 @@ const locDevMessageProcessed = {
 };
 
 const locTagMessage =
-    'device=12345678-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=12345678:tag1&latitude=0&longitude=0&timestamp=1571508472.691251&trigger=enter';
+    'device=apikey-vwr1-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=apikey-vwr1:tag1&latitude=0&longitude=0&timestamp=1571508472.691251&trigger=enter';
 
 const locTagMessageProcessed = {
     loc_timestamp: '2019-10-19T18:07:52.691Z',
-    api_key: '12345678',
+    api_key: 'apikey-vwr1',
     alias: 'tag1',
     loc_lat: 0,
     loc_lon: 0,
     loc_attr: null,
     loc_type: 'now',
-};
-
-// Setup test user
-const testUser = {
-    username: 'testuser',
-    fullname: 'Test User',
-    email: 'test@testuser',
-    role: 'viewer',
-    api_key: '12345678',
-    password: 'testuser',
-};
-
-const testDevice = {
-    api_key: '12345678',
-    identifier: 'testdevice1',
-    alias: 'Test device 1',
 };
 
 describe('Integrations', function () {
@@ -106,7 +91,7 @@ describe('Integrations', function () {
 
     before(async function () {
         // Create a test user and add test devices
-        await addUserAndDevices(testUser, [testDevice]);
+        await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, vwr1Devs);
         // Create a local MQTT server
         mqttServer = await createMqttServer(mqttService.getBrokerUrl().port);
         // Start the MQTT client service
@@ -120,7 +105,7 @@ describe('Integrations', function () {
 
     after(async function () {
         // Remove the test user and its owned devices
-        await removeUserAndDevices(testUser);
+        await removeUserAndDevices(vwr1);
         // Remove the MQTT test client
         await mqttTestClient.endAsync();
         // Remove the MQTT client service
