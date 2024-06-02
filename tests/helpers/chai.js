@@ -8,6 +8,7 @@ import chaiHttp from 'chai-http';
 
 export const { request } = use(chaiHttp);
 
+// Create a subset of an object array that only contains the given keys
 // data = [ { a: 1, b: 2, c: 3 }, { a: 4, b: 5, c: 6 } ];
 // subset(data, ['a', 'b']))  =>  [ { a: 1, b: 2 }, { a: 4, b: 5 } ]
 export function subset(objArray, keys) {
