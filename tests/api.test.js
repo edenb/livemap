@@ -381,7 +381,7 @@ describe('REST API', function () {
                     .send();
                 expect(res).have.status(204);
                 const deletedDevices = await getDevices(adm1);
-                expect(deletedDevices).to.be.null;
+                expect(deletedDevices).to.be.empty;
             });
             it('should respond with 404 if non of the devices exist', async function () {
                 const user = await getUser(adm1);

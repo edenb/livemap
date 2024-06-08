@@ -80,7 +80,7 @@ export async function getDevices(fromUser) {
         const user = await getUser(fromUser);
         const queryRes = await dev.getAllowedDevices(user.user_id);
         if (queryRes.rowCount <= 0) {
-            return null;
+            return [];
         }
         return queryRes.rows;
     } catch (err) {
