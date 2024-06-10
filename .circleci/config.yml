@@ -45,7 +45,7 @@ jobs:
             psql -h localhost -p 5432 -U livemap -d livemapdb < setup/schema.sql
       - run:
           name: Run tests
-          command: npm test:coverage
+          command: npm run test:coverage
       - codecov/upload
   deploy-fly-development:
     machine:
