@@ -49,7 +49,7 @@
     "lint": "eslint src tests",
     "start": "node src/app.js",
     "test": "mocha tests --exit",
-    "test:coverage": "c8 --check-coverage --60 npm run test"
+    "test:coverage": "c8 --check-coverage --lines 60 npm run test"
   },
   "c8": {
     "all": true,
