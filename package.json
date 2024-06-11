@@ -58,7 +58,8 @@
     ],
     "reporter": [
       "html",
-      "text"
+      "text",
+      "lcov"
     ]
   },
   "author": "edenb",
