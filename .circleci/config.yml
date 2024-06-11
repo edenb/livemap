@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   docker: circleci/docker@2.6.0
+  codecov: codecov/codecov@4.1.0
 jobs:
   lint:
     docker:
@@ -44,7 +45,9 @@ jobs:
             psql -h localhost -p 5432 -U livemap -d livemapdb < setup/schema.sql
       - run:
           name: Run tests
-          command: npm test
+          command: npm run test:coverage
+      - codecov/upload:
+          file: ./coverage/lcov.info
   deploy-fly-development:
     machine:
       docker_layer_caching: true

@@ -2,9 +2,13 @@ import { expect } from 'chai';
 import express from 'express';
 import { parse } from 'node:querystring';
 import { spy } from 'sinon';
-import { request } from './helpers/chai.js';
-import { addUserAndDevices, removeUserAndDevices } from './helpers/database.js';
-import { vwr1Auth, vwr1, vwr1Devs } from './helpers/fixtures.js';
+import { request, subset } from './helpers/chai.js';
+import {
+    addUserAndDevices,
+    getDevices,
+    removeUserAndDevices,
+} from './helpers/database.js';
+import { vwr1Auth, vwr1 } from './helpers/fixtures.js';
 import {
     createMqttClient,
     createMqttServer,
@@ -29,7 +33,7 @@ const mqttMessageProcessed = {
     device_id_tag: null,
     identifier_tag: null,
     api_key_tag: null,
-    alias: 'Viewer 1 device 1',
+    alias: 'vwr1Dev1',
     loc_timestamp: '2024-05-10T15:14:31.191Z',
     loc_lat: 32.123,
     loc_lon: -110.123,
@@ -43,7 +47,7 @@ const gpxMessage =
 const gpxMessageProcessed = {
     api_key: 'apikey-vwr1',
     identifier: 'vwr1Dev1',
-    alias: 'Viewer 1 device 1',
+    alias: 'vwr1Dev1',
     device_id_tag: null,
     api_key_tag: null,
     identifier_tag: null,
@@ -90,8 +94,6 @@ describe('Integrations', function () {
     const processLocationSpy = spy(processLocation);
 
     before(async function () {
-        // Create a test user and add test devices
-        await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, vwr1Devs);
         // Create a local MQTT server
         mqttServer = await createMqttServer(mqttService.getBrokerUrl().port);
         // Start the MQTT client service
@@ -104,8 +106,6 @@ describe('Integrations', function () {
     });
 
     after(async function () {
-        // Remove the test user and its owned devices
-        await removeUserAndDevices(vwr1);
         // Remove the MQTT test client
         await mqttTestClient.endAsync();
         // Remove the MQTT client service
@@ -121,7 +121,15 @@ describe('Integrations', function () {
     });
 
     describe('Process an MQTT message', function () {
-        it('should successfully process the received MQTT message', async function () {
+        before(async function () {
+            // Create a test user without devices
+            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
+        });
+        after(async function () {
+            // Remove the test user and its owned devices
+            await removeUserAndDevices(vwr1);
+        });
+        it('should process a message from a new device', async function () {
             await publishMessage(
                 mqttTestClient,
                 mqttServiceClient,
@@ -135,11 +143,42 @@ describe('Integrations', function () {
             );
             const processed = await processLocationSpy.returnValues[0];
             expect(processed).to.include(mqttMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(1);
+            expect(devices[0]).to.include({
+                identifier: 'vwr1Dev1',
+                alias: 'vwr1Dev1',
+            });
+        });
+        it('should process a message from an already created device', async function () {
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                mqttMessage,
+            );
+            expect(processLocationSpy.calledOnce).to.equal(true);
+            expect(processLocationSpy.args[0][0]).to.equal('mqtt');
+            expect(processLocationSpy.args[0][1].toString()).to.equal(
+                mqttMessage,
+            );
+            const processed = await processLocationSpy.returnValues[0];
+            expect(processed).to.include(mqttMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(1);
         });
     });
 
     describe('Process GPX webhook data', function () {
-        it('should successfully process the received GPX webhook message', async function () {
+        before(async function () {
+            // Create a test user without devices
+            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
+        });
+        after(async function () {
+            // Remove the test user and its owned devices
+            await removeUserAndDevices(vwr1);
+        });
+        it('should process a message from a new device', async function () {
             const res = await request(app)
                 .post('/location/gpx')
                 .query(gpxMessage)
@@ -152,11 +191,41 @@ describe('Integrations', function () {
             );
             const processed = await processLocationSpy.returnValues[0];
             expect(processed).to.include(gpxMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(1);
+            expect(devices[0]).to.include({
+                identifier: 'vwr1Dev1',
+                alias: 'vwr1Dev1',
+            });
+        });
+        it('should process a message from an already created device', async function () {
+            const res = await request(app)
+                .post('/location/gpx')
+                .query(gpxMessage)
+                .send('');
+            expect(res).have.status(200);
+            expect(processLocationSpy.calledOnce).to.equal(true);
+            expect(processLocationSpy.args[0][0]).to.equal('gpx');
+            expect(processLocationSpy.args[0][1]).to.deep.equal(
+                parse(gpxMessage),
+            );
+            const processed = await processLocationSpy.returnValues[0];
+            expect(processed).to.include(gpxMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(1);
         });
     });
 
     describe('Process Locative device data', function () {
-        it('should successfully process the received Locative device message', async function () {
+        before(async function () {
+            // Create a test user without devices
+            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
+        });
+        after(async function () {
+            // Remove the test user and its owned devices
+            await removeUserAndDevices(vwr1);
+        });
+        it('should process a message from a new device', async function () {
             const res = await request(app)
                 .post('/location/locative')
                 .query(locDevMessage)
@@ -169,11 +238,41 @@ describe('Integrations', function () {
             );
             const processed = await processLocationSpy.returnValues[0];
             expect(processed).to.include(locDevMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(1);
+            expect(devices[0]).to.include({
+                identifier: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
+                alias: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
+            });
+        });
+        it('should process a message from an already created device', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .query(locDevMessage)
+                .send('');
+            expect(res).have.status(200);
+            expect(processLocationSpy.calledOnce).to.equal(true);
+            expect(processLocationSpy.args[0][0]).to.equal('locative');
+            expect(processLocationSpy.args[0][1]).to.deep.equal(
+                parse(locDevMessage),
+            );
+            const processed = await processLocationSpy.returnValues[0];
+            expect(processed).to.include(locDevMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(1);
         });
     });
 
     describe('Process Locative tag data', function () {
-        it('should successfully process the received Locative tag message', async function () {
+        before(async function () {
+            // Create a test user without devices
+            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
+        });
+        after(async function () {
+            // Remove the test user and its owned devices
+            await removeUserAndDevices(vwr1);
+        });
+        it('should process a message from a new device', async function () {
             const res = await request(app)
                 .post('/location/locative')
                 .query(locTagMessage)
@@ -186,6 +285,33 @@ describe('Integrations', function () {
             );
             const processed = await processLocationSpy.returnValues[0];
             expect(processed).to.include(locTagMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(2);
+            expect(
+                subset(devices, ['identifier', 'alias']),
+            ).to.include.deep.members([
+                {
+                    identifier: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
+                    alias: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
+                },
+                { identifier: 'tag1', alias: 'tag1' },
+            ]);
+        });
+        it('should process a message from an already created device', async function () {
+            const res = await request(app)
+                .post('/location/locative')
+                .query(locTagMessage)
+                .send('');
+            expect(res).have.status(200);
+            expect(processLocationSpy.calledOnce).to.equal(true);
+            expect(processLocationSpy.args[0][0]).to.equal('locative');
+            expect(processLocationSpy.args[0][1]).to.deep.equal(
+                parse(locTagMessage),
+            );
+            const processed = await processLocationSpy.returnValues[0];
+            expect(processed).to.include(locTagMessageProcessed);
+            const devices = await getDevices(vwr1);
+            expect(devices.length).to.equal(2);
         });
     });
 });
