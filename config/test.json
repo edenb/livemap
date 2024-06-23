@@ -1,0 +1,9 @@
+{
+  "server": {
+    "forceSSL": "true"
+  },
+  "wclient": {
+    "name": "Live Map (test)",
+    "about": "This is the test version of Live Map."
+  }
+}
