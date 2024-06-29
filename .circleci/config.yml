@@ -56,7 +56,7 @@ jobs:
       - run:
           name: Deploy Fly development
           command: |
-            wget -qO- 'https://getfly.fly.dev/linux-x86-64/flyctl.tgz' | tar xz
+            curl -L https://fly.io/install.sh | sh
             ./flyctl auth docker
             DOCKER_BUILDKIT=1 docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM
@@ -69,7 +69,7 @@ jobs:
       - run:
           name: Deploy Fly demo
           command: |
-            wget -qO- 'https://getfly.fly.dev/linux-x86-64/flyctl.tgz' | tar xz
+            curl -L https://fly.io/install.sh | sh
             ./flyctl auth docker
             DOCKER_BUILDKIT=1 docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM
