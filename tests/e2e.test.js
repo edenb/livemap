@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { agent, request } from './helpers/chai.js';
+import { agent, request, subset } from './helpers/chai.js';
 import {
     addUserAndDevices,
     getDevices,
@@ -276,8 +276,11 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
                 expect(res.text).to.include('Device changed');
-                const modifiedDevice = (await getDevices(adm1))[0];
-                expect(modifiedDevice).to.include(data);
+                const devices = subset(
+                    await getDevices(adm1),
+                    Object.keys(adm1Devs[0]),
+                );
+                expect(devices).to.deep.include(adm1Devs[0]);
             });
             it('should POST a new device action', async function () {
                 const data = {
@@ -290,8 +293,11 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
                 expect(res.text).to.include('Device changed');
-                const modifiedDevice = (await getDevices(adm1))[1];
-                expect(modifiedDevice).to.include(adm1Devs[1]);
+                const devices = subset(
+                    await getDevices(adm1),
+                    Object.keys(adm1Devs[1]),
+                );
+                expect(devices).to.deep.include(adm1Devs[1]);
             });
             it('should POST an invalid new device action', async function () {
                 const data = {
