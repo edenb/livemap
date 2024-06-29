@@ -62,23 +62,23 @@ export default (passport) => {
     );
 
     // GET Registration Page
-    router.get('/signup', (req, res) => {
-        res.render('register', {
-            wclient: config.get('wclient'),
-            broker: getBrokerUrl(),
-            flash: req.flash(),
-        });
-    });
+    // router.get('/signup', (req, res) => {
+    //     res.render('register', {
+    //         wclient: config.get('wclient'),
+    //         broker: getBrokerUrl(),
+    //         flash: req.flash(),
+    //     });
+    // });
 
     // Handle Registration POST
-    router.post(
-        '/signup',
-        passport.authenticate('local', {
-            successRedirect: '/home',
-            failureRedirect: '/signup',
-            failureFlash: true,
-        }),
-    );
+    // router.post(
+    //     '/signup',
+    //     passport.authenticate('local', {
+    //         successRedirect: '/home',
+    //         failureRedirect: '/signup',
+    //         failureFlash: true,
+    //     }),
+    // );
 
     // GET Start Page
     router.get('/main', ensureAuthenticated, (req, res) => {
