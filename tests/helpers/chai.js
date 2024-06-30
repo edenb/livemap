@@ -8,6 +8,7 @@ import chaiHttp from 'chai-http';
 const chai = use(chaiHttp);
 
 export const request = chai.request.execute;
+export const agent = chai.request.agent;
 
 // Create a subset of an object array that only contains the given keys
 // data = [ { a: 1, b: 2, c: 3 }, { a: 4, b: 5, c: 6 } ];

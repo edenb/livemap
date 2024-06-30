@@ -47,8 +47,8 @@
   "scripts": {
     "format": "prettier src tests --write",
     "lint": "eslint src tests",
-    "start": "node src/app.js",
-    "test": "mocha tests --exit",
+    "start": "node src/server.js",
+    "test": "NODE_ENV=test mocha tests --color --exit",
     "test:coverage": "c8 npm run test"
   },
   "c8": {
