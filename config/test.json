@@ -3,7 +3,9 @@
     "forceSSL": "true"
   },
   "wclient": {
-    "name": "Live Map (test)",
-    "about": "This is the test version of Live Map."
+    "name": "Livemap name",
+    "license": "Livemap license",
+    "about": "Livemap about",
+    "showBroker": "true"
   }
 }

@@ -500,7 +500,17 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).have.status(200);
-                expect(res.body).to.be.an('object');
+                expect(res.body).to.eql({
+                    application: {
+                        name: 'Livemap name',
+                        about: 'Livemap about',
+                        license: 'Livemap license',
+                    },
+                    mqtt: {
+                        url: 'mqtt://127.0.0.1',
+                        port: '1883',
+                    },
+                });
             });
         });
     });

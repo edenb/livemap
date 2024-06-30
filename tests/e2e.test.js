@@ -114,13 +114,13 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/main$/);
                 expect(res).to.have.cookie('connect.sid');
-                expect(res.text).to.include('<title>Live Map (test)</title>');
+                expect(res.text).to.include('<title>Livemap name</title>');
             });
             it('should GET the main page', async function () {
                 const res = await reqAgent.get('/main');
                 expect(res).to.have.status(200);
                 expect(res).not.to.redirect;
-                expect(res.text).to.include('<title>Live Map (test)</title>');
+                expect(res.text).to.include('<title>Livemap name</title>');
             });
             it('should GET the change details page', async function () {
                 const res = await reqAgent.get('/changedetails');
@@ -421,7 +421,7 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/main$/);
                 expect(res).to.have.cookie('connect.sid');
-                expect(res.text).to.include('<title>Live Map (test)</title>');
+                expect(res.text).to.include('<title>Livemap name</title>');
             });
             it('should GET the change details page', async function () {
                 const res = await reqAgent.get('/changedetails');
