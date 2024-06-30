@@ -65,7 +65,7 @@ describe('e2e', function () {
                     .type('json')
                     .send(loginAdm1);
                 token = res.body.access_token;
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res.body.token_type).to.equal('Bearer');
                 expect(res.body.access_token).to.be.a('string');
             });
