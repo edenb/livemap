@@ -5,8 +5,8 @@ import Logger from './logger.js';
 import JSONValidator from './validator.js';
 
 const logger = Logger(import.meta.url);
-const livemapValidator = new JSONValidator('livemap');
-const MQTTValidator = new JSONValidator('mqtt');
+const livemapValidator = new JSONValidator(logger, 'livemap');
+const MQTTValidator = new JSONValidator(logger, 'mqtt');
 
 async function processGpx(payload) {
     let destData = {},
