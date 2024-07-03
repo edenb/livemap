@@ -87,7 +87,7 @@ const messageWithoutTimestamp = {
     loc_attr: undefined,
 };
 
-describe.only('Validator', function () {
+describe('Validator', function () {
     const logger = Logger(import.meta.url);
     const loggerSpy = spy(logger, 'error');
 
@@ -174,7 +174,7 @@ describe.only('Validator', function () {
         });
     });
 
-    describe('Load from a non existing file', function () {
+    describe('Load from a non existing schema file', function () {
         it('should log an error', async function () {
             const validator = new Validator(logger, 'a-file');
             expect(validator.schemaValid).to.be.false;
