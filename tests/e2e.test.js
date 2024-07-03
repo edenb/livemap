@@ -58,6 +58,29 @@ describe('e2e', function () {
             await removeUserAndDevices(adm1);
         });
 
+        describe('Anonymous user', function () {
+            it('should respond with 401 on login with a wrong password', async function () {
+                const res = await request(app)
+                    .post('/api/v1/login')
+                    .type('json')
+                    .send({
+                        username: adm1.username,
+                        password: 'wrongpassword',
+                    });
+                expect(res).to.have.status(401);
+            });
+            it('should respond with 401 on login with a wrong username', async function () {
+                const res = await request(app)
+                    .post('/api/v1/login')
+                    .type('json')
+                    .send({
+                        username: 'wrongusername',
+                        password: adm1Auth.password,
+                    });
+                expect(res).to.have.status(401);
+            });
+        });
+
         describe('Admin user', function () {
             it('should login as admin', async function () {
                 const res = await request(app)
@@ -105,6 +128,24 @@ describe('e2e', function () {
             it('should respond with HTTP status 404 on a non existing path', async function () {
                 const res = await reqAgent.get('/a-path');
                 expect(res).to.have.status(404);
+            });
+            it('should respond with an error on login with a wrong password', async function () {
+                const res = await reqAgent.post('/login').send({
+                    username: adm1.username,
+                    password: 'wrongpassword',
+                });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/$/);
+                expect(res.text).to.include('Wrong password');
+            });
+            it('should respond with an error on login with a wrong username', async function () {
+                const res = await reqAgent.post('/login').send({
+                    username: 'wrongusername',
+                    password: adm1Auth.password,
+                });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/$/);
+                expect(res.text).to.include('No such user');
             });
         });
 
