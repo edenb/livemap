@@ -173,6 +173,68 @@ describe('REST API', function () {
             });
         });
 
+        describe('POST /users without api key', function () {
+            it('should add a new user with generated api key', async function () {
+                const data = {
+                    api_key: null,
+                    email: 'viewer4@example.com',
+                    fullname: 'Viewer 4',
+                    password: 'password-vwr4',
+                    role: 'viewer',
+                    username: 'vwr4',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                const newUser = await getUser(data);
+                await removeUserAndDevices(newUser);
+                expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
+            });
+        });
+
+        describe('POST /users with too short full name', function () {
+            it('should fail to add a new user', async function () {
+                const data = {
+                    api_key: 'apikey-vwr4',
+                    email: 'viewer4@example.com',
+                    fullname: '4',
+                    password: 'password-vwr4',
+                    role: 'viewer',
+                    username: 'vwr4',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(400);
+                expect(res.error.text).to.equal('Full name too short');
+            });
+        });
+
+        describe('POST /users with an already existing api key', function () {
+            it('should fail to add a new user', async function () {
+                const data = {
+                    api_key: 'apikey-adm1',
+                    email: 'viewer4@example.com',
+                    fullname: 'Viewer 4',
+                    password: 'password-vwr4',
+                    role: 'viewer',
+                    username: 'vwr4',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(500);
+                expect(res.error.text).to.equal('Internal Server Error');
+            });
+        });
+
         describe('PUT /users/:userId', function () {
             it('should change the account details of a user', async function () {
                 const user = await getUser(vwr1);
