@@ -184,4 +184,27 @@ describe('GPX player', function () {
             expect(gpxPlayer.tracks.length).to.equal(0);
         });
     });
+
+    describe('create gpx player on an invalid directory', function () {
+        it('should throw an error', async function () {
+            gpxPlayer = new GpxPlayer('a-directory', '/location/gpx/test');
+            try {
+                await gpxPlayer.loadFileList(gpxPlayer.dirName);
+                expect(true, 'promise should fail').eq(false);
+            } catch (err) {
+                expect(err.message).to.eq(
+                    `ENOENT: no such file or directory, scandir 'a-directory'`,
+                );
+            }
+        });
+    });
+
+    describe('add tracks by api key', function () {
+        it('should find all 6 gpx test files', async function () {
+            gpxPlayer = new GpxPlayer('./tracks/test/', '/location/gpx/test');
+            await gpxPlayer.loadFileList(gpxPlayer.dirName);
+            gpxPlayer.addTracksByApiKey('testkey');
+            expect(gpxPlayer.tracks.length).to.equal(6);
+        });
+    });
 });

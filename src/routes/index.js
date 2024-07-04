@@ -182,21 +182,14 @@ export default (passport) => {
             'user_id',
             req.user.user_id,
         );
-        let userdevices = queryRes.rows;
-        if (typeof queryRes.userMessage === 'undefined') {
-            res.render('changedevices', {
-                wclient: config.get('wclient'),
-                broker: getBrokerUrl(),
-                flash: req.flash(),
-                user: req.user,
-                userdevices: userdevices,
-            });
-        } else {
-            req.flash('error', queryRes.userMessage);
-            req.session.save(() => {
-                res.redirect('/main');
-            });
-        }
+        const userdevices = queryRes.rows;
+        res.render('changedevices', {
+            wclient: config.get('wclient'),
+            broker: getBrokerUrl(),
+            flash: req.flash(),
+            user: req.user,
+            userdevices: userdevices,
+        });
     });
 
     // Handle change devices POST

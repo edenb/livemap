@@ -183,7 +183,7 @@ describe('Integrations', function () {
                 .post('/location/gpx')
                 .query(gpxMessage)
                 .send('');
-            expect(res).have.status(200);
+            expect(res).to.have.status(200);
             expect(processLocationSpy.calledOnce).to.equal(true);
             expect(processLocationSpy.args[0][0]).to.equal('gpx');
             expect(processLocationSpy.args[0][1]).to.deep.equal(
@@ -203,7 +203,7 @@ describe('Integrations', function () {
                 .post('/location/gpx')
                 .query(gpxMessage)
                 .send('');
-            expect(res).have.status(200);
+            expect(res).to.have.status(200);
             expect(processLocationSpy.calledOnce).to.equal(true);
             expect(processLocationSpy.args[0][0]).to.equal('gpx');
             expect(processLocationSpy.args[0][1]).to.deep.equal(
@@ -230,7 +230,7 @@ describe('Integrations', function () {
                 .post('/location/locative')
                 .query(locDevMessage)
                 .send('');
-            expect(res).have.status(200);
+            expect(res).to.have.status(200);
             expect(processLocationSpy.calledOnce).to.equal(true);
             expect(processLocationSpy.args[0][0]).to.equal('locative');
             expect(processLocationSpy.args[0][1]).to.deep.equal(
@@ -250,7 +250,7 @@ describe('Integrations', function () {
                 .post('/location/locative')
                 .query(locDevMessage)
                 .send('');
-            expect(res).have.status(200);
+            expect(res).to.have.status(200);
             expect(processLocationSpy.calledOnce).to.equal(true);
             expect(processLocationSpy.args[0][0]).to.equal('locative');
             expect(processLocationSpy.args[0][1]).to.deep.equal(
@@ -277,7 +277,7 @@ describe('Integrations', function () {
                 .post('/location/locative')
                 .query(locTagMessage)
                 .send('');
-            expect(res).have.status(200);
+            expect(res).to.have.status(200);
             expect(processLocationSpy.calledOnce).to.equal(true);
             expect(processLocationSpy.args[0][0]).to.equal('locative');
             expect(processLocationSpy.args[0][1]).to.deep.equal(
@@ -302,7 +302,7 @@ describe('Integrations', function () {
                 .post('/location/locative')
                 .query(locTagMessage)
                 .send('');
-            expect(res).have.status(200);
+            expect(res).to.have.status(200);
             expect(processLocationSpy.calledOnce).to.equal(true);
             expect(processLocationSpy.args[0][0]).to.equal('locative');
             expect(processLocationSpy.args[0][1]).to.deep.equal(

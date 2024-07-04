@@ -71,7 +71,7 @@ describe('REST API', function () {
         describe('GET /', function () {
             it('should respond that the API is available', async function () {
                 const res = await request(app).get('/api/v1').send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res).to.be.html;
                 expect(res.body).to.be.empty;
                 expect(res.text).to.equal('API V1 is up');
@@ -81,7 +81,7 @@ describe('REST API', function () {
         describe('GET /a-path', function () {
             it('should respond with 404 on a non exiting path', async function () {
                 const res = await request(app).get('/api/v1/a-path').send();
-                expect(res).have.status(404);
+                expect(res).to.have.status(404);
                 expect(res.text).to.equal('Invalid endpoint');
             });
         });
@@ -89,18 +89,18 @@ describe('REST API', function () {
         describe('GET /login', function () {
             it('should respond with 404 without username/password', async function () {
                 const res = await request(app).get('/api/v1/login').send();
-                expect(res).have.status(404);
+                expect(res).to.have.status(404);
             });
             it('should respond with 404 with invalid username/password', async function () {
                 const res = await request(app).get('/api/v1/login').send();
-                expect(res).have.status(404);
+                expect(res).to.have.status(404);
             });
         });
 
         describe('OPTIONS /', function () {
             it('should respond with 200 on OPTION method', async function () {
                 const res = await request(app).options('/api/v1').send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
             });
         });
     });
@@ -141,7 +141,7 @@ describe('REST API', function () {
                     .get('/api/v1/account')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res.body).to.include(adm1);
             });
         });
@@ -152,7 +152,7 @@ describe('REST API', function () {
                     .get('/api/v1/users')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 // const users = res.body.map(
                 //     ({ user_id, ...remainingAttrs }) => remainingAttrs,
                 // );
@@ -169,7 +169,69 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(201);
+                expect(res).to.have.status(201);
+            });
+        });
+
+        describe('POST /users without api key', function () {
+            it('should add a new user with generated api key', async function () {
+                const data = {
+                    api_key: null,
+                    email: 'viewer4@example.com',
+                    fullname: 'Viewer 4',
+                    password: 'password-vwr4',
+                    role: 'viewer',
+                    username: 'vwr4',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                const newUser = await getUser(data);
+                await removeUserAndDevices(newUser);
+                expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
+            });
+        });
+
+        describe('POST /users with too short full name', function () {
+            it('should fail to add a new user', async function () {
+                const data = {
+                    api_key: 'apikey-vwr4',
+                    email: 'viewer4@example.com',
+                    fullname: '4',
+                    password: 'password-vwr4',
+                    role: 'viewer',
+                    username: 'vwr4',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(400);
+                expect(res.error.text).to.equal('Full name too short');
+            });
+        });
+
+        describe('POST /users with an already existing api key', function () {
+            it('should fail to add a new user', async function () {
+                const data = {
+                    api_key: 'apikey-adm1',
+                    email: 'viewer4@example.com',
+                    fullname: 'Viewer 4',
+                    password: 'password-vwr4',
+                    role: 'viewer',
+                    username: 'vwr4',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(500);
+                expect(res.error.text).to.equal('Internal Server Error');
             });
         });
 
@@ -188,7 +250,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(204);
+                expect(res).to.have.status(204);
                 const modifiedUser = await getUser(vwr1);
                 expect(modifiedUser).to.include(data);
             });
@@ -201,7 +263,7 @@ describe('REST API', function () {
                     .get('/api/v1/users/' + user.user_id)
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res.body[0]).to.include(vwr1);
             });
         });
@@ -219,7 +281,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(201);
+                expect(res).to.have.status(201);
                 const modifiedUser = await getUser(adm1);
                 expect(modifiedUser.password).to.not.equal(user.password);
             });
@@ -235,7 +297,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(403);
+                expect(res).to.have.status(403);
             });
         });
 
@@ -252,7 +314,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(201);
+                expect(res).to.have.status(201);
                 const modifiedUser = await getUser(vwr1);
                 expect(modifiedUser.password).to.not.equal(user.password);
             });
@@ -267,7 +329,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(403);
+                expect(res).to.have.status(403);
             });
         });
 
@@ -278,7 +340,7 @@ describe('REST API', function () {
                     .delete('/api/v1/users/' + user.user_id)
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(204);
+                expect(res).to.have.status(204);
                 const deletedUser = await getUser(vwr2);
                 expect(deletedUser).to.be.null;
             });
@@ -288,7 +350,7 @@ describe('REST API', function () {
                     .delete('/api/v1/users/' + user.user_id)
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(400);
+                expect(res).to.have.status(400);
                 const deletedUser = await getUser(adm1);
                 expect(deletedUser).to.include(adm1);
             });
@@ -301,7 +363,7 @@ describe('REST API', function () {
                     .get('/api/v1/users/' + user.user_id + '/devices')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 const devices = subset(res.body, Object.keys(adm1Devs[0]));
                 expect(devices).to.eql(adm1Devs);
             });
@@ -321,7 +383,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(201);
+                expect(res).to.have.status(201);
                 const addedDevices = await getDevices(adm1);
                 const devices = subset(addedDevices, Object.keys(data));
                 expect(devices).to.include.deep.members([data]);
@@ -348,7 +410,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(204);
+                expect(res).to.have.status(204);
                 const modifiedDevices = await getDevices(adm1);
                 const devices = subset(modifiedDevices, Object.keys(data));
                 expect(devices).to.include.deep.members([data]);
@@ -366,7 +428,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(404);
+                expect(res).to.have.status(404);
             });
         });
 
@@ -379,7 +441,7 @@ describe('REST API', function () {
                     .delete('/api/v1/users/' + user.user_id + '/devices/' + ids)
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(204);
+                expect(res).to.have.status(204);
                 const deletedDevices = await getDevices(adm1);
                 expect(deletedDevices).to.be.empty;
             });
@@ -390,7 +452,7 @@ describe('REST API', function () {
                     .delete('/api/v1/users/' + user.user_id + '/devices/' + ids)
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(404);
+                expect(res).to.have.status(404);
             });
         });
 
@@ -411,7 +473,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).have.status(201);
+                expect(res).to.have.status(201);
                 const sharedDevices = await getDevices(vwr1);
                 const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
                 expect(devices).to.include.deep.members([
@@ -437,7 +499,7 @@ describe('REST API', function () {
                     )
                     .auth(token, { type: 'bearer' })
                     .send(vwr1);
-                expect(res).have.status(204);
+                expect(res).to.have.status(204);
                 const sharedDevices = await getDevices(vwr1);
                 const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
                 expect(devices).to.not.include.deep.members([...adm1Devs]);
@@ -450,7 +512,7 @@ describe('REST API', function () {
                     .get('/api/v1/devices')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 const devices = subset(res.body, Object.keys(vwr1Devs[0]));
                 expect(devices).to.include.deep.members([
                     ...vwr1Devs,
@@ -472,7 +534,7 @@ describe('REST API', function () {
                     .get('/api/v1/positions')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res.body[0]).to.include(orgPosition);
             });
         });
@@ -483,7 +545,7 @@ describe('REST API', function () {
                     .get('/api/v1/staticlayers')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res.body).to.be.an('array');
                 res.body.forEach(function (geojson) {
                     expect(geojson)
@@ -499,7 +561,7 @@ describe('REST API', function () {
                     .get('/api/v1/server/info')
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).have.status(200);
+                expect(res).to.have.status(200);
                 expect(res.body).to.eql({
                     application: {
                         name: 'Livemap name',

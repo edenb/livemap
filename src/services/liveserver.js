@@ -1,8 +1,5 @@
-import config from 'config';
-import cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import GpxPlayer from './gpxplayer.js';
-import { getStore } from '../database/db.js';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import * as pos from '../models/position.js';
@@ -13,21 +10,6 @@ const logger = Logger(import.meta.url);
 const io = new Server();
 
 const gpxPlayer = new GpxPlayer('./tracks/', '/location/gpx');
-
-function getSessionInfo(sid) {
-    return new Promise((resolve, reject) => {
-        getStore().get(sid, (error, session) => {
-            if (session && session.passport && session.passport.user) {
-                let sessionInfo = {};
-                sessionInfo.userId = session.passport.user;
-                sessionInfo.token = session.token;
-                resolve(sessionInfo);
-            } else {
-                reject();
-            }
-        });
-    });
-}
 
 function getRoomName(deviceId) {
     return `dev_${deviceId}`;
@@ -73,40 +55,8 @@ async function startGpxPlayer(userId) {
 //
 
 export function start(server) {
-    // On every incoming socket that contains a cookie get the ID of the current session.
-    io.use((socket, next) => {
-        // Only get the session ID if the socket contains a cookie
-        if (socket.request.headers.cookie) {
-            // Create the fake request that cookieParser will expect
-            let req = {
-                headers: {
-                    cookie: socket.request.headers.cookie,
-                },
-            };
-            // Run the parser and store the sessionID
-            cookieParser(config.get('sessions.secret'))(req, null, () => {});
-            let name = config.get('sessions.name');
-            socket.sessionID = req.signedCookies[name] || req.cookies[name];
-        }
-        next();
-    });
-
     // On a new socket connection handle socket authentication and join appropriate rooms
     io.sockets.on('connection', async (socket) => {
-        try {
-            // Authentication by cookie: the user joins all device rooms it has access to
-            if (socket.sessionID) {
-                let sessionInfo = await getSessionInfo(socket.sessionID);
-                await joinRooms(socket, sessionInfo.token);
-                await startGpxPlayer(socket.userId);
-            } else {
-                // Authentication by token: request authentication token
-                socket.emit('authenticate');
-            }
-        } catch (error) {
-            // Ignore socket connections with unknown/invalid session ID
-        }
-
         socket.on('token', async (data) => {
             try {
                 await joinRooms(socket, data);
@@ -116,6 +66,9 @@ export function start(server) {
                 socket.emit('unauthorized');
             }
         });
+
+        // Authentication by token: request authentication token
+        socket.emit('authenticate');
     });
 
     // Start Socket IO server
