@@ -8,26 +8,40 @@ import Logger from '../utils/logger.js';
 const logger = Logger(import.meta.url);
 
 export default class GpxPlayer {
-    constructor(dirName, destPath, cbPoint) {
-        this.dirName = dirName;
+    constructor(destPath, cbPoint) {
         this.destPath = destPath;
         if (typeof cbPoint === 'function') {
             this.cbPoint = cbPoint;
         } else {
             this.cbPoint = this.postMessage;
         }
-        this.tracks = [];
-        this.fileList = [];
-        this.init();
+        this.clear();
     }
 
-    async init() {
+    clear() {
+        this.dirName = '';
+        this.fileList = [];
+        this.tracks = [];
+    }
+
+    // Create a list of all gpx files in the given directory
+    async createFileList(dirName) {
+        let allFiles;
         try {
-            this.fileList = await this.loadFileList(this.dirName);
+            allFiles = await fs.readdir(dirName);
         } catch (err) {
-            this.fileList = [];
-            logger.error('Unable to locate GPX files.', err);
+            this.clear();
+            logger.error('Unable to locate GPX files.', err.message);
+            return [];
         }
+        this.dirName = dirName;
+        this.fileList = [];
+        allFiles.forEach((file) => {
+            if (extname(file) === '.gpx') {
+                this.fileList.push(basename(file, '.gpx'));
+            }
+        });
+        return this.fileList;
     }
 
     // Create new tracks from gpx files based on the given device list
@@ -67,18 +81,6 @@ export default class GpxPlayer {
                 }
             }
         }
-    }
-
-    // Create a list of all gpx files in the given directory
-    async loadFileList(dirName) {
-        const allFiles = await fs.readdir(dirName);
-        let fileList = [];
-        allFiles.forEach((file) => {
-            if (extname(file) === '.gpx') {
-                fileList.push(basename(file, '.gpx'));
-            }
-        });
-        return fileList;
     }
 
     // Get the track with the given name
@@ -157,7 +159,7 @@ class Track {
             this.points = await this.loadGpxFile();
             this.sendGpxPoint();
         } catch (err) {
-            logger.error('Unable to load GPX file.', err);
+            logger.error('Unable to load GPX file.', err.message);
         }
     }
 

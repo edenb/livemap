@@ -9,7 +9,7 @@ import Logger from '../utils/logger.js';
 const logger = Logger(import.meta.url);
 const io = new Server();
 
-const gpxPlayer = new GpxPlayer('./tracks/', '/location/gpx');
+const gpxPlayer = new GpxPlayer('/location/gpx');
 
 function getRoomName(deviceId) {
     return `dev_${deviceId}`;
@@ -32,6 +32,8 @@ async function joinRooms(socket, token) {
 }
 
 async function startGpxPlayer(userId) {
+    // Create al list of all available gpx files
+    await gpxPlayer.createFileList('./tracks/');
     // Start tracks of own devices
     let queryRes = await usr.getUserByField('user_id', userId);
     if (queryRes.rows && queryRes.rows.length > 0) {
