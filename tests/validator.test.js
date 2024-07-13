@@ -61,7 +61,7 @@ const livemapSchema = {
     required: ['loc_timestamp', 'loc_lat', 'loc_lon'],
 };
 
-describe('Validator', function () {
+describe.only('Validator', function () {
     const logger = Logger(import.meta.url);
     const loggerSpy = spy(logger, 'error');
 
@@ -171,6 +171,18 @@ describe('Validator', function () {
             expect(validator.schemaValid).to.be.false;
             expect(loggerSpy.calledOnce).to.equal(true);
             expect(loggerSpy.args[0][0]).to.contain('Schema name is required.');
+        });
+    });
+
+    describe('Create a validator without a logger and a schema name', function () {
+        it('should not create a validator', async function () {
+            const validator = new Validator(null, null, livemapSchema);
+            expect(validator.schemaValid).to.be.false;
+        });
+        it('should fail validation on a correct message', async function () {
+            const validator = new Validator(null, null, livemapSchema);
+            const valid = validator.validate(mqttMessageProcessed);
+            expect(valid).to.be.false;
         });
     });
 });

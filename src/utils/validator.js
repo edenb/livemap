@@ -19,9 +19,7 @@ export default class Validator {
             this.schemaName = schemaName;
             this.schemaValid = true;
         } catch (err) {
-            if (this.logger) {
-                this.logger.error(err.message);
-            }
+            this.logger?.error(err.message);
         }
     }
 
@@ -64,11 +62,9 @@ export default class Validator {
         if (this.schemaValid) {
             return this.ajvValidate(JSONSource);
         } else {
-            if (this.logger) {
-                this.logger.error(
-                    `Schema '${this.schemaName}' not valid. Unable to validate.`,
-                );
-            }
+            this.logger?.error(
+                `Schema '${this.schemaName}' not valid. Unable to validate.`,
+            );
             return false;
         }
     }
