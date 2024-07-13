@@ -3,8 +3,8 @@ import addFormats from 'ajv-formats';
 import { readFileSync } from 'fs';
 
 export default class Validator {
-    constructor(logger, schemaName, schema) {
-        this.logger = logger;
+    constructor(parentLogger, schemaName, schema) {
+        this.logger = parentLogger?.child({ fileUrl: import.meta.url });
         this.schemaName = '';
         this.schemaValid = false;
 
