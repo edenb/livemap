@@ -61,7 +61,7 @@ const livemapSchema = {
     required: ['loc_timestamp', 'loc_lat', 'loc_lon'],
 };
 
-describe.only('Validator', function () {
+describe('Validator', function () {
     const logger = Logger(import.meta.url);
     const loggerSpy = spy(logger, 'error');
 
