@@ -183,16 +183,13 @@ async function processMqtt(payload) {
                 logger.debug('Converted message: ' + JSON.stringify(destData));
                 return destData;
             } else {
-                logger.debug('Unable to find device');
-                return null;
+                throw new Error('No device found.');
             }
         } else {
-            logger.debug('Unknown API key: ' + srcData.apikey);
-            return null;
+            throw new Error('No API key and/or identity found.');
         }
     } else {
-        logger.debug('Invalid MQTT message: ' + payload);
-        return null;
+        throw new Error(`Invalid MQTT message '${payload}'`);
     }
 }
 
@@ -206,24 +203,29 @@ export async function processLocation(format, payload) {
     await usr.getAllUsers();
 
     let destData = null;
-    switch (format) {
-        case 'gpx':
-            destData = await processGpx(payload);
-            break;
-        case 'locative':
-            destData = await processLocative(payload);
-            break;
-        case 'mqtt':
-            destData = await processMqtt(payload);
-            break;
-    }
-
-    if (destData) {
-        if (livemapValidator.validate(destData)) {
-            sendToClients(destData);
-        } else {
-            logger.info(`Invalid: ${livemapValidator.errorsText()}`);
+    try {
+        switch (format) {
+            case 'gpx':
+                destData = await processGpx(payload);
+                break;
+            case 'locative':
+                destData = await processLocative(payload);
+                break;
+            case 'mqtt':
+                destData = await processMqtt(payload);
+                break;
         }
+
+        if (destData) {
+            if (livemapValidator.validate(destData)) {
+                sendToClients(destData);
+            } else {
+                logger.info(`Invalid: ${livemapValidator.errorsText()}`);
+                destData = null;
+            }
+        }
+    } catch (err) {
+        logger.info(`Ingester for '${format}' failed. ${err.message}`);
     }
     return destData;
 }
