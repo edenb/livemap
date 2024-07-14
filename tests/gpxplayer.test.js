@@ -110,8 +110,8 @@ describe('GPX player', function () {
 
     describe('create gpx player', function () {
         it('should find all 6 gpx test files', async function () {
-            gpxPlayer = new GpxPlayer('./tracks/test/', '/location/gpx/test');
-            const fileList = await gpxPlayer.loadFileList(gpxPlayer.dirName);
+            gpxPlayer = new GpxPlayer('/location/gpx/test');
+            const fileList = await gpxPlayer.createFileList('./tracks/test/');
             expect(fileList.length).to.equal(6);
         });
     });
@@ -186,23 +186,17 @@ describe('GPX player', function () {
     });
 
     describe('create gpx player on an invalid directory', function () {
-        it('should throw an error', async function () {
-            gpxPlayer = new GpxPlayer('a-directory', '/location/gpx/test');
-            try {
-                await gpxPlayer.loadFileList(gpxPlayer.dirName);
-                expect(true, 'promise should fail').eq(false);
-            } catch (err) {
-                expect(err.message).to.eq(
-                    `ENOENT: no such file or directory, scandir 'a-directory'`,
-                );
-            }
+        it('should find 0 gpx test files', async function () {
+            gpxPlayer = new GpxPlayer('/location/gpx/test');
+            const fileList = await gpxPlayer.createFileList('a-directory');
+            expect(fileList.length).to.equal(0);
         });
     });
 
     describe('add tracks by api key', function () {
         it('should find all 6 gpx test files', async function () {
-            gpxPlayer = new GpxPlayer('./tracks/test/', '/location/gpx/test');
-            await gpxPlayer.loadFileList(gpxPlayer.dirName);
+            gpxPlayer = new GpxPlayer('/location/gpx/test');
+            await gpxPlayer.createFileList('./tracks/test/');
             gpxPlayer.addTracksByApiKey('testkey');
             expect(gpxPlayer.tracks.length).to.equal(6);
         });

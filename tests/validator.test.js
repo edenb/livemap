@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
+import { mqttMessageProcessed } from './helpers/fixtures.js';
 import Logger from '../src/utils/logger.js';
 import Validator from '../src/utils/validator.js';
 
@@ -60,33 +61,6 @@ const livemapSchema = {
     required: ['loc_timestamp', 'loc_lat', 'loc_lon'],
 };
 
-const mqttMessageProcessed = {
-    api_key: 'apikey-vwr1',
-    identifier: 'vwr1Dev1',
-    device_id_tag: null,
-    identifier_tag: null,
-    api_key_tag: null,
-    alias: 'vwr1Dev1',
-    loc_timestamp: '2024-05-10T15:14:31.191Z',
-    loc_lat: 32.123,
-    loc_lon: -110.123,
-    loc_type: null,
-    loc_attr: undefined,
-};
-
-const messageWithoutTimestamp = {
-    api_key: 'apikey-vwr1',
-    identifier: 'vwr1Dev1',
-    device_id_tag: null,
-    identifier_tag: null,
-    api_key_tag: null,
-    alias: 'vwr1Dev1',
-    loc_lat: 32.123,
-    loc_lon: -110.123,
-    loc_type: null,
-    loc_attr: undefined,
-};
-
 describe('Validator', function () {
     const logger = Logger(import.meta.url);
     const loggerSpy = spy(logger, 'error');
@@ -116,11 +90,15 @@ describe('Validator', function () {
             expect(validator.errorsText()).to.contain('No errors');
         });
         it('should fail validation on an incorrect message', async function () {
+            const { loc_timestamp, ...messageWithoutTimestamp } =
+                mqttMessageProcessed;
             const pass = validator.validate(messageWithoutTimestamp);
             expect(pass).to.be.false;
             expect(loggerSpy.notCalled).to.equal(true);
         });
         it('should provide a validation error text on an incorrect message', async function () {
+            const { loc_timestamp, ...messageWithoutTimestamp } =
+                mqttMessageProcessed;
             validator.validate(messageWithoutTimestamp);
             expect(validator.errorsText()).to.contain(
                 `data must have required property 'loc_timestamp'`,
@@ -163,12 +141,16 @@ describe('Validator', function () {
             expect(validator.errorsText()).to.contain('Schema not valid.');
         });
         it('should fail validation with an error on an incorrect message', async function () {
+            const { loc_timestamp, ...messageWithoutTimestamp } =
+                mqttMessageProcessed;
             const pass = validator.validate(messageWithoutTimestamp);
             expect(pass).to.be.false;
             expect(loggerSpy.calledOnce).to.equal(true);
             expect(loggerSpy.args[0][0]).to.contain('Unable to validate.');
         });
         it('should provide a validation error text on an incorrect message', async function () {
+            const { loc_timestamp, ...messageWithoutTimestamp } =
+                mqttMessageProcessed;
             validator.validate(messageWithoutTimestamp);
             expect(validator.errorsText()).to.contain('Schema not valid.');
         });
@@ -189,6 +171,18 @@ describe('Validator', function () {
             expect(validator.schemaValid).to.be.false;
             expect(loggerSpy.calledOnce).to.equal(true);
             expect(loggerSpy.args[0][0]).to.contain('Schema name is required.');
+        });
+    });
+
+    describe('Create a validator without a logger and a schema name', function () {
+        it('should not create a validator', async function () {
+            const validator = new Validator(null, null, livemapSchema);
+            expect(validator.schemaValid).to.be.false;
+        });
+        it('should fail validation on a correct message', async function () {
+            const validator = new Validator(null, null, livemapSchema);
+            const valid = validator.validate(mqttMessageProcessed);
+            expect(valid).to.be.false;
         });
     });
 });
