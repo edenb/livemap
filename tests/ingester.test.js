@@ -206,7 +206,7 @@ describe('Ingester', function () {
             );
             expect(expectedResult).to.be.null;
             expect(logger.error.args[0][0]).to.equal(
-                `Ingester for 'mqtt' failed. Unable to parse payload. Unexpected token a in JSON at position 0`,
+                `Ingester for 'mqtt' failed. Unable to parse payload. Unexpected token 'a', "a-message" is not valid JSON`,
             );
         });
     });
