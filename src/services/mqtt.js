@@ -2,13 +2,12 @@ import config from 'config';
 import { connect } from 'mqtt';
 import Logger from '../utils/logger.js';
 
-const logger = Logger(import.meta.url);
-
 //
 // Exported modules
 //
 
 export function start(onLocation) {
+    const logger = Logger(import.meta.url);
     const client = connect(getBrokerUrl().href, { keepalive: 10 });
 
     client.on('connect', () => {
@@ -18,7 +17,7 @@ export function start(onLocation) {
     });
 
     client.on('message', (_, message) => {
-        onLocation('mqtt', message.toString());
+        onLocation(logger, 'mqtt', message.toString());
     });
 
     client.on('error', (error) => {

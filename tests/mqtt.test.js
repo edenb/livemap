@@ -48,8 +48,8 @@ describe('MQTT service', function () {
                 testMessage,
             );
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('mqtt');
-            expect(callbackSpy.args[0][1].toString()).to.equal(testMessage);
+            expect(callbackSpy.args[0][1]).to.equal('mqtt');
+            expect(callbackSpy.args[0][2].toString()).to.equal(testMessage);
         });
     });
 });
