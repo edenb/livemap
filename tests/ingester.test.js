@@ -17,7 +17,7 @@ import {
 import { processLocation } from '../src/utils/ingester.js';
 import Logger from '../src/utils/logger.js';
 
-describe.only('Ingester', function () {
+describe('Ingester', function () {
     const logger = Logger(import.meta.url);
 
     before(async function () {
