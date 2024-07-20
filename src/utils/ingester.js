@@ -3,13 +3,7 @@ import * as dev from '../models/device.js';
 import { sendToClients } from '../services/liveserver.js';
 import Validator from './validator.js';
 
-async function processGpx(payload, validator) {
-    if (validator) {
-        if (!validator.validate(payload)) {
-            throw new Error(`Invalid message: ${validator.errorsText()}`);
-        }
-    }
-
+async function processGpx(payload) {
     let destData = {},
         identObj = '';
 
@@ -51,13 +45,7 @@ async function processGpx(payload, validator) {
 // trigger: exit, enter or test
 // identity geofence - id:device
 // identity iBeacon - id1:device  id1:id2
-async function processLocative(payload, validator) {
-    if (validator) {
-        if (!validator.validate(payload)) {
-            throw new Error(`Invalid message: ${validator.errorsText()}`);
-        }
-    }
-
+async function processLocative(payload) {
     let destData = {},
         identObj = '',
         identity = '';
@@ -207,10 +195,10 @@ export async function processLocation(parentLogger, format, payload) {
     try {
         switch (format) {
             case 'gpx':
-                destData = await processGpx(payload, null);
+                destData = await processGpx(payload);
                 break;
             case 'locative':
-                destData = await processLocative(payload, null);
+                destData = await processLocative(payload);
                 break;
             case 'mqtt':
                 destData = await processMqtt(payload, MQTTValidator);
