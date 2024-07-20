@@ -1,12 +1,7 @@
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import { sendToClients } from '../services/liveserver.js';
-import Logger from './logger.js';
-import JSONValidator from './validator.js';
-
-const logger = Logger(import.meta.url);
-const livemapValidator = new JSONValidator(logger, 'livemap');
-const MQTTValidator = new JSONValidator(logger, 'mqtt');
+import Validator from './validator.js';
 
 async function processGpx(payload) {
     let destData = {},
@@ -138,58 +133,47 @@ async function processLocative(payload) {
     }
 }
 
-async function processMqtt(payload) {
-    var srcData,
+async function processMqtt(payload, validator) {
+    let srcData,
         destData = {};
 
-    // Convert JSON string to object
-    // Required: id, apikey, timestamp, lat, lon
-    // Optional: tagid, tagapikey, type, attr
     try {
         srcData = JSON.parse(payload);
-    } catch (e) {
-        srcData = null;
+    } catch (err) {
+        throw new Error(`Unable to parse payload. ${err.message}`);
     }
 
-    if (srcData !== null) {
-        if (!MQTTValidator.validate(srcData)) {
-            logger.info('Invalid: ' + MQTTValidator.errorsText());
-            // Invalidate MQTT message
-            srcData = null;
+    if (validator) {
+        if (!validator.validate(srcData)) {
+            throw new Error(`Invalid message: ${validator.errorsText()}`);
         }
     }
 
-    if (srcData !== null) {
-        if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
-            const queryRes = await dev.getDeviceByIdentity(
-                srcData.apikey,
-                srcData.id,
-            );
-            logger.info('MQTT message: ' + JSON.stringify(srcData));
-            if (queryRes.rowCount === 1) {
-                const destDevice = queryRes.rows[0];
-                destData.device_id = destDevice.device_id;
-                destData.api_key = destDevice.api_key;
-                destData.identifier = srcData.id;
-                destData.device_id_tag = null;
-                destData.identifier_tag = null;
-                destData.api_key_tag = null;
-                destData.alias = destDevice.alias;
-                destData.loc_timestamp = srcData.timestamp;
-                destData.loc_lat = srcData.lat;
-                destData.loc_lon = srcData.lon;
-                destData.loc_type = null; // Deprecated for MQTT
-                destData.loc_attr = srcData.attr;
-                logger.debug('Converted message: ' + JSON.stringify(destData));
-                return destData;
-            } else {
-                throw new Error('No device found.');
-            }
+    if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
+        const queryRes = await dev.getDeviceByIdentity(
+            srcData.apikey,
+            srcData.id,
+        );
+        if (queryRes.rowCount === 1) {
+            const destDevice = queryRes.rows[0];
+            destData.device_id = destDevice.device_id;
+            destData.api_key = destDevice.api_key;
+            destData.identifier = srcData.id;
+            destData.device_id_tag = null;
+            destData.identifier_tag = null;
+            destData.api_key_tag = null;
+            destData.alias = destDevice.alias;
+            destData.loc_timestamp = srcData.timestamp;
+            destData.loc_lat = srcData.lat;
+            destData.loc_lon = srcData.lon;
+            destData.loc_type = null; // Deprecated for MQTT
+            destData.loc_attr = srcData.attr;
+            return destData;
         } else {
-            throw new Error('No API key and/or identity found.');
+            throw new Error('No device found.');
         }
     } else {
-        throw new Error(`Invalid MQTT message '${payload}'`);
+        throw new Error('No API key and/or identity found.');
     }
 }
 
@@ -197,10 +181,15 @@ async function processMqtt(payload) {
 // Exported modules
 //
 
-export async function processLocation(format, payload) {
+export async function processLocation(parentLogger, format, payload) {
+    const logger = parentLogger?.child({ fileUrl: import.meta.url });
+
     // Retrieve latest information about users and devices
     await dev.getAllDevices();
     await usr.getAllUsers();
+
+    const livemapValidator = new Validator(logger, 'livemap');
+    const MQTTValidator = new Validator(logger, 'mqtt');
 
     let destData = null;
     try {
@@ -212,7 +201,7 @@ export async function processLocation(format, payload) {
                 destData = await processLocative(payload);
                 break;
             case 'mqtt':
-                destData = await processMqtt(payload);
+                destData = await processMqtt(payload, MQTTValidator);
                 break;
         }
 
@@ -220,12 +209,12 @@ export async function processLocation(format, payload) {
             if (livemapValidator.validate(destData)) {
                 sendToClients(destData);
             } else {
-                logger.info(`Invalid: ${livemapValidator.errorsText()}`);
+                logger?.error(`Invalid: ${livemapValidator.errorsText()}`);
                 destData = null;
             }
         }
     } catch (err) {
-        logger.info(`Ingester for '${format}' failed. ${err.message}`);
+        logger?.error(`Ingester for '${format}' failed. ${err.message}`);
     }
     return destData;
 }

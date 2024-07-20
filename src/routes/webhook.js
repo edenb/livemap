@@ -1,6 +1,8 @@
 import { Router, urlencoded } from 'express';
+import Logger from '../utils/logger.js';
 
 export default (onLocation) => {
+    const logger = Logger(import.meta.url);
     const router = Router();
 
     router.post('/gpx', urlencoded({ extended: false }), async (req, res) => {
@@ -17,7 +19,7 @@ export default (onLocation) => {
 
         if (payload) {
             try {
-                await onLocation('gpx', payload);
+                await onLocation(logger, 'gpx', payload);
                 res.sendStatus(200);
             } catch {
                 res.sendStatus(422);
@@ -42,7 +44,7 @@ export default (onLocation) => {
 
             if (payload) {
                 try {
-                    await onLocation('locative', payload);
+                    await onLocation(logger, 'locative', payload);
                     res.sendStatus(200);
                 } catch {
                     res.sendStatus(422);

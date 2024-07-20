@@ -63,27 +63,27 @@ const livemapSchema = {
 
 describe('Validator', function () {
     const logger = Logger(import.meta.url);
-    const loggerSpy = spy(logger, 'error');
+
+    beforeEach(function () {
+        spy(logger, 'error');
+    });
 
     afterEach(function () {
-        loggerSpy.resetHistory();
+        logger.error.restore();
     });
 
     describe('Load a valid schema from file', function () {
         let validator;
 
-        before(function () {
-            validator = new Validator(logger, 'livemap');
-        });
-
         it('should create a validator', async function () {
+            validator = new Validator(logger, 'livemap');
             expect(validator.schemaValid).to.be.true;
-            expect(loggerSpy.notCalled).to.equal(true);
+            expect(logger.error.notCalled).to.equal(true);
         });
         it('should pass validation on a correct message', async function () {
             const valid = validator.validate(mqttMessageProcessed);
             expect(valid).to.be.true;
-            expect(loggerSpy.notCalled).to.equal(true);
+            expect(logger.error.notCalled).to.equal(true);
         });
         it('should provide a validation error text on a correct message', async function () {
             validator.validate(mqttMessageProcessed);
@@ -94,7 +94,7 @@ describe('Validator', function () {
                 mqttMessageProcessed;
             const pass = validator.validate(messageWithoutTimestamp);
             expect(pass).to.be.false;
-            expect(loggerSpy.notCalled).to.equal(true);
+            expect(logger.error.notCalled).to.equal(true);
         });
         it('should provide a validation error text on an incorrect message', async function () {
             const { loc_timestamp, ...messageWithoutTimestamp } =
@@ -110,31 +110,28 @@ describe('Validator', function () {
         it('should create a validator', async function () {
             const validator = new Validator(logger, 'livemap', livemapSchema);
             expect(validator.schemaValid).to.be.true;
-            expect(loggerSpy.notCalled).to.equal(true);
+            expect(logger.error.notCalled).to.equal(true);
         });
     });
 
     describe('Load an invalid schema from memory', function () {
         let validator;
 
-        before(function () {
+        it('should log an error', async function () {
             validator = new Validator(logger, 'livemap', {
                 key: 'value',
             });
-        });
-
-        it('should log an error', async function () {
             expect(validator.schemaValid).to.be.false;
-            expect(loggerSpy.calledOnce).to.equal(true);
-            expect(loggerSpy.args[0][0]).to.contain(
+            expect(logger.error.calledOnce).to.equal(true);
+            expect(logger.error.args[0][0]).to.contain(
                 'Unable to create validator.',
             );
         });
         it('should fail validation with an error on a correct message', async function () {
             const valid = validator.validate(mqttMessageProcessed);
             expect(valid).to.be.false;
-            expect(loggerSpy.calledOnce).to.equal(true);
-            expect(loggerSpy.args[0][0]).to.contain('Unable to validate.');
+            expect(logger.error.calledOnce).to.equal(true);
+            expect(logger.error.args[0][0]).to.contain('Unable to validate.');
         });
         it('should provide a validation error text on a correct message', async function () {
             validator.validate(mqttMessageProcessed);
@@ -145,8 +142,8 @@ describe('Validator', function () {
                 mqttMessageProcessed;
             const pass = validator.validate(messageWithoutTimestamp);
             expect(pass).to.be.false;
-            expect(loggerSpy.calledOnce).to.equal(true);
-            expect(loggerSpy.args[0][0]).to.contain('Unable to validate.');
+            expect(logger.error.calledOnce).to.equal(true);
+            expect(logger.error.args[0][0]).to.contain('Unable to validate.');
         });
         it('should provide a validation error text on an incorrect message', async function () {
             const { loc_timestamp, ...messageWithoutTimestamp } =
@@ -160,8 +157,8 @@ describe('Validator', function () {
         it('should log an error', async function () {
             const validator = new Validator(logger, 'a-file');
             expect(validator.schemaValid).to.be.false;
-            expect(loggerSpy.calledOnce).to.equal(true);
-            expect(loggerSpy.args[0][0]).to.contain('Unable to load schema');
+            expect(logger.error.calledOnce).to.equal(true);
+            expect(logger.error.args[0][0]).to.contain('Unable to load schema');
         });
     });
 
@@ -169,8 +166,10 @@ describe('Validator', function () {
         it('should log an error', async function () {
             const validator = new Validator(logger, null, livemapSchema);
             expect(validator.schemaValid).to.be.false;
-            expect(loggerSpy.calledOnce).to.equal(true);
-            expect(loggerSpy.args[0][0]).to.contain('Schema name is required.');
+            expect(logger.error.calledOnce).to.equal(true);
+            expect(logger.error.args[0][0]).to.contain(
+                'Schema name is required.',
+            );
         });
     });
 

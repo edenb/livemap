@@ -53,8 +53,8 @@ describe('Webhooks', function () {
                 .send('');
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('gpx');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(gpx1));
+            expect(callbackSpy.args[0][1]).to.equal('gpx');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(gpx1));
         });
     });
 
@@ -63,8 +63,8 @@ describe('Webhooks', function () {
             const res = await request(app).post('/location/gpx').send(gpx2);
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('gpx');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(gpx2));
+            expect(callbackSpy.args[0][1]).to.equal('gpx');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(gpx2));
         });
     });
 
@@ -93,8 +93,8 @@ describe('Webhooks', function () {
                 .send('');
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('locative');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_dev1));
+            expect(callbackSpy.args[0][1]).to.equal('locative');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_dev1));
         });
     });
 
@@ -105,8 +105,8 @@ describe('Webhooks', function () {
                 .send(loc_dev2);
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('locative');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_dev2));
+            expect(callbackSpy.args[0][1]).to.equal('locative');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_dev2));
         });
     });
 
@@ -118,8 +118,8 @@ describe('Webhooks', function () {
                 .send('');
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('locative');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
+            expect(callbackSpy.args[0][1]).to.equal('locative');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_tag1_enter));
         });
     });
 
@@ -130,8 +130,8 @@ describe('Webhooks', function () {
                 .send(loc_tag1_enter);
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('locative');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_enter));
+            expect(callbackSpy.args[0][1]).to.equal('locative');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_tag1_enter));
         });
     });
 
@@ -143,8 +143,8 @@ describe('Webhooks', function () {
                 .send('');
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('locative');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
+            expect(callbackSpy.args[0][1]).to.equal('locative');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_tag1_exit));
         });
     });
 
@@ -155,8 +155,8 @@ describe('Webhooks', function () {
                 .send(loc_tag1_exit);
             expect(res).to.have.status(200);
             expect(callbackSpy.calledOnce).to.equal(true);
-            expect(callbackSpy.args[0][0]).to.equal('locative');
-            expect(callbackSpy.args[0][1]).to.deep.equal(parse(loc_tag1_exit));
+            expect(callbackSpy.args[0][1]).to.equal('locative');
+            expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_tag1_exit));
         });
     });
 });
