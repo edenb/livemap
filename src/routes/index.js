@@ -1,6 +1,6 @@
 import config from 'config';
-import { Router } from 'express';
 import 'connect-flash';
+import { Router } from 'express';
 import { getNewToken } from '../auth/jwt.js';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';

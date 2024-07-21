@@ -1,9 +1,9 @@
 import config from 'config';
-import pg from 'pg';
-import pgConnectionString from 'pg-connection-string';
 import pgStore from 'connect-pg-simple';
 import memoryStore from 'memorystore';
-import { readFile } from 'fs';
+import { readFile } from 'node:fs';
+import pg from 'pg';
+import pgConnectionString from 'pg-connection-string';
 import { load, invalidate, save } from './dbcache.js';
 import Logger from '../utils/logger.js';
 

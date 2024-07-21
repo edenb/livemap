@@ -1,5 +1,5 @@
 import config from 'config';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { createLogger, format, transports } from 'winston';
 
 export default (fileUrl) => {
