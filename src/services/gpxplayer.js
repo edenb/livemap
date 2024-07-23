@@ -1,7 +1,7 @@
 import config from 'config';
-import { request } from 'http';
-import { promises as fs } from 'fs';
-import { extname, basename } from 'path';
+import { promises as fs } from 'node:fs';
+import { request } from 'node:http';
+import { extname, basename } from 'node:path';
 import { Parser } from 'xml2js';
 import Logger from '../utils/logger.js';
 

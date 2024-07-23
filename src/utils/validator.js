@@ -1,6 +1,6 @@
 import ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 
 export default class Validator {
     constructor(parentLogger, schemaName, schema) {

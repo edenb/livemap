@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 
 function readDir(dirName) {
     return new Promise((resolve, reject) => {

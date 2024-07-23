@@ -1,6 +1,6 @@
-import config from 'config';
 import bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
+import config from 'config';
+import { randomBytes } from 'node:crypto';
 import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
 
 // In memory list of all users with their attributes
