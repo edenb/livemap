@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import express from 'express';
-import session from 'express-session';
 import { spy } from 'sinon';
-import { request } from './helpers/chai.js';
+import { agent, request } from './helpers/chai.js';
 import {
     addUserAndDevices,
     getDevices,
@@ -17,66 +15,45 @@ import {
     devPositions,
 } from './helpers/fixtures.js';
 import { createLiveClient, destroyLiveClient } from './helpers/live.js';
-import { addRouter, createWebServer } from './helpers/webserver.js';
-import passport from '../src/auth/passport.js';
-import { bindStore, getStore } from '../src/database/db.js';
-import routesApi from '../src/routes/api.js';
+import { createWebServer } from './helpers/webserver.js';
+import App from '../src/app.js';
 import * as liveServer from '../src/services/liveserver.js';
 
 describe('Live server', function () {
+    const app = App();
+    let loginAdm1;
+    let loginVwr1;
+    let position;
     let server;
     let tokenAdm1;
     let tokenVwr1;
     let webServer;
-    const app = express();
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    bindStore(session, 'memory');
-
-    const sessionMiddleware = session({
-        name: 'session',
-        store: getStore(),
-        secret: 'secret',
-        cookie: { maxAge: 60, sameSite: 'strict' },
-        resave: false,
-        saveUninitialized: true,
-        unset: 'keep',
-    });
-    app.use((req, res, next) => {
-        return sessionMiddleware(req, res, next);
-    });
-    app.use(passport.session());
 
     before(async function () {
         // Start a webserver and a live server
         webServer = await createWebServer(app, 3001);
-        addRouter(app, '/api/v1', routesApi(passport));
         server = liveServer.start(webServer);
         // Create test users and add test devices
         await addUserAndDevices({ ...adm1, ...adm1Auth }, adm1Devs);
         await addUserAndDevices({ ...vwr1, ...vwr1Auth }, []);
         // Get token of user: adm1
-        const loginAdm1 = {
+        loginAdm1 = {
             username: adm1.username,
             password: adm1Auth.password,
         };
-        const res1 = await request(app)
-            .post('/api/v1/login')
-            .type('json')
-            .send(loginAdm1);
-        tokenAdm1 = res1.body.access_token;
-        // Get token of user: vwr11
-        const loginVwr1 = {
+        // Get token of user: vwr1
+        loginVwr1 = {
             username: vwr1.username,
             password: vwr1Auth.password,
         };
-        const res2 = await request(app)
-            .post('/api/v1/login')
-            .type('json')
-            .send(loginVwr1);
-        tokenVwr1 = res2.body.access_token;
+        // Create a position for a device owned by adm1
+        const devices = await getDevices(adm1);
+        position = {
+            ...devPositions[0],
+            device_id: devices[0].device_id,
+            api_key: adm1.api_key,
+        };
     });
-
     after(async function () {
         // Destroy the live server and the webserver
         server.close();
@@ -84,27 +61,33 @@ describe('Live server', function () {
         await removeUserAndDevices(vwr1);
     });
 
-    describe('Broadcast positions of a device to all authorized clients', async function () {
-        let position;
+    describe('Broadcast positions to token authorized clients', async function () {
         let client1, client2, client3;
         let callbackSpy1 = spy(),
             callbackSpy2 = spy(),
             callbackSpy3 = spy();
+
         before(async function () {
-            const devices = await getDevices(adm1);
-            position = {
-                ...devPositions[0],
-                device_id: devices[0].device_id,
-                api_key: adm1.api_key,
-            };
+            const res1 = await request(app)
+                .post('/api/v1/login')
+                .type('json')
+                .send(loginAdm1);
+            tokenAdm1 = res1.body.access_token;
+            const res2 = await request(app)
+                .post('/api/v1/login')
+                .type('json')
+                .send(loginVwr1);
+            tokenVwr1 = res2.body.access_token;
             client1 = await createLiveClient(
                 'http://localhost:3001',
                 tokenAdm1,
+                null,
                 callbackSpy1,
             );
             client3 = await createLiveClient(
                 'http://localhost:3001',
                 tokenVwr1,
+                null,
                 callbackSpy3,
             );
         });
@@ -128,6 +111,7 @@ describe('Live server', function () {
                 client2 = await createLiveClient(
                     'http://localhost:3001',
                     tokenAdm1,
+                    null,
                     callbackSpy2,
                 );
             });
@@ -174,12 +158,60 @@ describe('Live server', function () {
         });
     });
 
-    describe('Connection attempt by an unauthorized client', async function () {
+    describe('Connection attempt with an unauthorized token', async function () {
         it('should throw an exception', async function () {
             try {
                 await createLiveClient(
                     'http://localhost:3001',
                     'invalid-token',
+                    null,
+                    null,
+                );
+                expect(true, 'promise should fail').eq(false);
+            } catch (e) {
+                expect(e.message).to.eq('Unauthorized');
+            }
+        });
+    });
+
+    describe('Broadcast positions to cookie authorized clients', async function () {
+        let reqAgent;
+
+        before(function () {
+            // Create a request agent to retain cookies
+            reqAgent = agent(app);
+        });
+        after(function () {
+            // Destroy the request agent
+            reqAgent.close();
+        });
+
+        describe('Existing authorized client', function () {
+            it('should receive the first position', async function () {
+                const callbackSpy = spy();
+                const res = await reqAgent.post('/login').send(loginAdm1);
+                const client = await createLiveClient(
+                    'http://localhost:3001',
+                    null,
+                    res.headers['set-cookie'][0],
+                    callbackSpy,
+                );
+                await liveServer.sendToClients(position);
+                expect(callbackSpy.calledOnce).to.equal(true);
+                const data = JSON.parse(callbackSpy.args[0][0]).data;
+                expect(data).to.eql(position);
+                await destroyLiveClient(client);
+            });
+        });
+    });
+
+    describe('Connection attempt with an unauthorized cookie', async function () {
+        it('should throw an exception', async function () {
+            try {
+                await createLiveClient(
+                    'http://localhost:3001',
+                    null,
+                    'connect.sid=invalid_cookie',
                     null,
                 );
                 expect(true, 'promise should fail').eq(false);
