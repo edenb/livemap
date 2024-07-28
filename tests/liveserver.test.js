@@ -187,20 +187,27 @@ describe('Live server', function () {
         });
 
         describe('Existing authorized client', function () {
-            it('should receive the first position', async function () {
-                const callbackSpy = spy();
+            let client;
+            let callbackSpy = spy();
+
+            before(async function () {
                 const res = await reqAgent.post('/login').send(loginAdm1);
-                const client = await createLiveClient(
+                client = await createLiveClient(
                     'http://localhost:3001',
                     null,
                     res.headers['set-cookie'][0],
                     callbackSpy,
                 );
+            });
+            after(async function () {
+                await destroyLiveClient(client);
+            });
+
+            it('should receive the first position', async function () {
                 await liveServer.sendToClients(position);
                 expect(callbackSpy.calledOnce).to.equal(true);
                 const data = JSON.parse(callbackSpy.args[0][0]).data;
                 expect(data).to.eql(position);
-                await destroyLiveClient(client);
             });
         });
     });
