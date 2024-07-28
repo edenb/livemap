@@ -1,8 +1,13 @@
 import { io } from 'socket.io-client';
 
-export function createLiveClient(serverUrl, token, onData) {
+export function createLiveClient(serverUrl, token, cookie, onData) {
     return new Promise(function (resolve, reject) {
-        const socket = io(serverUrl);
+        let options = { forceNew: true };
+        if (cookie) {
+            options = { ...options, ...{ extraHeaders: { cookie } } };
+        }
+
+        const socket = io(serverUrl, options);
         socket.on('positionUpdate', function (data) {
             onData(data);
         });
@@ -13,6 +18,7 @@ export function createLiveClient(serverUrl, token, onData) {
             resolve(socket);
         });
         socket.on('unauthorized', function () {
+            socket.close();
             reject(new Error('Unauthorized'));
         });
     });
