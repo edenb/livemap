@@ -61,7 +61,7 @@ describe('Live server', function () {
         await removeUserAndDevices(vwr1);
     });
 
-    describe('Broadcast positions to token authorized clients', async function () {
+    describe('Broadcast positions to token authorized clients (auth by event)', async function () {
         let client1, client2, client3;
         let callbackSpy1 = spy(),
             callbackSpy2 = spy(),
@@ -82,12 +82,14 @@ describe('Live server', function () {
                 'http://localhost:3001',
                 tokenAdm1,
                 null,
+                false,
                 callbackSpy1,
             );
             client3 = await createLiveClient(
                 'http://localhost:3001',
                 tokenVwr1,
                 null,
+                false,
                 callbackSpy3,
             );
         });
@@ -112,6 +114,7 @@ describe('Live server', function () {
                     'http://localhost:3001',
                     tokenAdm1,
                     null,
+                    false,
                     callbackSpy2,
                 );
             });
@@ -158,13 +161,131 @@ describe('Live server', function () {
         });
     });
 
-    describe('Connection attempt with an unauthorized token', async function () {
+    describe('Connection attempt with an unauthorized token (auth by event)', async function () {
         it('should throw an exception', async function () {
             try {
                 await createLiveClient(
                     'http://localhost:3001',
                     'invalid-token',
                     null,
+                    false,
+                    null,
+                );
+                expect(true, 'promise should fail').eq(false);
+            } catch (e) {
+                expect(e.message).to.eq('Unauthorized');
+            }
+        });
+    });
+
+    describe('Broadcast positions to token authorized clients (auth by handshake)', async function () {
+        let client1, client2, client3;
+        let callbackSpy1 = spy(),
+            callbackSpy2 = spy(),
+            callbackSpy3 = spy();
+
+        before(async function () {
+            const res1 = await request(app)
+                .post('/api/v1/login')
+                .type('json')
+                .send(loginAdm1);
+            tokenAdm1 = res1.body.access_token;
+            const res2 = await request(app)
+                .post('/api/v1/login')
+                .type('json')
+                .send(loginVwr1);
+            tokenVwr1 = res2.body.access_token;
+            client1 = await createLiveClient(
+                'http://localhost:3001',
+                tokenAdm1,
+                null,
+                true,
+                callbackSpy1,
+            );
+            client3 = await createLiveClient(
+                'http://localhost:3001',
+                tokenVwr1,
+                null,
+                true,
+                callbackSpy3,
+            );
+        });
+        after(async function () {
+            await destroyLiveClient(client1);
+            await destroyLiveClient(client2);
+            await destroyLiveClient(client3);
+        });
+
+        describe('Existing authorized client 1', async function () {
+            it('should receive the first position', async function () {
+                await liveServer.sendToClients(position); // First position
+                expect(callbackSpy1.calledOnce).to.equal(true);
+                const data = JSON.parse(callbackSpy1.args[0][0]).data;
+                expect(data).to.eql(position);
+            });
+        });
+
+        describe('A new authorized client 2', async function () {
+            before(async function () {
+                client2 = await createLiveClient(
+                    'http://localhost:3001',
+                    tokenAdm1,
+                    null,
+                    true,
+                    callbackSpy2,
+                );
+            });
+            it('should receive the second position', async function () {
+                await liveServer.sendToClients(position); // Second position
+                expect(callbackSpy2.calledOnce).to.equal(true);
+                const data = JSON.parse(callbackSpy2.args[0][0]).data;
+                expect(data).to.eql(position);
+            });
+        });
+
+        describe('Existing authorized client 1', async function () {
+            it('should receive the second position', async function () {
+                expect(callbackSpy1.calledTwice).to.equal(true);
+                const data = JSON.parse(callbackSpy1.args[1][0]).data;
+                expect(data).to.eql(position);
+            });
+        });
+
+        describe('An unauthorized client 3', async function () {
+            it('should not receive any positions', async function () {
+                expect(callbackSpy3.callCount).to.equal(0);
+            });
+        });
+
+        describe('A position with an invalid device id', async function () {
+            let invalidPosition;
+            before(async function () {
+                invalidPosition = {
+                    ...devPositions[0],
+                    device_id: -1,
+                    api_key: adm1.api_key,
+                };
+            });
+            it('should not be received by any client', async function () {
+                callbackSpy1.resetHistory();
+                callbackSpy2.resetHistory();
+                callbackSpy3.resetHistory();
+                await liveServer.sendToClients(invalidPosition);
+                expect(callbackSpy1.callCount).to.equal(0);
+                expect(callbackSpy2.callCount).to.equal(0);
+                expect(callbackSpy3.callCount).to.equal(0);
+            });
+        });
+    });
+
+    describe('Connection attempt with an unauthorized token (auth by handshake)', async function () {
+        it('should throw an exception', async function () {
+            try {
+                await createLiveClient(
+                    'http://localhost:3001',
+                    'invalid-token',
+                    null,
+                    true,
                     null,
                 );
                 expect(true, 'promise should fail').eq(false);
@@ -196,6 +317,7 @@ describe('Live server', function () {
                     'http://localhost:3001',
                     null,
                     res.headers['set-cookie'][0],
+                    false,
                     callbackSpy,
                 );
             });
@@ -219,6 +341,7 @@ describe('Live server', function () {
                     'http://localhost:3001',
                     null,
                     'connect.sid=invalid_cookie',
+                    false,
                     null,
                 );
                 expect(true, 'promise should fail').eq(false);
