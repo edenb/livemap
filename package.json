@@ -29,7 +29,7 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "aedes": "^0.51.0",
+    "aedes": "^0.51.3",
     "c8": "^10.0.0",
     "chai": "^5.1.0",
     "chai-http": "^5.0.0",
