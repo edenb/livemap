@@ -74,9 +74,33 @@ async function startGpxPlayer(userId) {
 // Exported modules
 //
 
+// The liverserver (Socket.IO server) supports 3 ways of authorization:
+// 1. Cookie authorization
+//    Reuse of the cookie provided by the REST API.
+//    After successful login with the REST API the server sends a cookie with the name connect.sid.
+//    During socket.io connection setup the liveserver checks the existence and validity of the connect-sid cookie.
+// 2. Token authorization by handshake
+//    After successful login with the REST API the server provides a token.
+//    During socket.io connection setup (handshake) the client sends the given token to the server.
+//    The server checks the validity of the token.
+// 3. Token authorization by event
+//    After successful login with the REST API the server provides a token.
+//    After socket.io connection setup the liveserver asks for a token (token event).
+//    The client sends the token in an event (authenticate event).
+//    The server checks the validity of the token.
 export function start(server) {
     // On every incoming socket that contains a cookie get the ID of the current session.
-    io.use((socket, next) => {
+    io.use(async (socket, next) => {
+        let err;
+        const token = socket.handshake.auth.token;
+        if (token) {
+            try {
+                await joinRooms(socket, token);
+                await startGpxPlayer(socket.userId);
+            } catch (error) {
+                err = Error(`Unauthorized. ${error.message}`);
+            }
+        }
         // Only get the session ID if the socket contains a cookie
         if (socket.request.headers.cookie) {
             // Create the fake request that cookieParser will expect
@@ -90,7 +114,7 @@ export function start(server) {
             let name = config.get('sessions.name');
             socket.sessionID = req.signedCookies[name] || req.cookies[name];
         }
-        next();
+        next(err);
     });
 
     // On a new socket connection handle socket authentication and join appropriate rooms
