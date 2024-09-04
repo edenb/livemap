@@ -191,12 +191,8 @@ export async function processLocation(parentLogger, format, payload) {
     await dev.getAllDevices();
     await usr.getAllUsers();
 
-    if (!livemapValidator) {
-        livemapValidator = new Validator(logger, 'livemap');
-    }
-    if (!MQTTValidator) {
-        MQTTValidator = new Validator(logger, 'mqtt');
-    }
+    livemapValidator ||= new Validator(logger, 'livemap');
+    MQTTValidator ||= new Validator(logger, 'mqtt');
 
     let destData = null;
     try {
