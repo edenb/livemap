@@ -7,14 +7,13 @@ export default (onLocation) => {
 
     router.post('/gpx', urlencoded({ extended: false }), async (req, res) => {
         let payload;
-        // Use payload from query string or body. Query string is preferred.
-        // Respond with errorcode 422 if neither are provided.
+        // Use the payload from the query string or the body.
+        // Respond with errorcode 422 if neither are provided or
+        // processing of the data fails.
         if (Object.keys(req.query).length > 0) {
             payload = req.query;
         } else if (Object.keys(req.body).length > 0) {
             payload = req.body;
-        } else {
-            res.sendStatus(422);
         }
 
         if (payload) {
@@ -24,6 +23,8 @@ export default (onLocation) => {
             } catch {
                 res.sendStatus(422);
             }
+        } else {
+            res.sendStatus(422);
         }
     });
 

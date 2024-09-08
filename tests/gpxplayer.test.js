@@ -38,7 +38,7 @@ function routerGpxPoint() {
         express.urlencoded({ extended: false }),
         async function (req, res) {
             const now = new Date().toISOString();
-            points.push({ ts: now, ...req.query });
+            points.push({ ts: now, ...req.body });
             res.sendStatus(200);
         },
     );

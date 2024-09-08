@@ -3,6 +3,9 @@ import * as dev from '../models/device.js';
 import { sendToClients } from '../services/liveserver.js';
 import Validator from './validator.js';
 
+let livemapValidator;
+let MQTTValidator;
+
 async function processGpx(payload) {
     let destData = {},
         identObj = '';
@@ -188,8 +191,8 @@ export async function processLocation(parentLogger, format, payload) {
     await dev.getAllDevices();
     await usr.getAllUsers();
 
-    const livemapValidator = new Validator(logger, 'livemap');
-    const MQTTValidator = new Validator(logger, 'mqtt');
+    livemapValidator ||= new Validator(logger, 'livemap');
+    MQTTValidator ||= new Validator(logger, 'mqtt');
 
     let destData = null;
     try {

@@ -2,6 +2,7 @@ import config from 'config';
 import { promises as fs } from 'node:fs';
 import { request } from 'node:http';
 import { extname, basename } from 'node:path';
+import { stringify } from 'node:querystring';
 import { Parser } from 'xml2js';
 import Logger from '../utils/logger.js';
 
@@ -107,20 +108,20 @@ export default class GpxPlayer {
 
     // Send HTTP POST request
     postMessage(data) {
-        const gpxQuerystring = new URLSearchParams({
+        const gpxQuerystring = stringify({
             device_id: data.device_id,
             gps_latitude: data.gps_latitude,
             gps_longitude: data.gps_longitude,
             gps_time: data.gps_time,
-        }).toString();
+        });
 
         const options = {
             host: 'localhost',
             port: config.get('server.port'),
-            path: this.destPath + '?' + gpxQuerystring,
+            path: this.destPath,
             method: 'POST',
             headers: {
-                'Content-Type': 'text/plain',
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'Content-Length': Buffer.byteLength(gpxQuerystring),
             },
         };
@@ -134,7 +135,9 @@ export default class GpxPlayer {
         });
 
         req.on('error', (err) => {
-            logger.error('GPX player failed HTTP POST.', err);
+            let errMessages = '';
+            err.errors?.forEach((el) => (errMessages += el.message + '. '));
+            logger.error(`GPX player failed HTTP POST. ${errMessages}`);
         });
 
         req.write(gpxQuerystring);
