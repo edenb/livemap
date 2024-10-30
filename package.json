@@ -31,7 +31,7 @@
   "devDependencies": {
     "aedes": "^0.51.0",
     "c8": "^10.0.0",
-    "chai": "^5.1.0",
+    "chai": "^5.1.2",
     "chai-http": "^5.0.0",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.0.0",
