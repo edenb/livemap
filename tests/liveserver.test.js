@@ -19,7 +19,7 @@ import { createWebServer } from './helpers/webserver.js';
 import App from '../src/app.js';
 import * as liveServer from '../src/services/liveserver.js';
 
-describe.only('Live server', function () {
+describe('Live server', function () {
     const app = App();
     let loginAdm1;
     let loginVwr1;
