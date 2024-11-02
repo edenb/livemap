@@ -14,7 +14,7 @@ import {
     vwr1,
     devPositions,
 } from './helpers/fixtures.js';
-import { createLiveClient, destroyLiveClient } from './helpers/live.js';
+import { createLiveClient, destroyLiveClient, sleep } from './helpers/live.js';
 import { createWebServer } from './helpers/webserver.js';
 import App from '../src/app.js';
 import * as liveServer from '../src/services/liveserver.js';
@@ -102,6 +102,7 @@ describe('Live server', function () {
         describe('Existing authorized client 1', async function () {
             it('should receive the first position', async function () {
                 await liveServer.sendToClients(position); // First position
+                await sleep(100);
                 expect(callbackSpy1.calledOnce).to.equal(true);
                 const data = JSON.parse(callbackSpy1.args[0][0]).data;
                 expect(data).to.eql(position);
@@ -120,6 +121,7 @@ describe('Live server', function () {
             });
             it('should receive the second position', async function () {
                 await liveServer.sendToClients(position); // Second position
+                await sleep(100);
                 expect(callbackSpy2.calledOnce).to.equal(true);
                 const data = JSON.parse(callbackSpy2.args[0][0]).data;
                 expect(data).to.eql(position);
@@ -154,6 +156,7 @@ describe('Live server', function () {
                 callbackSpy2.resetHistory();
                 callbackSpy3.resetHistory();
                 await liveServer.sendToClients(invalidPosition);
+                await sleep(100);
                 expect(callbackSpy1.callCount).to.equal(0);
                 expect(callbackSpy2.callCount).to.equal(0);
                 expect(callbackSpy3.callCount).to.equal(0);
@@ -219,6 +222,7 @@ describe('Live server', function () {
         describe('Existing authorized client 1', async function () {
             it('should receive the first position', async function () {
                 await liveServer.sendToClients(position); // First position
+                await sleep(100);
                 expect(callbackSpy1.calledOnce).to.equal(true);
                 const data = JSON.parse(callbackSpy1.args[0][0]).data;
                 expect(data).to.eql(position);
@@ -237,6 +241,7 @@ describe('Live server', function () {
             });
             it('should receive the second position', async function () {
                 await liveServer.sendToClients(position); // Second position
+                await sleep(100);
                 expect(callbackSpy2.calledOnce).to.equal(true);
                 const data = JSON.parse(callbackSpy2.args[0][0]).data;
                 expect(data).to.eql(position);
@@ -271,6 +276,7 @@ describe('Live server', function () {
                 callbackSpy2.resetHistory();
                 callbackSpy3.resetHistory();
                 await liveServer.sendToClients(invalidPosition);
+                await sleep(100);
                 expect(callbackSpy1.callCount).to.equal(0);
                 expect(callbackSpy2.callCount).to.equal(0);
                 expect(callbackSpy3.callCount).to.equal(0);
@@ -327,6 +333,7 @@ describe('Live server', function () {
 
             it('should receive the first position', async function () {
                 await liveServer.sendToClients(position);
+                await sleep(100);
                 expect(callbackSpy.calledOnce).to.equal(true);
                 const data = JSON.parse(callbackSpy.args[0][0]).data;
                 expect(data).to.eql(position);

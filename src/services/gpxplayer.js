@@ -136,8 +136,8 @@ export default class GpxPlayer {
 
         req.on('error', (err) => {
             let errMessages = '';
-            err.errors?.forEach((el) => (errMessages += el.message + '. '));
-            logger.error(`GPX player failed HTTP POST. ${errMessages}`);
+            err.errors?.forEach((el) => (errMessages += ` ${el.message}.`));
+            logger.error(`GPX player failed HTTP POST.${errMessages}`);
         });
 
         req.write(gpxQuerystring);
