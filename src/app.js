@@ -1,6 +1,7 @@
 import config from 'config';
 import flash from 'connect-flash';
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import session from 'express-session';
 import morgan from 'morgan';
 import { dirname } from 'node:path';
@@ -40,6 +41,15 @@ export default () => {
     // Directory and filename of this module
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
+
+    // Apply the rate limiting middleware to all requests.
+    const rateLimiter = rateLimit({
+        windowMs: config.get('rateLimiter.window'),
+        limit: config.get('rateLimiter.limit'),
+        standardHeaders: 'draft-7',
+        legacyHeaders: false,
+    });
+    app.use(rateLimiter);
 
     // Add http routes for location ingestion
     app.use('/location', routesWebhook(processLocation));

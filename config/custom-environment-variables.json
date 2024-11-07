@@ -7,6 +7,10 @@
     "port": "C_SERVER_PORT",
     "forceSSL": "C_SERVER_FORCESSL"
   },
+  "rateLimiter": {
+    "limit": "C_RATELIMITER_LIMIT",
+    "window": "C_RATELIMITER_WINDOW"
+  },
   "logger": {
     "level": "C_LOGGER_LEVEL",
     "colorize": "C_LOGGER_COLORIZE"

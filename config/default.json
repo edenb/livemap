@@ -7,6 +7,10 @@
     "port": 3000,
     "forceSSL": "false"
   },
+  "rateLimiter": {
+    "limit": 100,
+    "window": 60000
+  },
   "logger": {
     "level": "info",
     "colorize": true
