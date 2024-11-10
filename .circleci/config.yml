@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@2.6.0
-  codecov: codecov/codecov@4.1.0
+  docker: circleci/docker@2.8.1
+  codecov: codecov/codecov@5.0.2
 jobs:
   lint:
     docker:
@@ -47,7 +47,7 @@ jobs:
           name: Run tests
           command: npm run test:coverage
       - codecov/upload:
-          file: ./coverage/lcov.info
+          files: ./coverage/lcov.info
   deploy-fly-development:
     machine:
       docker_layer_caching: true
