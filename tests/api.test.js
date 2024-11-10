@@ -1,6 +1,4 @@
 import { expect } from 'chai';
-import express from 'express';
-import session from 'express-session';
 import { request, subset } from './helpers/chai.js';
 import {
     addPosition,
@@ -26,40 +24,16 @@ import {
     vwr3,
     devPositions,
 } from './helpers/fixtures.js';
-import {
-    addRouter,
-    createWebServer,
-    destroyWebServer,
-} from './helpers/webserver.js';
-import passport from '../src/auth/passport.js';
-import { bindStore, getStore } from '../src/database/db.js';
-import routesApi from '../src/routes/api.js';
+import { createWebServer, destroyWebServer } from './helpers/webserver.js';
+import App from '../src/app.js';
 
 describe('REST API', function () {
+    const app = App();
     let webServer;
-    const app = express();
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    bindStore(session, 'memory');
-
-    const sessionMiddleware = session({
-        name: 'session',
-        store: getStore(),
-        secret: 'secret',
-        cookie: { maxAge: 60, sameSite: 'strict' },
-        resave: false,
-        saveUninitialized: true,
-        unset: 'keep',
-    });
-    app.use((req, res, next) => {
-        return sessionMiddleware(req, res, next);
-    });
-    app.use(passport.session());
 
     before(async function () {
         // Start a webserver
-        webServer = await createWebServer(app, 3000);
-        addRouter(app, '/api/v1', routesApi(passport));
+        webServer = await createWebServer(app, 3001);
     });
 
     after(async function () {
