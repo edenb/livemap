@@ -70,8 +70,8 @@ export default () => {
     app.use(express.urlencoded({ extended: true }));
     app.enable('trust proxy');
 
-    // Sessions stored in 'memory' or 'pg' (database)
-    bindStore(session, 'memory');
+    // Store sessions in the database
+    bindStore(session);
     // Don't use sessions for API calls,
     // i.e. a token is given in the header (Authorization: <some_token>)
     const sessionMiddleware = session({
@@ -81,7 +81,7 @@ export default () => {
         cookie: { maxAge: config.get('sessions.maxAge'), sameSite: 'strict' },
         resave: false,
         saveUninitialized: true,
-        unset: 'keep', // Or destroy?
+        unset: 'keep',
     });
 
     app.use((req, res, next) => {
