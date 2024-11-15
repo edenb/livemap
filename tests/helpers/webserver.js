@@ -14,6 +14,6 @@ export function destroyWebServer(server) {
     });
 }
 
-export function addRouter(app, baseRoute, router) {
-    app.use(baseRoute, router);
+export function addRoutes(app, basePath, router) {
+    app.use(basePath, router);
 }

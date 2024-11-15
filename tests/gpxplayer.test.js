@@ -1,10 +1,11 @@
 import { expect } from 'chai';
-import express from 'express';
 import {
-    addRouter,
+    addRoutes,
     createWebServer,
     destroyWebServer,
 } from './helpers/webserver.js';
+import App from '../src/app.js';
+import routesWebhook from '../src/routes/webhook.js';
 import GpxPlayer from '../src/services/gpxplayer.js';
 
 const test7p1s = { api_key: 'testkey', identifier: '7p1s' };
@@ -18,7 +19,7 @@ const test_delay_too_short = {
 const trackTest7p1s = {
     dirName: './tracks/test/',
     name: 'testkey_7p1s',
-    destPath: '/location/gpx/test',
+    destPath: '/test/location/gpx',
     points: [],
     pointsIndex: 0,
     isRunning: true,
@@ -30,20 +31,9 @@ function getTrackname(testDevice) {
     return `${testDevice.api_key}_${testDevice.identifier}`;
 }
 
-function routerGpxPoint() {
-    const router = express.Router();
-
-    router.post(
-        '/',
-        express.urlencoded({ extended: false }),
-        async function (req, res) {
-            const now = new Date().toISOString();
-            points.push({ ts: now, ...req.body });
-            res.sendStatus(200);
-        },
-    );
-
-    return router;
+function processLocation(parentLogger, format, payload) {
+    const now = new Date().toISOString();
+    points.push({ ts: now, ...payload });
 }
 
 function reportPoints(device_id) {
@@ -93,14 +83,15 @@ function waitForTimeout(delay) {
 }
 
 describe('GPX player', function () {
+    const app = App();
     let gpxPlayer;
+    const testBasePath = '/test/location';
     let webServer;
-    const app = express();
 
     before(async function () {
         // Start a webserver
-        webServer = await createWebServer(app, 3000);
-        addRouter(app, '/location/gpx/test', routerGpxPoint());
+        webServer = await createWebServer(app, 3001);
+        addRoutes(app, `${testBasePath}`, routesWebhook(processLocation));
     });
 
     after(async function () {
@@ -110,7 +101,7 @@ describe('GPX player', function () {
 
     describe('create gpx player', function () {
         it('should find all 6 gpx test files', async function () {
-            gpxPlayer = new GpxPlayer('/location/gpx/test');
+            gpxPlayer = new GpxPlayer(`${testBasePath}/gpx`);
             const fileList = await gpxPlayer.createFileList('./tracks/test/');
             expect(fileList.length).to.equal(6);
         });
@@ -187,7 +178,7 @@ describe('GPX player', function () {
 
     describe('create gpx player on an invalid directory', function () {
         it('should find 0 gpx test files', async function () {
-            gpxPlayer = new GpxPlayer('/location/gpx/test');
+            gpxPlayer = new GpxPlayer(`${testBasePath}/gpx`);
             const fileList = await gpxPlayer.createFileList('a-directory');
             expect(fileList.length).to.equal(0);
         });
@@ -195,7 +186,7 @@ describe('GPX player', function () {
 
     describe('add tracks by api key', function () {
         it('should find all 6 gpx test files', async function () {
-            gpxPlayer = new GpxPlayer('/location/gpx/test');
+            gpxPlayer = new GpxPlayer(`${testBasePath}/gpx`);
             await gpxPlayer.createFileList('./tracks/test/');
             gpxPlayer.addTracksByApiKey('testkey');
             expect(gpxPlayer.tracks.length).to.equal(6);
