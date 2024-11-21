@@ -31,7 +31,7 @@ function getTrackname(testDevice) {
     return `${testDevice.api_key}_${testDevice.identifier}`;
 }
 
-function processLocation(parentLogger, format, payload) {
+function processLocation(_parentLogger, _format, payload) {
     const now = new Date().toISOString();
     points.push({ ts: now, ...payload });
 }
@@ -186,7 +186,7 @@ describe('GPX player', function () {
 
     describe('add tracks by api key', function () {
         it('should find all 6 gpx test files', async function () {
-            gpxPlayer = new GpxPlayer(`${testBasePath}/gpx`);
+            gpxPlayer = new GpxPlayer(`${testBasePath}/gpx`, function () {});
             await gpxPlayer.createFileList('./tracks/test/');
             gpxPlayer.addTracksByApiKey('testkey');
             expect(gpxPlayer.tracks.length).to.equal(6);
