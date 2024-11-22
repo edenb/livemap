@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { spy } from 'sinon';
 import { request, subset } from './helpers/chai.js';
 import {
     addUserAndDevices,
@@ -29,13 +30,14 @@ describe('Integrations', function () {
     let mqttServer;
     let mqttServiceClient;
     let mqttTestClient;
+    const processLocationSpy = spy(processLocation);
     let webServer;
 
     before(async function () {
         // Create a local MQTT server
         mqttServer = await createMqttServer(mqttService.getBrokerUrl().port);
         // Start the MQTT client service
-        mqttServiceClient = mqttService.start(processLocation);
+        mqttServiceClient = mqttService.start(processLocationSpy);
         // Start an MQTT test client
         mqttTestClient = createMqttClient();
         // Start a webserver
@@ -63,12 +65,9 @@ describe('Integrations', function () {
             await removeUserAndDevices(vwr1);
         });
         it('should process a message from a new device', async function () {
-            await publishMessage(
-                mqttTestClient,
-                mqttServiceClient,
-                'livemap/test',
-                mqttMessage,
-            );
+            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            // Wait until MQTT message is processed
+            await Promise.all(processLocationSpy.returnValues);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
@@ -77,12 +76,9 @@ describe('Integrations', function () {
             });
         });
         it('should process a message from an already created device', async function () {
-            await publishMessage(
-                mqttTestClient,
-                mqttServiceClient,
-                'livemap/test',
-                mqttMessage,
-            );
+            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            // Wait until MQTT message is processed
+            await Promise.all(processLocationSpy.returnValues);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
         });
