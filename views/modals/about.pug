@@ -7,7 +7,7 @@
         h4.modal-title #{wclient.name}
       .modal-body
         p !{wclient.about}
-        if wclient.showBroker == "true"
+        if wclient.showBroker
           p
             |MQTT broker:
             = ' '

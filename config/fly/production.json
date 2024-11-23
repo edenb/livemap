@@ -1,6 +1,7 @@
 {
   "server": {
-    "forceSSL": "true"
+    "forceSSL": true,
+    "proxy": true
   },
   "db": {
     "url": "postgres://pguser:mysecretpgpassword@localhost"

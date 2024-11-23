@@ -33,10 +33,10 @@ export function getBrokerUrl() {
     let mqttProtocol = config.get('mqtt.protocol');
     let mqttUserVhost = config.get('mqtt.userVhost');
 
-    if (mqttPort !== '') {
+    if (mqttPort) {
         brokerUrl.port = mqttPort;
     }
-    if (mqttProtocol !== '') {
+    if (mqttProtocol) {
         brokerUrl.protocol = mqttProtocol;
     }
     if (mqttUserVhost) {
