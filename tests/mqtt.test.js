@@ -8,6 +8,9 @@ import {
 } from './helpers/mqtt.js';
 import * as mqttService from '../src/services/mqtt.js';
 
+import { createWebServer, destroyWebServer } from './helpers/webserver.js';
+import App from '../src/app.js';
+
 const testMessage =
     '{"id":"test2", "apikey":"12345678", "timestamp":"2024-05-10T15:14:31.191Z", "lat":"32.123", "lon":"-110.123"}';
 
@@ -17,6 +20,9 @@ describe.only('MQTT service', function () {
     let mqttServiceClient;
     let mqttTestClient;
 
+    let webServer;
+    const app = App();
+
     before(async function () {
         // Create a local MQTT server
         mqttServer = await createMqttServer(mqttService.getBrokerUrl().port);
@@ -24,6 +30,8 @@ describe.only('MQTT service', function () {
         mqttServiceClient = mqttService.start(callbackSpy);
         // Start an MQTT test client
         mqttTestClient = createMqttClient();
+
+        webServer = await createWebServer(app, 3001);
     });
 
     after(async function () {
@@ -33,6 +41,8 @@ describe.only('MQTT service', function () {
         await mqttServiceClient.endAsync();
         // Destroy the local MQTT server
         await destroyMqttServer(mqttServer);
+
+        await destroyWebServer(webServer);
     });
 
     afterEach(function () {
