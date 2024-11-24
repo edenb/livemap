@@ -6,7 +6,7 @@ import * as mqttService from '../../src/services/mqtt.js';
 export function createMqttServer(port) {
     return new Promise(function (resolve, reject) {
         try {
-            const aedes = new Aedes();
+            const aedes = Aedes();
             const mqttServer = createServer(aedes.handle);
 
             mqttServer.on('close', function () {
@@ -16,6 +16,14 @@ export function createMqttServer(port) {
 
             mqttServer.on('error', function (err) {
                 reject(err);
+            });
+
+            aedes.on('subscribe', function (packet, _client) {
+                console.log(`Subscribe qos ${packet[0].qos}`);
+            });
+
+            aedes.on('publish', function (packet, _client) {
+                console.log(`Publish: ${packet.payload}`);
             });
 
             mqttServer.listen(port, function () {
