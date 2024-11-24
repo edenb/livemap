@@ -45,9 +45,9 @@ describe.only('MQTT service', function () {
         await destroyWebServer(webServer);
     });
 
-    afterEach(function () {
-        callbackSpy.resetHistory();
-    });
+    // afterEach(function () {
+    //     callbackSpy.resetHistory();
+    // });
 
     describe('Publish a message with livemap topic', function () {
         it('should receive the published message', async function () {
