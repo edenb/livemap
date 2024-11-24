@@ -10,9 +10,9 @@ export function start(onLocation) {
     const logger = Logger(import.meta.url);
     const client = connect(getBrokerUrl().href, { keepalive: 10 });
 
-    client.on('connect', () => {
+    client.on('connect', async () => {
         logger.info('Connected to MQTT broker: ' + getBrokerUrl().href);
-        client.subscribe(config.get('mqtt.topic'));
+        await client.subscribeAsync(config.get('mqtt.topic'));
         logger.info('MQTT client started');
     });
 
