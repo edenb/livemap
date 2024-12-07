@@ -9,13 +9,6 @@ import {
 } from './helpers/mqtt.js';
 import * as mqttService from '../src/services/mqtt.js';
 
-// async function processLocation(_parentLogger, _format, _payload) {
-//     return new Promise(function (resolve) {
-//         console.log('Dummy called');
-//         resolve();
-//     });
-// }
-
 describe.only('MQTT service', function () {
     const callbackSpy = spy();
     let mqttServer;
@@ -40,9 +33,9 @@ describe.only('MQTT service', function () {
         await destroyMqttServer(mqttServer);
     });
 
-    // afterEach(function () {
-    //     callbackSpy.resetHistory();
-    // });
+    afterEach(function () {
+        callbackSpy.resetHistory();
+    });
 
     describe('Publish a message with livemap topic', function () {
         it('should receive the published message', async function () {
@@ -54,7 +47,6 @@ describe.only('MQTT service', function () {
             );
             // Wait until MQTT message is processed
             await Promise.all(callbackSpy.returnValues);
-            //await callbackSpy();
             expect(callbackSpy.calledOnce).to.equal(true);
             expect(callbackSpy.args[0][1]).to.equal('mqtt');
             expect(callbackSpy.args[0][2].toString()).to.equal(mqttMessage);

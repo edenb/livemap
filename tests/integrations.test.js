@@ -73,7 +73,6 @@ describe.only('Integrations', function () {
             );
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
-            //await processLocationSpy();
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
@@ -90,7 +89,6 @@ describe.only('Integrations', function () {
             );
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
-            //await processLocationSpy();
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
         });
