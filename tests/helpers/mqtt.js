@@ -26,6 +26,10 @@ export function createMqttServer(port) {
                 console.log(`Publish: ${packet.payload}`);
             });
 
+            aedes.on('clientReady', function (client) {
+                console.log(`clientReady: ${client.id}`);
+            });
+
             mqttServer.listen(port, function () {
                 console.log('MQTT server created');
                 resolve(mqttServer);
@@ -62,17 +66,26 @@ export async function createMqttClient() {
 //     console.log('End publishMessage');
 // }
 
+function storePut() {
+    console.log('storePut');
+}
+
 export async function publishMessage(client, topic, message) {
     console.log('Start publishMessage');
     return new Promise(function (resolve, reject) {
-        client.publish(topic, message, { qos: 2 }, function (err, packet) {
-            console.log('callback packet =' + JSON.stringify(packet));
-            if (err) {
-                reject(err);
-            } else {
-                console.log('End publishMessage');
-                resolve();
-            }
-        });
+        client.publish(
+            topic,
+            message,
+            { qos: 2, cbStorePut: storePut },
+            function (err, packet) {
+                console.log('callback packet =' + JSON.stringify(packet));
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log('End publishMessage');
+                    resolve();
+                }
+            },
+        );
     });
 }
