@@ -39,7 +39,7 @@ describe('Integrations', function () {
         // Start the MQTT client service
         mqttServiceClient = mqttService.start(processLocationSpy);
         // Start an MQTT test client
-        mqttTestClient = createMqttClient();
+        mqttTestClient = await createMqttClient();
         // Start a webserver
         webServer = await createWebServer(app, 3001);
     });
@@ -67,7 +67,8 @@ describe('Integrations', function () {
         it('should process a message from a new device', async function () {
             await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
             // Wait until MQTT message is processed
-            await Promise.all(processLocationSpy.returnValues);
+            //await Promise.all(processLocationSpy.returnValues);
+            await processLocationSpy();
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({

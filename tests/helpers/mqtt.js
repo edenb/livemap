@@ -18,15 +18,16 @@ export function createMqttServer(port) {
                 reject(err);
             });
 
-            aedes.on('subscribe', function (packet, _client) {
-                console.log(`Subscribe qos ${packet[0].qos}`);
+            aedes.on('subscribe', function (packet, client) {
+                console.log(`Subscribe qos ${packet[0].qos} ${client.id}`);
             });
 
-            aedes.on('publish', function (packet, _client) {
+            aedes.on('publish', function (packet, client) {
                 console.log(`Publish: ${packet.payload}`);
             });
 
             mqttServer.listen(port, function () {
+                console.log('MQTT server created');
                 resolve(mqttServer);
             });
         } catch (err) {
@@ -47,10 +48,12 @@ export function destroyMqttServer(mqttServer) {
     });
 }
 
-export function createMqttClient() {
-    return mqtt.connect(mqttService.getBrokerUrl().href, {
+export async function createMqttClient() {
+    const client = await mqtt.connectAsync(mqttService.getBrokerUrl().href, {
         keepalive: 10,
     });
+    console.log('MQTT test client created');
+    return client;
 }
 
 // export async function publishMessage(client, topic, message) {

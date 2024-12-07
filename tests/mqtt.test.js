@@ -30,7 +30,7 @@ describe.only('MQTT service', function () {
         // Start the MQTT client service
         mqttServiceClient = mqttService.start(callbackSpy);
         // Start an MQTT test client
-        mqttTestClient = createMqttClient();
+        mqttTestClient = await createMqttClient();
 
         webServer = await createWebServer(app, 3001);
     });
