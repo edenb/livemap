@@ -67,8 +67,8 @@ describe('Integrations', function () {
         it('should process a message from a new device', async function () {
             await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
             // Wait until MQTT message is processed
-            //await Promise.all(processLocationSpy.returnValues);
-            await processLocationSpy();
+            await Promise.all(processLocationSpy.returnValues);
+            //await processLocationSpy();
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
@@ -80,6 +80,7 @@ describe('Integrations', function () {
             await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
+            //await processLocationSpy();
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
         });
