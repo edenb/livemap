@@ -66,26 +66,37 @@ export async function createMqttClient() {
 //     console.log('End publishMessage');
 // }
 
-function storePut() {
-    console.log('storePut');
-}
+// function storePut() {
+//     console.log('storePut');
+// }
 
-export async function publishMessage(client, topic, message) {
+// export async function publishMessage(client, topic, message) {
+//     console.log('Start publishMessage');
+//     return new Promise(function (resolve, reject) {
+//         client.publish(
+//             topic,
+//             message,
+//             { qos: 2, cbStorePut: storePut },
+//             function (err, packet) {
+//                 console.log('callback packet =' + JSON.stringify(packet));
+//                 if (err) {
+//                     reject(err);
+//                 } else {
+//                     console.log('End publishMessage');
+//                     resolve();
+//                 }
+//             },
+//         );
+//     });
+// }
+
+export function publishMessage(sendClient, receiveClient, topic, message) {
     console.log('Start publishMessage');
-    return new Promise(function (resolve, reject) {
-        client.publish(
-            topic,
-            message,
-            { qos: 2, cbStorePut: storePut },
-            function (err, packet) {
-                console.log('callback packet =' + JSON.stringify(packet));
-                if (err) {
-                    reject(err);
-                } else {
-                    console.log('End publishMessage');
-                    resolve();
-                }
-            },
-        );
+    return new Promise(function (resolve) {
+        receiveClient.on('message', function () {
+            console.log('End publishMessage');
+            resolve();
+        });
+        sendClient.publish(topic, message, { qos: 0 });
     });
 }

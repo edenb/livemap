@@ -59,7 +59,12 @@ describe.only('MQTT service', function () {
 
     describe('Publish a message with livemap topic', function () {
         it('should receive the published message', async function () {
-            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                mqttMessage,
+            );
             // Wait until MQTT message is processed
             await Promise.all(callbackSpy.returnValues);
             //await callbackSpy();
