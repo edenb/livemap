@@ -16,10 +16,8 @@ export function start(onLocation) {
         logger.info('MQTT client started');
     });
 
-    client.on('message', (_, message) => {
-        console.log('Start onlocation');
+    client.on('message', (_topic, message, _packet) => {
         onLocation(logger, 'mqtt', message.toString());
-        console.log('End onlocation');
     });
 
     client.on('error', (error) => {
