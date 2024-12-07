@@ -9,7 +9,7 @@ import {
 } from './helpers/mqtt.js';
 import * as mqttService from '../src/services/mqtt.js';
 
-describe.only('MQTT service', function () {
+describe('MQTT service', function () {
     const callbackSpy = spy();
     let mqttServer;
     let mqttServiceClient;

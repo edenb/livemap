@@ -25,7 +25,7 @@ import App from '../src/app.js';
 import * as mqttService from '../src/services/mqtt.js';
 import { processLocation } from '../src/utils/ingester.js';
 
-describe.only('Integrations', function () {
+describe('Integrations', function () {
     const app = App();
     let mqttServer;
     let mqttServiceClient;
