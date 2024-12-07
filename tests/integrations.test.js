@@ -55,7 +55,7 @@ describe('Integrations', function () {
         await destroyWebServer(webServer);
     });
 
-    describe.only('Process an MQTT message', function () {
+    describe('Process an MQTT message', function () {
         before(async function () {
             // Create a test user without devices
             await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
