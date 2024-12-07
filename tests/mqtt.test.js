@@ -9,18 +9,15 @@ import {
 } from './helpers/mqtt.js';
 import * as mqttService from '../src/services/mqtt.js';
 
-// const testMessage =
-//     '{"id":"test2", "apikey":"12345678", "timestamp":"2024-05-10T15:14:31.191Z", "lat":"32.123", "lon":"-110.123"}';
-
-async function processLocation(_parentLogger, _format, _payload) {
-    return new Promise(function (resolve) {
-        console.log('Dummy called');
-        resolve();
-    });
-}
+// async function processLocation(_parentLogger, _format, _payload) {
+//     return new Promise(function (resolve) {
+//         console.log('Dummy called');
+//         resolve();
+//     });
+// }
 
 describe.only('MQTT service', function () {
-    const callbackSpy = spy(processLocation);
+    const callbackSpy = spy();
     let mqttServer;
     let mqttServiceClient;
     let mqttTestClient;
