@@ -65,7 +65,8 @@ export async function createMqttClient() {
 export async function publishMessage(client, topic, message) {
     console.log('Start publishMessage');
     return new Promise(function (resolve, reject) {
-        client.publish(topic, message, { qos: 2 }, function (err, _packet) {
+        client.publish(topic, message, { qos: 2 }, function (err, packet) {
+            console.log('callback packet =' + JSON.stringify(packet));
             if (err) {
                 reject(err);
             } else {
