@@ -25,7 +25,7 @@ import App from '../src/app.js';
 import * as mqttService from '../src/services/mqtt.js';
 import { processLocation } from '../src/utils/ingester.js';
 
-describe('Integrations', function () {
+describe.only('Integrations', function () {
     const app = App();
     let mqttServer;
     let mqttServiceClient;
@@ -65,7 +65,12 @@ describe('Integrations', function () {
             await removeUserAndDevices(vwr1);
         });
         it('should process a message from a new device', async function () {
-            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                mqttMessage,
+            );
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
             //await processLocationSpy();
@@ -77,7 +82,12 @@ describe('Integrations', function () {
             });
         });
         it('should process a message from an already created device', async function () {
-            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                mqttMessage,
+            );
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
             //await processLocationSpy();
