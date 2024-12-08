@@ -11,11 +11,12 @@ let mqtt, server;
 const logger = Logger(import.meta.url);
 
 export async function allUp(app) {
-    const port = config.get('server.port');
-    server = app.listen(port, () => {
-        logger.info(`Server started on port ${port}`);
-    });
     if (await checkDbUp()) {
+        const port = config.get('server.port');
+        server = app.listen(port, () => {
+            logger.info(`Server started on port ${port}`);
+        });
+
         startMaintenance();
         liveService.start(server);
         mqtt = mqttService.start(processLocation);
