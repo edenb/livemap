@@ -1,5 +1,6 @@
-import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
+import * as pos from '../models/position.js';
+import * as usr from '../models/user.js';
 import { sendToClients } from '../services/liveserver.js';
 import Validator from './validator.js';
 
@@ -210,7 +211,18 @@ export async function processLocation(parentLogger, format, payload) {
 
         if (destData) {
             if (livemapValidator.validate(destData)) {
-                sendToClients(destData);
+                await Promise.all([
+                    pos.insertPosition([
+                        destData.device_id,
+                        destData.device_id_tag,
+                        destData.loc_timestamp,
+                        destData.loc_lat,
+                        destData.loc_lon,
+                        destData.loc_type,
+                        destData.loc_attr,
+                    ]),
+                    sendToClients(destData),
+                ]);
             } else {
                 logger?.error(`Invalid: ${livemapValidator.errorsText()}`);
                 destData = null;

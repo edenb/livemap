@@ -22,7 +22,7 @@ export default () => {
     app.disable('x-powered-by');
 
     // Force HTTPS
-    if (config.get('server.forceSSL') === 'true') {
+    if (config.get('server.forceSSL')) {
         app.use((req, res, next) => {
             if (
                 req.headers['x-forwarded-proto'] &&
@@ -68,10 +68,12 @@ export default () => {
     app.use(morgan('combined', { stream: logger.stream })); // log every request to the logger
     app.use(express.json()); // get information from html forms
     app.use(express.urlencoded({ extended: true }));
-    app.enable('trust proxy');
+    if (config.get('server.proxy')) {
+        app.enable('trust proxy');
+    }
 
-    // Sessions stored in 'memory' or 'pg' (database)
-    bindStore(session, 'memory');
+    // Store sessions in the database
+    bindStore(session);
     // Don't use sessions for API calls,
     // i.e. a token is given in the header (Authorization: <some_token>)
     const sessionMiddleware = session({
@@ -81,7 +83,7 @@ export default () => {
         cookie: { maxAge: config.get('sessions.maxAge'), sameSite: 'strict' },
         resave: false,
         saveUninitialized: true,
-        unset: 'keep', // Or destroy?
+        unset: 'keep',
     });
 
     app.use((req, res, next) => {

@@ -4,44 +4,90 @@
     "tokenAlgorithm": "C_AUTH_TOKENALGORITHM"
   },
   "server": {
-    "port": "C_SERVER_PORT",
-    "forceSSL": "C_SERVER_FORCESSL"
+    "port": {
+      "__name": "C_SERVER_PORT",
+      "__format": "number"
+    },
+    "forceSSL": {
+      "__name": "C_SERVER_FORCESSL",
+      "__format": "boolean"
+    },
+    "proxy": {
+      "__name": "C_SERVER_PROXY",
+      "__format": "boolean"
+    }
   },
   "rateLimiter": {
-    "limit": "C_RATELIMITER_LIMIT",
-    "window": "C_RATELIMITER_WINDOW"
+    "limit": {
+      "__name": "C_RATELIMITER_LIMIT",
+      "__format": "number"
+    },
+    "window": {
+      "__name": "C_RATELIMITER_WINDOW",
+      "__format": "number"
+    }
   },
   "logger": {
     "level": "C_LOGGER_LEVEL",
-    "colorize": "C_LOGGER_COLORIZE"
+    "colorize": {
+      "__name": "C_LOGGER_COLORIZE",
+      "__format": "boolean"
+    }
   },
   "mqtt": {
     "url": "C_MQTT_URL",
     "protocol": "C_MQTT_PROTOCOL",
-    "port": "C_MQTT_PORT",
-    "userVhost": "C_MQTT_USERVHOST",
+    "port": {
+      "__name": "C_MQTT_PORT",
+      "__format": "number"
+    },
+    "userVhost": {
+      "__name": "C_MQTT_USERVHOST",
+      "__format": "boolean"
+    },
     "topic": "C_MQTT_TOPIC"
   },
   "db": {
     "url": "C_DB_URL",
-    "ssl": "C_DB_SSL",
-    "maintenanceInterval": "C_DB_MAINTENANCEINTERVAL"
+    "ssl": {
+      "__name": "C_DB_SSL",
+      "__format": "boolean"
+    },
+    "maintenanceInterval": {
+      "__name": "C_DB_MAINTENANCEINTERVAL",
+      "__format": "number"
+    }
   },
   "sessions": {
     "tableName": "C_SESSIONS_TABLENAME",
     "name": "C_SESSIONS_NAME",
     "secret": "C_SESSIONS_SECRET",
-    "maxAge": "C_SESSIONS_MAXAGE"
+    "maxAge": {
+      "__name": "C_SESSIONS_MAXAGE",
+      "__format": "number"
+    }
   },
   "user": {
-    "nameMinLength": "C_USER_NAMEMINLENGTH",
-    "pwdMinLength": "C_USER_PWDMINLENGTH",
-    "pwdSaltRounds": "C_USER_PWDSALTROUNDS"
+    "nameMinLength": {
+      "__name": "C_USER_NAMEMINLENGTH",
+      "__format": "number"
+    },
+    "pwdMinLength": {
+      "__name": "C_USER_PWDMINLENGTH",
+      "__format": "number"
+    },
+    "pwdSaltRounds": {
+      "__name": "C_USER_PWDSALTROUNDS",
+      "__format": "number"
+    }
   },
   "wclient": {
     "name": "C_WCLIENT_NAME",
     "license": "C_WCLIENT_LICENSE",
     "about": "C_WCLIENT_ABOUT",
-    "showBroker": "C_WCLIENT_SHOWBROKER"
+    "showBroker": {
+      "__name": "C_WCLIENT_SHOWBROKER",
+      "__format": "boolean"
+    }
   }
 }

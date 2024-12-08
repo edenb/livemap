@@ -39,10 +39,11 @@ export function destroyMqttServer(mqttServer) {
     });
 }
 
-export function createMqttClient() {
-    return mqtt.connect(mqttService.getBrokerUrl().href, {
+export async function createMqttClient() {
+    const client = await mqtt.connectAsync(mqttService.getBrokerUrl().href, {
         keepalive: 10,
     });
+    return client;
 }
 
 export function publishMessage(sendClient, receiveClient, topic, message) {

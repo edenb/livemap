@@ -5,7 +5,8 @@
   },
   "server": {
     "port": 3000,
-    "forceSSL": "false"
+    "forceSSL": false,
+    "proxy": false
   },
   "rateLimiter": {
     "limit": 100,
@@ -18,7 +19,7 @@
   "mqtt": {
     "url": "mqtt://127.0.0.1:1883",
     "protocol": "",
-    "port": "",
+    "port": 0,
     "userVhost": false,
     "topic": "livemap/#"
   },
@@ -42,6 +43,6 @@
     "name": "Live Map (Dev)",
     "license": "MIT",
     "about": "This is the development version of the Live Map demo.",
-    "showBroker": "false"
+    "showBroker": false
   }
 }

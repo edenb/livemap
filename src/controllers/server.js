@@ -18,7 +18,7 @@ function getApplicationInfo() {
 }
 
 function getMqttInfo() {
-    if (config.get('wclient.showBroker') === 'true') {
+    if (config.get('wclient.showBroker')) {
         const broker = getBrokerUrl();
         const mqttInfo = {
             mqtt: {

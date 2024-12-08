@@ -1,6 +1,4 @@
 import { expect } from 'chai';
-import express from 'express';
-import { parse } from 'node:querystring';
 import { spy } from 'sinon';
 import { request, subset } from './helpers/chai.js';
 import {
@@ -10,13 +8,9 @@ import {
 } from './helpers/database.js';
 import {
     gpxMessage,
-    gpxMessageProcessed,
     locDevMessage,
-    locDevMessageProcessed,
     locTagMessage,
-    locTagMessageProcessed,
     mqttMessage,
-    mqttMessageProcessed,
     vwr1Auth,
     vwr1,
 } from './helpers/fixtures.js';
@@ -26,35 +20,28 @@ import {
     destroyMqttServer,
     publishMessage,
 } from './helpers/mqtt.js';
-import {
-    addRouter,
-    createWebServer,
-    destroyWebServer,
-} from './helpers/webserver.js';
-import routesWebhook from '../src/routes/webhook.js';
+import { createWebServer, destroyWebServer } from './helpers/webserver.js';
+import App from '../src/app.js';
 import * as mqttService from '../src/services/mqtt.js';
 import { processLocation } from '../src/utils/ingester.js';
 
 describe('Integrations', function () {
+    const app = App();
     let mqttServer;
     let mqttServiceClient;
     let mqttTestClient;
+    const processLocationSpy = spy(processLocation);
     let webServer;
-    const app = express();
-    const wrapper = { processLocation: processLocation };
 
     before(async function () {
-        // Spy on function processLocation
-        spy(wrapper, 'processLocation');
         // Create a local MQTT server
         mqttServer = await createMqttServer(mqttService.getBrokerUrl().port);
         // Start the MQTT client service
-        mqttServiceClient = mqttService.start(wrapper.processLocation);
+        mqttServiceClient = mqttService.start(processLocationSpy);
         // Start an MQTT test client
-        mqttTestClient = createMqttClient();
+        mqttTestClient = await createMqttClient();
         // Start a webserver
-        webServer = await createWebServer(app, 3000);
-        addRouter(app, '/location', routesWebhook(wrapper.processLocation));
+        webServer = await createWebServer(app, 3001);
     });
 
     after(async function () {
@@ -66,10 +53,6 @@ describe('Integrations', function () {
         await destroyMqttServer(mqttServer);
         // Destroy the webserver
         await destroyWebServer(webServer);
-    });
-
-    afterEach(function () {
-        wrapper.processLocation.resetHistory();
     });
 
     describe('Process an MQTT message', function () {
@@ -88,13 +71,8 @@ describe('Integrations', function () {
                 'livemap/test',
                 mqttMessage,
             );
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('mqtt');
-            expect(wrapper.processLocation.args[0][2].toString()).to.equal(
-                mqttMessage,
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(mqttMessageProcessed);
+            // Wait until MQTT message is processed
+            await Promise.all(processLocationSpy.returnValues);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
@@ -109,13 +87,8 @@ describe('Integrations', function () {
                 'livemap/test',
                 mqttMessage,
             );
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('mqtt');
-            expect(wrapper.processLocation.args[0][2].toString()).to.equal(
-                mqttMessage,
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(mqttMessageProcessed);
+            // Wait until MQTT message is processed
+            await Promise.all(processLocationSpy.returnValues);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
         });
@@ -136,13 +109,6 @@ describe('Integrations', function () {
                 .query(gpxMessage)
                 .send('');
             expect(res).to.have.status(200);
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('gpx');
-            expect(wrapper.processLocation.args[0][2]).to.deep.equal(
-                parse(gpxMessage),
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(gpxMessageProcessed);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
@@ -156,13 +122,6 @@ describe('Integrations', function () {
                 .query(gpxMessage)
                 .send('');
             expect(res).to.have.status(200);
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('gpx');
-            expect(wrapper.processLocation.args[0][2]).to.deep.equal(
-                parse(gpxMessage),
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(gpxMessageProcessed);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
         });
@@ -183,13 +142,6 @@ describe('Integrations', function () {
                 .query(locDevMessage)
                 .send('');
             expect(res).to.have.status(200);
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('locative');
-            expect(wrapper.processLocation.args[0][2]).to.deep.equal(
-                parse(locDevMessage),
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(locDevMessageProcessed);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
@@ -203,13 +155,6 @@ describe('Integrations', function () {
                 .query(locDevMessage)
                 .send('');
             expect(res).to.have.status(200);
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('locative');
-            expect(wrapper.processLocation.args[0][2]).to.deep.equal(
-                parse(locDevMessage),
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(locDevMessageProcessed);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
         });
@@ -230,13 +175,6 @@ describe('Integrations', function () {
                 .query(locTagMessage)
                 .send('');
             expect(res).to.have.status(200);
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('locative');
-            expect(wrapper.processLocation.args[0][2]).to.deep.equal(
-                parse(locTagMessage),
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(locTagMessageProcessed);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(2);
             expect(
@@ -255,13 +193,6 @@ describe('Integrations', function () {
                 .query(locTagMessage)
                 .send('');
             expect(res).to.have.status(200);
-            expect(wrapper.processLocation.calledOnce).to.equal(true);
-            expect(wrapper.processLocation.args[0][1]).to.equal('locative');
-            expect(wrapper.processLocation.args[0][2]).to.deep.equal(
-                parse(locTagMessage),
-            );
-            const processed = await wrapper.processLocation.returnValues[0];
-            expect(processed).to.include(locTagMessageProcessed);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(2);
         });

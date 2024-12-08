@@ -3,9 +3,8 @@ import cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import GpxPlayer from './gpxplayer.js';
 import { getStore } from '../database/db.js';
-import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
-import * as pos from '../models/position.js';
+import * as usr from '../models/user.js';
 import { getTokenPayload } from '../auth/jwt.js';
 import Logger from '../utils/logger.js';
 
@@ -157,20 +156,10 @@ export function start(server) {
 
 export async function sendToClients(destData) {
     // Send a location update to every client that is authorized for this device
-    // and store the location in the database
     let deviceRoom = getRoomName(destData.device_id);
     io.to(deviceRoom).emit(
         'positionUpdate',
         JSON.stringify({ type: 'gps', data: destData }),
     );
     logger.debug(`Clients connected: ${io.sockets.sockets.size}`);
-    await pos.insertPosition([
-        destData.device_id,
-        destData.device_id_tag,
-        destData.loc_timestamp,
-        destData.loc_lat,
-        destData.loc_lon,
-        destData.loc_type,
-        destData.loc_attr,
-    ]);
 }

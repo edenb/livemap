@@ -32,7 +32,7 @@ export default class GpxPlayer {
             allFiles = await fs.readdir(dirName);
         } catch (err) {
             this.clear();
-            logger.error('Unable to locate GPX files.', err.message);
+            logger.error(`Unable to locate GPX files. ${err.message}`);
             return [];
         }
         this.dirName = dirName;
@@ -162,7 +162,7 @@ class Track {
             this.points = await this.loadGpxFile();
             this.sendGpxPoint();
         } catch (err) {
-            logger.error('Unable to load GPX file.', err.message);
+            logger.error(`Unable to load GPX file. ${err.message}`);
         }
     }
 

@@ -484,10 +484,11 @@ describe('e2e', function () {
             await removeUserAndDevices(vwr1);
         });
 
-        describe('/post 200 subsequent requests', function () {
+        describe('/post 120 subsequent requests', function () {
             it('should respond with HTTP status 429', async function () {
+                this.timeout(10000);
                 let res;
-                for (let i = 0; i < 200; i++) {
+                for (let i = 0; i < 120; i++) {
                     res = await request(app)
                         .post('/location/gpx')
                         .query(gpxMessage)

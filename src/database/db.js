@@ -1,6 +1,5 @@
 import config from 'config';
 import pgStore from 'connect-pg-simple';
-import memoryStore from 'memorystore';
 import { readFile } from 'node:fs';
 import pg from 'pg';
 import pgConnectionString from 'pg-connection-string';
@@ -8,8 +7,8 @@ import { load, invalidate, save } from './dbcache.js';
 import Logger from '../utils/logger.js';
 
 const logger = Logger(import.meta.url);
-var sessionStore;
-var queryDef = [];
+let sessionStore;
+let queryDef = [];
 
 queryDef.getAllUsers = {
     qstr: 'SELECT user_id, username, fullname, email, role, api_key FROM users',
@@ -184,7 +183,7 @@ export function getEmptyQueryRes() {
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
 const dbConfig = pgConnectionString.parse(config.get('db.url'));
 // Overwrite tls.connect options to allow self signed certs
-if (config.get('db.ssl') === true) {
+if (config.get('db.ssl')) {
     dbConfig.ssl = { rejectUnauthorized: false };
 }
 const pgPool = new pg.Pool(dbConfig);
@@ -273,25 +272,11 @@ async function queryDbFromFile(fileName) {
 // Sessions
 //
 
-export function bindStore(session, type) {
-    switch (type) {
-        case 'memory':
-            sessionStore = new (memoryStore(session))({
-                checkPeriod: 2 * 86400000,
-            });
-            break;
-        case 'pg':
-            sessionStore = new (pgStore(session))({
-                tableName: config.get('sessions.tableName'),
-                pool: pgPool,
-            });
-            break;
-        default:
-            sessionStore = new (memoryStore(session))({
-                checkPeriod: 2 * 86400000,
-            });
-            break;
-    }
+export function bindStore(session) {
+    sessionStore = new (pgStore(session))({
+        tableName: config.get('sessions.tableName'),
+        pool: pgPool,
+    });
 }
 
 export function getStore() {
