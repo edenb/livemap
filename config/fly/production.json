@@ -1,6 +1,5 @@
 {
   "server": {
-    "forceSSL": true,
     "proxy": true
   },
   "db": {
