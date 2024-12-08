@@ -4,8 +4,7 @@
     "proxy": true
   },
   "db": {
-    "url": "postgres://pguser:mysecretpgpassword@localhost",
-    "ssl": false
+    "url": "postgres://pguser:mysecretpgpassword@localhost"
   },
   "sessions": {
     "secret": "myproductioncookiesecret"
