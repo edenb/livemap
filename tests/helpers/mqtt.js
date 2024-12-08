@@ -39,12 +39,18 @@ export function destroyMqttServer(mqttServer) {
     });
 }
 
-export function createMqttClient() {
-    return mqtt.connect(mqttService.getBrokerUrl().href, {
+export async function createMqttClient() {
+    const client = await mqtt.connectAsync(mqttService.getBrokerUrl().href, {
         keepalive: 10,
     });
+    return client;
 }
 
-export async function publishMessage(client, topic, message) {
-    await client.publishAsync(topic, message, { qos: 2 });
+export function publishMessage(sendClient, receiveClient, topic, message) {
+    return new Promise(function (resolve) {
+        receiveClient.on('message', function () {
+            resolve();
+        });
+        sendClient.publish(topic, message, { qos: 0 });
+    });
 }

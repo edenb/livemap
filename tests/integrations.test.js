@@ -39,7 +39,7 @@ describe('Integrations', function () {
         // Start the MQTT client service
         mqttServiceClient = mqttService.start(processLocationSpy);
         // Start an MQTT test client
-        mqttTestClient = createMqttClient();
+        mqttTestClient = await createMqttClient();
         // Start a webserver
         webServer = await createWebServer(app, 3001);
     });
@@ -65,7 +65,12 @@ describe('Integrations', function () {
             await removeUserAndDevices(vwr1);
         });
         it('should process a message from a new device', async function () {
-            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                mqttMessage,
+            );
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
             const devices = await getDevices(vwr1);
@@ -76,7 +81,12 @@ describe('Integrations', function () {
             });
         });
         it('should process a message from an already created device', async function () {
-            await publishMessage(mqttTestClient, 'livemap/test', mqttMessage);
+            await publishMessage(
+                mqttTestClient,
+                mqttServiceClient,
+                'livemap/test',
+                mqttMessage,
+            );
             // Wait until MQTT message is processed
             await Promise.all(processLocationSpy.returnValues);
             const devices = await getDevices(vwr1);

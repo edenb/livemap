@@ -8,15 +8,16 @@ import Logger from '../utils/logger.js';
 
 export function start(onLocation) {
     const logger = Logger(import.meta.url);
+    logger.info('Connecting to MQTT broker: ' + getBrokerUrl().href);
     const client = connect(getBrokerUrl().href, { keepalive: 10 });
 
-    client.on('connect', () => {
+    client.on('connect', async () => {
         logger.info('Connected to MQTT broker: ' + getBrokerUrl().href);
-        client.subscribe(config.get('mqtt.topic'));
+        await client.subscribeAsync(config.get('mqtt.topic'));
         logger.info('MQTT client started');
     });
 
-    client.on('message', (_, message) => {
+    client.on('message', (_topic, message, _packet) => {
         onLocation(logger, 'mqtt', message.toString());
     });
 
