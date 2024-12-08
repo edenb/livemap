@@ -4,6 +4,9 @@
     "forceSSL": false,
     "proxy": false
   },
+  "db": {
+    "ssl": false
+  },
   "wclient": {
     "name": "Livemap name",
     "license": "Livemap license",
