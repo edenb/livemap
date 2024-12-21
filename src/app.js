@@ -69,7 +69,7 @@ export default () => {
     app.use(express.json()); // get information from html forms
     app.use(express.urlencoded({ extended: true }));
     if (config.get('server.proxy')) {
-        app.enable('trust proxy');
+        app.set('trust proxy', 1);
     }
 
     // Store sessions in the database
