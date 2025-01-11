@@ -1,6 +1,7 @@
 import config from 'config';
 import 'connect-flash';
 import { Router } from 'express';
+import { rateLimit } from 'express-rate-limit';
 import { getNewToken } from '../auth/jwt.js';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
@@ -32,6 +33,15 @@ function ensureAuthenticated(req, res, next) {
 }
 
 export default (passport) => {
+    // Apply rate limiting middleware to index routes
+    const rateLimiter = rateLimit({
+        windowMs: config.get('rateLimiter.window'),
+        limit: config.get('rateLimiter.limit'),
+        standardHeaders: 'draft-7',
+        legacyHeaders: false,
+    });
+    router.use(rateLimiter);
+
     // GET login page
     router.get('/', (req, res) => {
         // Save the remote IP address in the session store
