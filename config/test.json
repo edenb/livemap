@@ -4,6 +4,10 @@
     "forceSSL": false,
     "proxy": false
   },
+  "rateLimiter": {
+    "limit": 100,
+    "window": 10000
+  },
   "db": {
     "ssl": false
   },
