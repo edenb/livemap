@@ -17,6 +17,16 @@ function isNumber(num) {
     }
 }
 
+function flashMessage(err) {
+    let message = err.message || err.statusText || 'Unknown error';
+    if (err.errors && err.errors.length > 0) {
+        for (let error of err.errors) {
+            message += ` - ${error.message}`;
+        }
+    }
+    return message;
+}
+
 function ensureAuthenticated(req, res, next) {
     // if user is authenticated in the session, call the next() to call the next request handler
     // Passport adds this method to request object. A middleware is allowed to add properties to
@@ -149,18 +159,18 @@ export default (passport) => {
                 res.redirect('/main');
                 break;
             case 'submit':
-                if (modUser.user_id <= 0) {
-                    queryRes = await usr.addUser(req.user, modUser);
-                } else {
-                    queryRes = await usr.modifyUser(req.user, modUser);
-                }
-                if (queryRes.rowCount === 1) {
+                try {
+                    if (modUser.user_id <= 0) {
+                        queryRes = await usr.addUser(req.user, modUser);
+                    } else {
+                        queryRes = await usr.modifyUser(req.user, modUser);
+                    }
                     req.flash('info', 'Details changed');
                     req.session.save(() => {
                         res.redirect('/changedetails');
                     });
-                } else {
-                    req.flash('error', queryRes.userMessage || 'Unknown error');
+                } catch (err) {
+                    req.flash('error', flashMessage(err));
                     req.session.save(() => {
                         res.redirect('/changedetails');
                     });

@@ -230,7 +230,7 @@ describe('e2e', function () {
                     .send({ ...data, action: 'submit' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedetails$/);
-                expect(res.text).to.include('No role selected');
+                expect(res.text).to.include('Validation failed');
             });
             it('should POST a delete user action', async function () {
                 const data = await getUser(vwr2);

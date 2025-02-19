@@ -53,7 +53,7 @@ describe('REST API', function () {
         });
 
         describe('GET /a-path', function () {
-            it('should respond with 404 on a non exiting path', async function () {
+            it('should respond with 404 on a non existing path', async function () {
                 const res = await request(app).get('/api/v1/a-path').send();
                 expect(res).to.have.status(404);
                 expect(res.text).to.equal('Invalid endpoint');
@@ -130,8 +130,9 @@ describe('REST API', function () {
                 // const users = res.body.map(
                 //     ({ user_id, ...remainingAttrs }) => remainingAttrs,
                 // );
-                const users = subset(res.body, Object.keys(adm1));
-                expect(users).to.include.deep.members([adm1, man1, vwr1]);
+                //const users = subset(res.body, Object.keys(adm1));
+                //expect(users).to.include.deep.members([adm1, man1, vwr1]);
+                expect(res.body).to.containSubset([adm1, man1, vwr1]);
             });
         });
 
@@ -149,14 +150,7 @@ describe('REST API', function () {
 
         describe('POST /users without api key', function () {
             it('should add a new user with generated api key', async function () {
-                const data = {
-                    api_key: null,
-                    email: 'viewer4@example.com',
-                    fullname: 'Viewer 4',
-                    password: 'password-vwr4',
-                    role: 'viewer',
-                    username: 'vwr4',
-                };
+                const data = { ...vwr3Auth, ...vwr3, api_key: null };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
@@ -164,48 +158,41 @@ describe('REST API', function () {
                     .send(data);
                 expect(res).to.have.status(201);
                 const newUser = await getUser(data);
-                await removeUserAndDevices(newUser);
                 expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
             });
         });
 
         describe('POST /users with too short full name', function () {
             it('should fail to add a new user', async function () {
-                const data = {
-                    api_key: 'apikey-vwr4',
-                    email: 'viewer4@example.com',
-                    fullname: '4',
-                    password: 'password-vwr4',
-                    role: 'viewer',
-                    username: 'vwr4',
-                };
+                const data = { ...vwr3Auth, ...vwr3, fullname: '4' };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).to.have.status(400);
-                expect(res.error.text).to.equal('Full name too short');
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Full name too short',
+                    },
+                ]);
             });
         });
 
         describe('POST /users with an already existing api key', function () {
             it('should fail to add a new user', async function () {
-                const data = {
-                    api_key: 'apikey-adm1',
-                    email: 'viewer4@example.com',
-                    fullname: 'Viewer 4',
-                    password: 'password-vwr4',
-                    role: 'viewer',
-                    username: 'vwr4',
-                };
+                const data = { ...vwr3Auth, ...vwr3, api_key: 'apikey-adm1' };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).to.have.status(500);
-                expect(res.error.text).to.equal('Internal Server Error');
+                expect(res).to.have.status(409);
+                expect(res.body.statusText).to.equal('Conflict');
+                expect(res.body.message).to.include(
+                    'duplicate key value violates unique constraint',
+                );
             });
         });
 
@@ -213,11 +200,9 @@ describe('REST API', function () {
             it('should change the account details of a user', async function () {
                 const user = await getUser(vwr1);
                 const data = {
-                    username: 'vwr1',
-                    fullname: 'Viewer 1 modified',
+                    ...vwr1,
                     email: 'viewer1modified@example.com',
-                    role: 'viewer',
-                    api_key: 'apikey-vwr1',
+                    fullname: 'Viewer 1 modified',
                 };
                 const res = await request(app)
                     .put('/api/v1/users/' + user.user_id)
@@ -227,6 +212,58 @@ describe('REST API', function () {
                 expect(res).to.have.status(204);
                 const modifiedUser = await getUser(vwr1);
                 expect(modifiedUser).to.include(data);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if userId too large', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/9999999999')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+            });
+            it('should respond with 422 if userId is not an integer', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/42.42')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
             });
         });
 

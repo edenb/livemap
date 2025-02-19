@@ -220,8 +220,7 @@ export async function queryDbAsync(key, sqlParams) {
                 sqlParams || [],
             );
         } catch (err) {
-            logger.error(`Database access failed: ${err.message}`);
-            throw new Error(`Database access failed: ${err.message}`);
+            throw new Error(`Database query failed. ${err.message}`);
         } finally {
             pgClient.release();
         }
@@ -232,7 +231,6 @@ export async function queryDbAsync(key, sqlParams) {
             save(queryDef[key], sqlParams, dbQueryRes);
         }
     } else {
-        logger.error(`Database query failed. No query for key: ${key}`);
         throw new Error(`Database query failed. No query for key: ${key}`);
     }
 
@@ -301,7 +299,6 @@ export async function checkDbUp() {
             return true;
         }
     } catch (err) {
-        logger.error(`Unable to check database status. ${err}`);
         return false;
     }
 }

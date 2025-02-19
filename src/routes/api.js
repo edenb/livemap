@@ -7,6 +7,7 @@ import * as devices from '../controllers/device.js';
 import * as positions from '../controllers/position.js';
 import * as staticLayers from '../controllers/staticlayer.js';
 import * as server from '../controllers/server.js';
+import { httpErrorHandler } from '../middlewares/httperrorhandler.js';
 
 export default (passport) => {
     const router = Router();
@@ -140,10 +141,12 @@ export default (passport) => {
         server.getInfo,
     );
 
-    // This middleware always at the end to catch undefined endpoints
     router.use('*', (req, res) => {
         res.status(404).send(`Invalid endpoint`);
     });
+
+    // Error handling middleware (should be placed at the end)
+    router.use(httpErrorHandler);
 
     return router;
 };

@@ -1,4 +1,5 @@
 import * as usr from '../models/user.js';
+import { HttpError } from '../utils/error.js';
 
 export async function getAllUsers(req, res) {
     const queryRes = await usr.getAllUsers();
@@ -27,52 +28,34 @@ export async function getUserByUserId(req, res) {
     }
 }
 
-export async function addUser(req, res) {
-    if (req.tokenPayload) {
-        const queryRes = await usr.addUser(
-            { user_id: req.tokenPayload.userId, role: req.tokenPayload.role },
+export async function addUser(req, res, next) {
+    try {
+        await usr.addUser(
+            {
+                user_id: req.tokenPayload.userId,
+                role: req.tokenPayload.role,
+            },
             req.body,
         );
-        if (queryRes.rowCount === -1) {
-            res.status(500).send(`Internal Server Error`);
-        } else if (queryRes.rowCount === -2) {
-            res.status(400).send(queryRes.userMessage);
-        } else {
-            if (queryRes.rowCount > 0) {
-                res.status(201).send();
-            } else {
-                res.status(409).send(queryRes.userMessage);
-            }
-        }
-    } else {
-        res.status(403).send();
+        res.status(201).send();
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function modifyUser(req, res) {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    if (reqUserId >= 0 && req.tokenPayload) {
-        req.body.user_id = reqUserId;
+export async function modifyUser(req, res, next) {
+    try {
         const queryRes = await usr.modifyUser(
             { user_id: req.tokenPayload.userId, role: req.tokenPayload.role },
-            req.body,
+            { ...req.body, user_id: Number(req.params?.userId) },
         );
-        if (queryRes.rowCount === -1) {
-            res.status(500).send(`Internal Server Error`);
-        } else if (queryRes.rowCount === -2) {
-            res.status(400).send(queryRes.userMessage);
+        if (queryRes.rowCount > 0) {
+            res.status(204).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(204).send();
-            } else {
-                res.status(404).send(queryRes.userMessage);
-            }
+            throw new HttpError(404);
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 
