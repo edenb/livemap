@@ -219,8 +219,6 @@ export async function queryDbAsync(key, sqlParams) {
                 queryDef[key].qstr,
                 sqlParams || [],
             );
-        } catch (err) {
-            throw new Error(`Database query failed. ${err.message}`);
         } finally {
             pgClient.release();
         }
