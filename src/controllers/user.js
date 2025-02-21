@@ -162,23 +162,20 @@ export async function resetPassword(req, res) {
     }
 }
 
-export async function getAccount(req, res) {
-    const queryRes = await usr.getUserByField(
-        'user_id',
-        req.tokenPayload.userId,
-    );
-    if (queryRes.rowCount === -1) {
-        res.status(500).send(`Internal Server Error`);
-    } else if (queryRes.rowCount === -2) {
-        res.status(400).send(queryRes.userMessage);
-    } else {
-        let response = {};
-        response.user_id = queryRes.rows[0].user_id;
-        response.username = queryRes.rows[0].username;
-        response.role = queryRes.rows[0].role;
-        response.api_key = queryRes.rows[0].api_key;
-        response.fullname = queryRes.rows[0].fullname;
-        response.email = queryRes.rows[0].email;
-        res.status(200).send(response);
+export async function getAccount(req, res, next) {
+    try {
+        const queryRes = await usr.getUserByField(
+            'user_id',
+            req.tokenPayload.userId,
+        );
+        if (queryRes.rowCount > 0) {
+            // Do not expose password hash in response
+            const { password, ...user } = queryRes.rows[0];
+            res.status(200).send(user);
+        } else {
+            throw new HttpError(404);
+        }
+    } catch (err) {
+        next(err);
     }
 }
