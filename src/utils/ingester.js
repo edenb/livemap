@@ -12,7 +12,7 @@ async function processGpx(payload) {
         identObj = '';
 
     identObj = dev.splitDeviceIdentity(payload.device_id, '_');
-    if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
+    if (!identObj.err && (await usr.isKnownAPIkey(identObj.apiKey, null))) {
         const queryRes = await dev.getDeviceByIdentity(
             identObj.apiKey,
             identObj.identifier,
@@ -57,7 +57,7 @@ async function processLocative(payload) {
     // Determine if it's a detection of an iBeacon (lon and lat are '0') or the location of a device
     if (payload.latitude === '0' && payload.longitude === '0') {
         identObj = dev.splitDeviceIdentity(payload.id, ':');
-        if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
+        if (!identObj.err && (await usr.isKnownAPIkey(identObj.apiKey, null))) {
             let queryRes = await dev.getDeviceByIdentity(
                 identObj.apiKey,
                 payload.device,
@@ -103,7 +103,7 @@ async function processLocative(payload) {
     } else {
         identity = payload.id + ':' + payload.device;
         identObj = dev.splitDeviceIdentity(identity, ':');
-        if (identObj.err === null && usr.isKnownAPIkey(identObj.apiKey, null)) {
+        if (!identObj.err && (await usr.isKnownAPIkey(identObj.apiKey, null))) {
             const queryRes = await dev.getDeviceByIdentity(
                 identObj.apiKey,
                 payload.device,
@@ -153,7 +153,7 @@ async function processMqtt(payload, validator) {
         }
     }
 
-    if (srcData.apikey && usr.isKnownAPIkey(srcData.apikey, null)) {
+    if (srcData.apikey && (await usr.isKnownAPIkey(srcData.apikey, null))) {
         const queryRes = await dev.getDeviceByIdentity(
             srcData.apikey,
             srcData.id,

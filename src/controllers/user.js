@@ -1,30 +1,28 @@
 import * as usr from '../models/user.js';
 import { HttpError } from '../utils/error.js';
 
-export async function getAllUsers(req, res) {
-    const queryRes = await usr.getAllUsers();
-    if (queryRes.rowCount === -1) {
-        res.status(500).send(`Internal Server Error`);
-    } else if (queryRes.rowCount === -2) {
-        res.status(400).send(queryRes.userMessage);
-    } else {
+export async function getAllUsers(_req, res, next) {
+    try {
+        const queryRes = await usr.getAllUsers();
         res.status(200).send(queryRes.rows);
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function getUserByUserId(req, res) {
-    const userId = parseInt(req.params.userId);
-    if (!Number.isInteger(userId)) {
-        res.status(400).send(`Bad Request`);
-    } else {
-        const queryRes = await usr.getUserByField('user_id', userId);
-        if (queryRes.rowCount === -1) {
-            res.status(500).send(`Internal Server Error`);
-        } else if (queryRes.rowCount === -2) {
-            res.status(400).send(queryRes.userMessage);
-        } else {
+export async function getUserByUserId(req, res, next) {
+    try {
+        const queryRes = await usr.getUserByField(
+            'user_id',
+            Number(req.params?.userId),
+        );
+        if (queryRes.rowCount > 0) {
             res.status(200).send(queryRes.rows);
+        } else {
+            throw new HttpError(404);
         }
+    } catch (err) {
+        next(err);
     }
 }
 

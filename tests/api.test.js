@@ -277,6 +277,20 @@ describe('REST API', function () {
                 expect(res).to.have.status(200);
                 expect(res.body[0]).to.include(vwr1);
             });
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(422);
+            });
         });
 
         describe('POST /users/:userId/password/change', function () {

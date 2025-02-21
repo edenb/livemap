@@ -4,9 +4,6 @@ import { randomBytes } from 'node:crypto';
 import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
 import { ValidationError } from '../utils/error.js';
 
-// In memory list of all users with their attributes
-var users = [];
-
 //
 // Local functions
 //
@@ -32,8 +29,8 @@ function validateChangeUser(user, modUser) {
     return null;
 }
 
-function validateUserId(modUser) {
-    if (Number.isNaN(modUser.user_id)) {
+function validateUserId(user_id) {
+    if (Number.isNaN(user_id)) {
         return [
             {
                 code: 'userIdNotANumber',
@@ -42,7 +39,7 @@ function validateUserId(modUser) {
             },
         ];
     }
-    if (!Number.isSafeInteger(modUser.user_id)) {
+    if (!Number.isSafeInteger(user_id)) {
         return [
             {
                 code: 'userIdNotAnInteger',
@@ -51,7 +48,7 @@ function validateUserId(modUser) {
             },
         ];
     }
-    if (modUser.user_id < 1 || modUser.user_id > 2147483647) {
+    if (user_id < 1 || user_id > 2147483647) {
         return [
             {
                 code: 'userIdNotInRange',
@@ -63,7 +60,7 @@ function validateUserId(modUser) {
     return null;
 }
 
-function validateAccountInput(modUser) {
+async function validateAccountInput(modUser) {
     // ToDo: add more validations here
 
     // The full name should have a minimal length
@@ -77,7 +74,7 @@ function validateAccountInput(modUser) {
         ];
     }
     // An API key should be unique (mainly for manually changed API keys)
-    if (isKnownAPIkey(modUser.api_key, modUser)) {
+    if (await isKnownAPIkey(modUser.api_key, modUser)) {
         return [
             {
                 code: 'apiKeyInUse',
@@ -117,43 +114,37 @@ function validatePasswordInput(password) {
 //
 
 export async function getAllUsers() {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('getAllUsers', []);
-        users = queryRes.rows;
-        return queryRes;
-    } catch (err) {
-        queryRes.userMessage = 'Unable to get users';
-        return queryRes;
-    }
+    const queryRes = await queryDbAsync('getAllUsers', []);
+    return queryRes;
 }
 
 export async function getUserByField(field, value) {
-    let queryRes = getEmptyQueryRes();
-    let queryDefinition = '';
+    let key;
+    let validationError;
+
     if (field === 'user_id') {
-        queryDefinition = 'getUserByUserId';
+        validationError = validateUserId(value);
+        if (validationError) {
+            throw new ValidationError(validationError);
+        }
+        key = 'getUserByUserId';
     }
     if (field === 'username') {
-        queryDefinition = 'getUserByUsername';
+        key = 'getUserByUsername';
     }
     if (field === 'api_key') {
-        queryDefinition = 'getUserByApiKey';
+        key = 'getUserByApiKey';
     }
-    if (queryDefinition !== '') {
-        try {
-            queryRes = await queryDbAsync(queryDefinition, [value]);
-        } catch (err) {
-            queryRes.userMessage = 'Unable to get user';
-            return queryRes;
-        }
+    if (!key) {
+        throw new TypeError(`No key for field: ${field}`);
     }
+
+    const queryRes = await queryDbAsync(key, [value]);
     return queryRes;
 }
 
 export async function addUser(user, modUser) {
     let passwordHash;
-    let queryRes;
     let validationError;
 
     // If the API key is empty generate one
@@ -164,7 +155,7 @@ export async function addUser(user, modUser) {
     if (validationError) {
         throw new ValidationError(validationError);
     }
-    validationError = validateAccountInput(modUser);
+    validationError = await validateAccountInput(modUser);
     if (validationError) {
         throw new ValidationError(validationError);
     }
@@ -178,7 +169,7 @@ export async function addUser(user, modUser) {
         throw new ValidationError(err.message, 'failedHash');
     }
 
-    queryRes = await queryDbAsync('insertUser', [
+    const queryRes = await queryDbAsync('insertUser', [
         modUser.username,
         modUser.fullname,
         modUser.email,
@@ -186,19 +177,17 @@ export async function addUser(user, modUser) {
         modUser.api_key,
         passwordHash,
     ]);
-
     return queryRes;
 }
 
 export async function modifyUser(user, modUser) {
-    let queryRes;
     let validationError;
 
     // If the API key is empty generate one
     if (!modUser.api_key || modUser.api_key === '') {
         modUser.api_key = generateAPIkey();
     }
-    validationError = validateUserId(modUser);
+    validationError = validateUserId(modUser.user_id);
     if (validationError) {
         throw new ValidationError(validationError);
     }
@@ -206,12 +195,12 @@ export async function modifyUser(user, modUser) {
     if (validationError) {
         throw new ValidationError(validationError);
     }
-    validationError = validateAccountInput(modUser);
+    validationError = await validateAccountInput(modUser);
     if (validationError) {
         throw new ValidationError(validationError);
     }
 
-    queryRes = await queryDbAsync('modifyUserById', [
+    const queryRes = await queryDbAsync('modifyUserById', [
         modUser.user_id,
         modUser.username,
         modUser.fullname,
@@ -219,7 +208,6 @@ export async function modifyUser(user, modUser) {
         modUser.role,
         modUser.api_key,
     ]);
-
     return queryRes;
 }
 
@@ -312,25 +300,18 @@ export async function deleteUser(user, modUser) {
     return queryRes;
 }
 
-export function isKnownAPIkey(apiKey, ignoreUser) {
-    var i, ignoreId;
-
-    if (ignoreUser === null) {
-        ignoreId = -1;
-    } else {
-        ignoreId = ignoreUser.user_id;
-    }
-
-    i = 0;
-    while (
-        i < users.length &&
-        (users[i].api_key !== apiKey || users[i].user_id === ignoreId)
-    ) {
-        i++;
-    }
-    if (i !== users.length) {
-        return true;
-    } else {
+export async function isKnownAPIkey(apiKey, ignoreUser) {
+    try {
+        const queryRes = await getAllUsers();
+        const foundUser = queryRes.rows.find(
+            (e) => e.api_key === apiKey && e.api_key !== ignoreUser?.api_key,
+        );
+        if (foundUser) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (err) {
         return false;
     }
 }
