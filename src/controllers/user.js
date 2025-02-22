@@ -168,13 +168,9 @@ export async function getAccount(req, res, next) {
             'user_id',
             req.tokenPayload.userId,
         );
-        if (queryRes.rowCount > 0) {
-            // Do not expose password hash in response
-            const { password, ...user } = queryRes.rows[0];
-            res.status(200).send(user);
-        } else {
-            throw new HttpError(404);
-        }
+        // Do not expose password hash in response
+        const { password, ...user } = queryRes.rows[0];
+        res.status(200).send(user);
     } catch (err) {
         next(err);
     }
