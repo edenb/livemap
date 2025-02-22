@@ -57,29 +57,19 @@ export async function modifyUser(req, res, next) {
     }
 }
 
-export async function removeUser(req, res) {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    if (reqUserId >= 0 && req.tokenPayload) {
+export async function removeUser(req, res, next) {
+    try {
         const queryRes = await usr.deleteUser(
             { user_id: req.tokenPayload.userId, role: req.tokenPayload.role },
-            { user_id: reqUserId },
+            { user_id: Number(req.params?.userId) },
         );
-        if (queryRes.rowCount === -1) {
-            res.status(500).send(`Internal Server Error`);
-        } else if (queryRes.rowCount === -2) {
-            res.status(400).send(queryRes.userMessage);
+        if (queryRes.rowCount > 0) {
+            res.status(204).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(204).send();
-            } else {
-                res.status(404).send(queryRes.userMessage);
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 

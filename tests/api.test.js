@@ -368,15 +368,29 @@ describe('REST API', function () {
                 const deletedUser = await getUser(vwr2);
                 expect(deletedUser).to.be.null;
             });
-            it('should respond with 400 when deleting own account', async function () {
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .delete('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 when deleting own account', async function () {
                 const user = await getUser(adm1);
                 const res = await request(app)
                     .delete('/api/v1/users/' + user.user_id)
                     .auth(token, { type: 'bearer' })
                     .send();
-                expect(res).to.have.status(400);
+                expect(res).to.have.status(422);
                 const deletedUser = await getUser(adm1);
                 expect(deletedUser).to.include(adm1);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const res = await request(app)
+                    .delete('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(422);
             });
         });
 

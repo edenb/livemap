@@ -242,15 +242,23 @@ describe('e2e', function () {
                 const deletedUser = await getUser(vwr2);
                 expect(deletedUser).to.be.null;
             });
-            it('should POST a delete user action', async function () {
+            it('should POST a delete unknown user action', async function () {
                 const data = await getUser(vwr2);
                 const res = await reqAgent
                     .post('/changedetails')
-                    .send({ ...data, action: 'delete' });
+                    .send({ ...data, user_id: 2147483647, action: 'delete' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedetails$/);
-                const deletedUser = await getUser(vwr2);
-                expect(deletedUser).to.be.null;
+                expect(res.text).to.include('User not found');
+            });
+            it('should POST a delete invalid user action', async function () {
+                const data = await getUser(vwr2);
+                const res = await reqAgent
+                    .post('/changedetails')
+                    .send({ ...data, user_id: 0, action: 'delete' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedetails$/);
+                expect(res.text).to.include('Validation failed');
             });
             it('should POST a cancel user action', async function () {
                 const data = await getUser(vwr2);

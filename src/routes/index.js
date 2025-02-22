@@ -177,14 +177,21 @@ export default (passport) => {
                 }
                 break;
             case 'delete':
-                queryRes = await usr.deleteUser(req.user, modUser);
-                if (queryRes.rowCount === 1) {
-                    req.flash('info', 'User deleted');
-                    req.session.save(() => {
-                        res.redirect('/changedetails');
-                    });
-                } else {
-                    req.flash('error', queryRes.userMessage || 'Unknown error');
+                try {
+                    queryRes = await usr.deleteUser(req.user, modUser);
+                    if (queryRes.rowCount === 1) {
+                        req.flash('info', 'User deleted');
+                        req.session.save(() => {
+                            res.redirect('/changedetails');
+                        });
+                    } else {
+                        req.flash('error', 'User not found');
+                        req.session.save(() => {
+                            res.redirect('/changedetails');
+                        });
+                    }
+                } catch (err) {
+                    req.flash('error', flashMessage(err));
                     req.session.save(() => {
                         res.redirect('/changedetails');
                     });

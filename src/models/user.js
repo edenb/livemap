@@ -286,17 +286,24 @@ export async function checkPassword(password, passwordHash) {
 }
 
 export async function deleteUser(user, modUser) {
-    let queryRes = getEmptyQueryRes();
+    let validationError;
+
     if (user.user_id === modUser.user_id) {
-        queryRes.userMessage = 'You can not delete your own account';
-        queryRes.rowCount = -2;
-    } else {
-        try {
-            queryRes = await queryDbAsync('deleteUser', [modUser.user_id]);
-        } catch (err) {
-            queryRes.userMessage = 'Failed to delete user';
-        }
+        validationError = [
+            {
+                code: 'accountNoOwnDelete',
+                field: 'user_id',
+                message: 'Can not delete own account',
+            },
+        ];
+        throw new ValidationError(validationError);
     }
+    validationError = validateUserId(modUser.user_id);
+    if (validationError) {
+        throw new ValidationError(validationError);
+    }
+
+    const queryRes = await queryDbAsync('deleteUser', [modUser.user_id]);
     return queryRes;
 }
 
