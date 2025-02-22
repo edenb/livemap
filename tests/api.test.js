@@ -120,6 +120,76 @@ describe('REST API', function () {
             });
         });
 
+        describe('GET /devices', function () {
+            it('should get all devices', async function () {
+                const res = await request(app)
+                    .get('/api/v1/devices')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                const devices = subset(res.body, Object.keys(vwr1Devs[0]));
+                expect(devices).to.include.deep.members([
+                    ...vwr1Devs,
+                    ...man1Devs,
+                    ...adm1Devs,
+                ]);
+            });
+        });
+
+        describe('GET /positions', function () {
+            it('should get all latest positions from devices of a user', async function () {
+                const devices = await getDevices(adm1);
+                const orgPosition = {
+                    ...devPositions[0],
+                    device_id: devices[0].device_id,
+                };
+                await addPosition(orgPosition);
+                const res = await request(app)
+                    .get('/api/v1/positions')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body[0]).to.include(orgPosition);
+            });
+        });
+
+        describe('GET /server/info', function () {
+            it('should get information about the server', async function () {
+                const res = await request(app)
+                    .get('/api/v1/server/info')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.eql({
+                    application: {
+                        name: 'Livemap name',
+                        about: 'Livemap about',
+                        license: 'Livemap license',
+                    },
+                    mqtt: {
+                        url: 'mqtt://127.0.0.1',
+                        port: '1883',
+                    },
+                });
+            });
+        });
+
+        describe('GET /staticlayers', function () {
+            it('should get all static layers', async function () {
+                const res = await request(app)
+                    .get('/api/v1/staticlayers')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.be.an('array');
+                res.body.forEach(function (geojson) {
+                    expect(geojson)
+                        .to.be.an('object')
+                        .that.has.any.keys('type');
+                });
+            });
+        });
+
         describe('GET /users', function () {
             it('should get all users details', async function () {
                 const res = await request(app)
@@ -146,10 +216,7 @@ describe('REST API', function () {
                     .send(data);
                 expect(res).to.have.status(201);
             });
-        });
-
-        describe('POST /users without api key', function () {
-            it('should add a new user with generated api key', async function () {
+            it('should add a new user with a generated api key', async function () {
                 const data = { ...vwr3Auth, ...vwr3, api_key: null };
                 const res = await request(app)
                     .post('/api/v1/users')
@@ -160,11 +227,8 @@ describe('REST API', function () {
                 const newUser = await getUser(data);
                 expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
             });
-        });
-
-        describe('POST /users with too short full name', function () {
-            it('should fail to add a new user', async function () {
-                const data = { ...vwr3Auth, ...vwr3, fullname: '4' };
+            it('should respond with 422 if full name too short', async function () {
+                const data = { ...vwr3Auth, ...vwr3, fullname: '3' };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
@@ -178,10 +242,7 @@ describe('REST API', function () {
                     },
                 ]);
             });
-        });
-
-        describe('POST /users with an already existing api key', function () {
-            it('should fail to add a new user', async function () {
+            it('should respond with 409 if api key already exists', async function () {
                 const data = { ...vwr3Auth, ...vwr3, api_key: 'apikey-adm1' };
                 const res = await request(app)
                     .post('/api/v1/users')
@@ -193,6 +254,32 @@ describe('REST API', function () {
                 expect(res.body.message).to.include(
                     'duplicate key value violates unique constraint',
                 );
+            });
+        });
+
+        describe('GET /users/:userId', function () {
+            it('should get details about a user', async function () {
+                const user = await getUser(vwr1);
+                const res = await request(app)
+                    .get('/api/v1/users/' + user.user_id)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body[0]).to.include(vwr1);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(422);
             });
         });
 
@@ -264,97 +351,6 @@ describe('REST API', function () {
                     .type('json')
                     .send(data);
                 expect(res).to.have.status(422);
-            });
-        });
-
-        describe('GET /users/:userId', function () {
-            it('should get details about a user', async function () {
-                const user = await getUser(vwr1);
-                const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                expect(res.body[0]).to.include(vwr1);
-            });
-            it('should respond with 404 if user does not exist', async function () {
-                const res = await request(app)
-                    .get('/api/v1/users/2147483647')
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(404);
-            });
-            it('should respond with 422 if userId is not a number', async function () {
-                const res = await request(app)
-                    .get('/api/v1/users/aaa')
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(422);
-            });
-        });
-
-        describe('POST /users/:userId/password/change', function () {
-            it('should change your own password', async function () {
-                const user = await getUser(adm1);
-                const data = {
-                    curpwd: adm1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const modifiedUser = await getUser(adm1);
-                expect(modifiedUser.password).to.not.equal(user.password);
-            });
-            it('should respond with 403 on other users', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    curpwd: vwr1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(403);
-            });
-        });
-
-        describe('POST /users/:userId/password/reset', function () {
-            it('should change the password of a user', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    curpwd: vwr1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/reset')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const modifiedUser = await getUser(vwr1);
-                expect(modifiedUser.password).to.not.equal(user.password);
-            });
-            it('should respond with 403 if user does not exist', async function () {
-                const data = {
-                    curpwd: vwr1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/0/password/change')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(403);
             });
         });
 
@@ -531,73 +527,68 @@ describe('REST API', function () {
             });
         });
 
-        describe('GET /devices', function () {
-            it('should get all devices', async function () {
-                const res = await request(app)
-                    .get('/api/v1/devices')
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                const devices = subset(res.body, Object.keys(vwr1Devs[0]));
-                expect(devices).to.include.deep.members([
-                    ...vwr1Devs,
-                    ...man1Devs,
-                    ...adm1Devs,
-                ]);
-            });
-        });
-
-        describe('GET /positions', function () {
-            it('should get all latest positions from devices of a user', async function () {
-                const devices = await getDevices(adm1);
-                const orgPosition = {
-                    ...devPositions[0],
-                    device_id: devices[0].device_id,
+        describe('POST /users/:userId/password/change', function () {
+            it('should change your own password', async function () {
+                const user = await getUser(adm1);
+                const data = {
+                    curpwd: adm1Auth.password,
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
                 };
-                await addPosition(orgPosition);
                 const res = await request(app)
-                    .get('/api/v1/positions')
+                    .post('/api/v1/users/' + user.user_id + '/password/change')
                     .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                expect(res.body[0]).to.include(orgPosition);
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                const modifiedUser = await getUser(adm1);
+                expect(modifiedUser.password).to.not.equal(user.password);
+            });
+            it('should respond with 403 on other users', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    curpwd: vwr1Auth.password,
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/' + user.user_id + '/password/change')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(403);
             });
         });
 
-        describe('GET /staticlayers', function () {
-            it('should get all static layers', async function () {
+        describe('POST /users/:userId/password/reset', function () {
+            it('should change the password of a user', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    curpwd: vwr1Auth.password,
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                };
                 const res = await request(app)
-                    .get('/api/v1/staticlayers')
+                    .post('/api/v1/users/' + user.user_id + '/password/reset')
                     .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                expect(res.body).to.be.an('array');
-                res.body.forEach(function (geojson) {
-                    expect(geojson)
-                        .to.be.an('object')
-                        .that.has.any.keys('type');
-                });
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                const modifiedUser = await getUser(vwr1);
+                expect(modifiedUser.password).to.not.equal(user.password);
             });
-        });
-
-        describe('GET /server/info', function () {
-            it('should get information about the server', async function () {
+            it('should respond with 403 if user does not exist', async function () {
+                const data = {
+                    curpwd: vwr1Auth.password,
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                };
                 const res = await request(app)
-                    .get('/api/v1/server/info')
+                    .post('/api/v1/users/0/password/change')
                     .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                expect(res.body).to.eql({
-                    application: {
-                        name: 'Livemap name',
-                        about: 'Livemap about',
-                        license: 'Livemap license',
-                    },
-                    mqtt: {
-                        url: 'mqtt://127.0.0.1',
-                        port: '1883',
-                    },
-                });
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(403);
             });
         });
     });
