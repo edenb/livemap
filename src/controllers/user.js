@@ -19,7 +19,7 @@ export async function getUserByUserId(req, res, next) {
         if (queryRes.rowCount > 0) {
             res.status(200).send(queryRes.rows);
         } else {
-            throw new HttpError(404);
+            throw new HttpError(404, 'User not found');
         }
     } catch (err) {
         next(err);
@@ -50,7 +50,7 @@ export async function modifyUser(req, res, next) {
         if (queryRes.rowCount > 0) {
             res.status(204).send();
         } else {
-            throw new HttpError(404);
+            throw new HttpError(404, 'User not found');
         }
     } catch (err) {
         next(err);

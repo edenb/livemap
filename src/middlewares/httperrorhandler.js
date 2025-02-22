@@ -62,6 +62,7 @@ export function httpErrorHandler(err, _req, res, _next) {
         }
     } else if (err instanceof HttpError) {
         errStatusCode = err.statusCode;
+        message = err.message;
     } else if (err instanceof ValidationError) {
         errStatusCode = 422;
         message = err.message;
