@@ -1,5 +1,6 @@
 import config from 'config';
 import jsonwebtoken from 'jsonwebtoken';
+import { HttpError } from '../utils/error.js';
 
 //
 // Exported modules
@@ -31,35 +32,32 @@ export function getTokenPayload(token) {
 }
 
 export function isAuthorized(rolesAllowed) {
-    return (req, res, next) => {
-        // Get the token from the header (API requests) or from the session (web client requests)
-        let token = null;
-        if (req.headers.authorization) {
-            let authorizationDirectives = req.headers.authorization.split(' ');
-            if (
-                authorizationDirectives.length === 2 &&
-                authorizationDirectives[0] === 'Bearer'
-            ) {
-                token = authorizationDirectives[1];
+    return (req, _res, next) => {
+        try {
+            // Get the token from the header (API requests) or from the session (web client requests)
+            let token;
+            const authHeader = req.get('authorization');
+            if (authHeader?.split(' ')[0] === 'Bearer') {
+                token = authHeader?.split(' ')[1];
             }
-        }
-        if (req.isAuthenticated() && req.session && req.session.token) {
-            token = req.session.token;
-        }
+            if (req.isAuthenticated() && req.session?.token) {
+                token = req.session.token;
+            }
 
-        if (token) {
-            let tokenPayload = getTokenPayload(token);
-            req.tokenPayload = tokenPayload;
-            if (!tokenPayload) {
-                res.status(401).send('Unauthorized. Invalid token');
-            } else {
-                if (rolesAllowed.includes(tokenPayload.role)) {
-                    return next();
-                }
-                res.status(403).send('Forbidden');
+            if (!token) {
+                throw new HttpError(401, 'Token required');
             }
-        } else {
-            res.status(401).send('Unauthorized. Token required');
+            const tokenPayload = getTokenPayload(token);
+            if (!tokenPayload) {
+                throw new HttpError(401, 'Invalid token');
+            }
+            if (!rolesAllowed.includes(tokenPayload.role)) {
+                throw new HttpError(403, 'Access denied');
+            }
+            req.tokenPayload = tokenPayload;
+            return next();
+        } catch (err) {
+            next(err);
         }
     };
 }
