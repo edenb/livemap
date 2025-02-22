@@ -110,13 +110,17 @@ describe('REST API', function () {
         });
 
         describe('GET /account', function () {
-            it('should respond with account details', async function () {
+            it('should get account details', async function () {
                 const res = await request(app)
                     .get('/api/v1/account')
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
                 expect(res.body).to.include(adm1);
+            });
+            it('should respond with 401 if auth token is missing', async function () {
+                const res = await request(app).get('/api/v1/account').send();
+                expect(res).to.have.status(401);
             });
         });
 
@@ -197,12 +201,11 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
-                // const users = res.body.map(
-                //     ({ user_id, ...remainingAttrs }) => remainingAttrs,
-                // );
-                //const users = subset(res.body, Object.keys(adm1));
-                //expect(users).to.include.deep.members([adm1, man1, vwr1]);
                 expect(res.body).to.containSubset([adm1, man1, vwr1]);
+            });
+            it('should respond with 401 if auth token is missing', async function () {
+                const res = await request(app).get('/api/v1/users').send();
+                expect(res).to.have.status(401);
             });
         });
 
