@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import config from 'config';
 import { randomBytes } from 'node:crypto';
-import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
+import { queryDbAsync } from '../database/db.js';
 import { ValidationError } from '../utils/error.js';
 
 //
@@ -10,6 +10,14 @@ import { ValidationError } from '../utils/error.js';
 
 function generateAPIkey() {
     return randomBytes(8).toString('hex').toUpperCase();
+}
+
+async function createHash(password) {
+    const passwordHash = await bcrypt.hash(
+        password,
+        config.get('user.pwdSaltRounds'),
+    );
+    return passwordHash;
 }
 
 function validateChangeUser(user, modUser) {
@@ -144,7 +152,6 @@ export async function getUserByField(field, value) {
 }
 
 export async function addUser(user, modUser) {
-    let passwordHash;
     let validationError;
 
     // If the API key is empty generate one
@@ -163,12 +170,8 @@ export async function addUser(user, modUser) {
     if (validationError) {
         throw new ValidationError(validationError);
     }
-    try {
-        passwordHash = await createHash(modUser.password);
-    } catch (err) {
-        throw new ValidationError(err.message, 'failedHash');
-    }
 
+    const passwordHash = await createHash(modUser.password);
     const queryRes = await queryDbAsync('insertUser', [
         modUser.username,
         modUser.fullname,
@@ -211,78 +214,46 @@ export async function modifyUser(user, modUser) {
     return queryRes;
 }
 
-export async function changePassword(user, curPwd, newPwd, confirmPwd) {
-    let queryRes = getEmptyQueryRes();
-    let authOK = false;
+export async function changePassword(user_id, newPwd, confirmPwd, currentPwd) {
+    if (!credentialsMatch(user_id, currentPwd)) {
+        const validationError = [
+            {
+                code: 'userPasswordMismatch',
+                field: 'password',
+                message: 'User and password do not match',
+            },
+        ];
+        throw new ValidationError(validationError);
+    }
 
-    // If a user has no password yet, any current password will work (for legacy UI)
-    if (user.password === null) {
-        authOK = true;
-    } else {
-        authOK = await checkPassword(curPwd, user.password);
-    }
-    if (authOK) {
-        queryRes = await resetPassword(user, newPwd, confirmPwd);
-        return queryRes;
-    } else {
-        queryRes.userMessage = 'Old password incorrect';
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
-}
-
-export async function resetPassword(user, newPwd, confirmPwd) {
-    let queryRes = getEmptyQueryRes();
-
-    const userMessage = validatePasswordInput(newPwd);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
-    if (newPwd !== confirmPwd) {
-        queryRes.userMessage = 'New passwords mismatch';
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
-    let newHash;
-    try {
-        newHash = await createHash(newPwd);
-    } catch (err) {
-        queryRes.userMessage = 'Hashing failed';
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
-    try {
-        queryRes = await queryDbAsync('changePwdByUsername', [
-            user.username,
-            newHash,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'User not found';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'Failed to change password';
-        return queryRes;
-    }
+    const queryRes = await resetPassword(user_id, newPwd, confirmPwd);
     return queryRes;
 }
 
-export async function createHash(password) {
-    const passwordHash = await bcrypt.hash(
-        password,
-        config.get('user.pwdSaltRounds'),
-    );
-    return passwordHash;
-}
+export async function resetPassword(user_id, newPwd, confirmPwd) {
+    let validationError;
 
-export async function checkPassword(password, passwordHash) {
-    if (password === null) {
-        return true;
-    } else {
-        const match = await bcrypt.compare(password || '', passwordHash);
-        return match;
+    validationError = validatePasswordInput(newPwd);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
+    if (newPwd !== confirmPwd) {
+        validationError = [
+            {
+                code: 'newPasswordsMismatch',
+                field: 'password',
+                message: 'New passwords do not match',
+            },
+        ];
+        throw new ValidationError(validationError);
+    }
+
+    const newPasswordHash = await createHash(newPwd);
+    const queryRes = await queryDbAsync('changePwdByUserId', [
+        user_id,
+        newPasswordHash,
+    ]);
+    return queryRes;
 }
 
 export async function deleteUser(user, modUser) {
@@ -305,6 +276,17 @@ export async function deleteUser(user, modUser) {
 
     const queryRes = await queryDbAsync('deleteUser', [modUser.user_id]);
     return queryRes;
+}
+
+export async function credentialsMatch(user_id, password) {
+    const queryRes = await queryDbAsync('getPwdByUserId', [user_id]);
+    if (queryRes.rowCount > 0) {
+        const currentPasswordHash = queryRes.rows[0].password;
+        const match = await bcrypt.compare(password, currentPasswordHash);
+        return match;
+    } else {
+        return false;
+    }
 }
 
 export async function isKnownAPIkey(apiKey, ignoreUser) {

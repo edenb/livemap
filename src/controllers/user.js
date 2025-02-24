@@ -73,82 +73,41 @@ export async function removeUser(req, res, next) {
     }
 }
 
-export async function changePassword(req, res) {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    if (
-        reqUserId >= 0 &&
-        req.tokenPayload &&
-        reqUserId === req.tokenPayload.userId
-    ) {
-        const queryRes1 = await usr.getUserByField('user_id', reqUserId);
-        if (queryRes1.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
-        } else {
-            if (queryRes1.rowCount > 0 && req.body.curpwd !== null) {
-                let queryRes2;
-                queryRes2 = await usr.changePassword(
-                    queryRes1.rows[0],
-                    req.body.curpwd,
-                    req.body.newpwd,
-                    req.body.confirmpwd,
-                );
-                if (queryRes2.rowCount === -1) {
-                    res.status(500).send(`Internal Server Error`);
-                } else if (queryRes2.rowCount === -2) {
-                    res.status(400).send(queryRes2.userMessage);
-                } else {
-                    if (queryRes2.rowCount > 0) {
-                        res.status(201).send();
-                    } else {
-                        res.status(409).send();
-                    }
-                }
-            } else {
-                res.status(409).send();
-            }
+export async function changePassword(req, res, next) {
+    try {
+        if (req.tokenPayload.userId !== Number(req.params?.userId)) {
+            throw new HttpError(403, 'Can only change own password');
         }
-    } else {
-        res.status(403).send();
+        const queryRes = await usr.changePassword(
+            Number(req.params?.userId),
+            req.body.newpwd,
+            req.body.confirmpwd,
+            req.body.currentpwd,
+        );
+        if (queryRes.rowCount > 0) {
+            res.status(201).send();
+        } else {
+            throw new HttpError(404, 'User and password do not match');
+        }
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function resetPassword(req, res) {
-    let reqUserId = -1;
-    if (req.params && req.params.userId) {
-        reqUserId = parseInt(req.params.userId) || -1;
-    }
-    if (reqUserId >= 0) {
-        const queryRes1 = await usr.getUserByField('user_id', reqUserId);
-        if (queryRes1.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
+export async function resetPassword(req, res, next) {
+    try {
+        const queryRes = await usr.resetPassword(
+            Number(req.params?.userId),
+            req.body.newpwd,
+            req.body.confirmpwd,
+        );
+        if (queryRes.rowCount > 0) {
+            res.status(201).send();
         } else {
-            if (queryRes1.rowCount > 0 && req.body.curpwd !== null) {
-                let queryRes2;
-                queryRes2 = await usr.resetPassword(
-                    queryRes1.rows[0],
-                    req.body.newpwd,
-                    req.body.confirmpwd,
-                );
-                if (queryRes2.rowCount === -1) {
-                    res.status(500).send(`Internal Server Error`);
-                } else if (queryRes2.rowCount === -2) {
-                    res.status(400).send(queryRes2.userMessage);
-                } else {
-                    if (queryRes2.rowCount > 0) {
-                        res.status(201).send();
-                    } else {
-                        res.status(409).send();
-                    }
-                }
-            } else {
-                res.status(409).send();
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 

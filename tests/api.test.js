@@ -548,7 +548,7 @@ describe('REST API', function () {
             it('should change your own password', async function () {
                 const user = await getUser(adm1);
                 const data = {
-                    curpwd: adm1Auth.password,
+                    currentpwd: adm1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
                 };
@@ -564,7 +564,7 @@ describe('REST API', function () {
             it('should respond with 403 on other users', async function () {
                 const user = await getUser(vwr1);
                 const data = {
-                    curpwd: vwr1Auth.password,
+                    currentpwd: vwr1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
                 };
@@ -581,7 +581,7 @@ describe('REST API', function () {
             it('should change the password of a user', async function () {
                 const user = await getUser(vwr1);
                 const data = {
-                    curpwd: vwr1Auth.password,
+                    currentpwd: vwr1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
                 };
@@ -596,7 +596,7 @@ describe('REST API', function () {
             });
             it('should respond with 403 if user does not exist', async function () {
                 const data = {
-                    curpwd: vwr1Auth.password,
+                    currentpwd: vwr1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
                 };

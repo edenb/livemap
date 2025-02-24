@@ -300,7 +300,7 @@ describe('e2e', function () {
                     .send({ ...data, operation: 'submit' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changepassword$/);
-                expect(res.text).to.include('New passwords mismatch');
+                expect(res.text).to.include('New passwords do not match');
             });
             it('should POST a cancel change password action', async function () {
                 const data = {

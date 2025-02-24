@@ -46,8 +46,14 @@ queryDef.modifyUserById = {
     writeTables: ['users'],
     cached: false,
 };
-queryDef.changePwdByUsername = {
-    qstr: 'UPDATE users SET password = $2 WHERE username = $1',
+queryDef.getPwdByUserId = {
+    qstr: 'SELECT password FROM users WHERE user_id = $1',
+    readTables: ['users'],
+    writeTables: [],
+    cached: true,
+};
+queryDef.changePwdByUserId = {
+    qstr: 'UPDATE users SET password = $2 WHERE user_id = $1',
     readTables: [],
     writeTables: ['users'],
     cached: false,

@@ -345,19 +345,26 @@ export default (passport) => {
         if (req.body.operation === 'cancel') {
             res.redirect('/main');
         } else {
-            const queryRes = await usr.changePassword(
-                req.user,
-                req.body.oldpassword,
-                req.body.password,
-                req.body.confirm,
-            );
-            if (queryRes.rowCount === 1) {
-                req.flash('info', 'Password changed');
-                req.session.save(() => {
-                    res.redirect('/main');
-                });
-            } else {
-                req.flash('error', queryRes.userMessage || 'Unknown error');
+            try {
+                const queryRes = await usr.changePassword(
+                    req.user.user_id,
+                    req.body.password,
+                    req.body.confirm,
+                    req.body.oldpassword,
+                );
+                if (queryRes.rowCount === 1) {
+                    req.flash('info', 'Password changed');
+                    req.session.save(() => {
+                        res.redirect('/main');
+                    });
+                } else {
+                    req.flash('error', 'User not found');
+                    req.session.save(() => {
+                        res.redirect('/changepassword');
+                    });
+                }
+            } catch (err) {
+                req.flash('error', flashMessage(err));
                 req.session.save(() => {
                     res.redirect('/changepassword');
                 });
