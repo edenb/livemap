@@ -75,9 +75,6 @@ export async function removeUser(req, res, next) {
 
 export async function changePassword(req, res, next) {
     try {
-        if (req.tokenPayload.userId !== Number(req.params?.userId)) {
-            throw new HttpError(403, 'Can only change own password');
-        }
         const queryRes = await usr.changePassword(
             Number(req.params?.userId),
             req.body.newpwd,
@@ -87,7 +84,7 @@ export async function changePassword(req, res, next) {
         if (queryRes.rowCount > 0) {
             res.status(201).send();
         } else {
-            throw new HttpError(404, 'User and password do not match');
+            throw new HttpError(422, 'User and password do not match');
         }
     } catch (err) {
         next(err);

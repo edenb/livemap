@@ -215,7 +215,7 @@ export async function modifyUser(user, modUser) {
 }
 
 export async function changePassword(user_id, newPwd, confirmPwd, currentPwd) {
-    if (!credentialsMatch(user_id, currentPwd)) {
+    if (!(await credentialsMatch(user_id, currentPwd))) {
         const validationError = [
             {
                 code: 'userPasswordMismatch',

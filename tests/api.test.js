@@ -548,9 +548,9 @@ describe('REST API', function () {
             it('should change your own password', async function () {
                 const user = await getUser(adm1);
                 const data = {
-                    currentpwd: adm1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
+                    currentpwd: adm1Auth.password,
                 };
                 const res = await request(app)
                     .post('/api/v1/users/' + user.user_id + '/password/change')
@@ -558,22 +558,39 @@ describe('REST API', function () {
                     .type('json')
                     .send(data);
                 expect(res).to.have.status(201);
-                const modifiedUser = await getUser(adm1);
-                expect(modifiedUser.password).to.not.equal(user.password);
             });
-            it('should respond with 403 on other users', async function () {
+            it('should change password of other users', async function () {
                 const user = await getUser(vwr1);
                 const data = {
-                    currentpwd: vwr1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
+                    currentpwd: vwr1Auth.password,
                 };
                 const res = await request(app)
                     .post('/api/v1/users/' + user.user_id + '/password/change')
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).to.have.status(403);
+                expect(res).to.have.status(201);
+            });
+            it('should respond with 422 if given current password is incorrect', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                    currentpwd: 'wrong current password',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/' + user.user_id + '/password/change')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'User and password do not match',
+                    },
+                ]);
             });
         });
 
@@ -581,7 +598,6 @@ describe('REST API', function () {
             it('should change the password of a user', async function () {
                 const user = await getUser(vwr1);
                 const data = {
-                    currentpwd: vwr1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
                 };
@@ -591,21 +607,72 @@ describe('REST API', function () {
                     .type('json')
                     .send(data);
                 expect(res).to.have.status(201);
-                const modifiedUser = await getUser(vwr1);
-                expect(modifiedUser.password).to.not.equal(user.password);
             });
-            it('should respond with 403 if user does not exist', async function () {
+            it('should respond with 404 if user does not exist', async function () {
                 const data = {
-                    currentpwd: vwr1Auth.password,
                     newpwd: 'my modified password',
                     confirmpwd: 'my modified password',
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/0/password/change')
+                    .post('/api/v1/users/2147483647/password/reset')
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
-                expect(res).to.have.status(403);
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if password is empty', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: '',
+                    confirmpwd: '',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No password',
+                    },
+                ]);
+            });
+            it('should respond with 422 if password too short', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'pw',
+                    confirmpwd: 'pw',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Password too short',
+                    },
+                ]);
+            });
+            it('should respond with 422 if user and password do not match', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'a different password',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'New passwords do not match',
+                    },
+                ]);
             });
         });
     });

@@ -55,6 +55,14 @@ export function isAuthorized(rolesAllowed) {
                 throw new HttpError(403, 'Access denied');
             }
             req.tokenPayload = tokenPayload;
+            // Only admins have access to resources of other users
+            if (
+                tokenPayload.role !== 'admin' &&
+                req.params?.userId &&
+                req.tokenPayload.userId !== Number(req.params?.userId)
+            ) {
+                throw new HttpError(403, 'Access denied');
+            }
             return next();
         } catch (err) {
             next(err);
