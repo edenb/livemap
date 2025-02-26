@@ -219,15 +219,7 @@ export async function queryDbAsync(key, sqlParams) {
         }
 
         // Query the database
-        const pgClient = await pgPool.connect();
-        try {
-            dbQueryRes = await pgClient.query(
-                queryDef[key].qstr,
-                sqlParams || [],
-            );
-        } finally {
-            pgClient.release();
-        }
+        dbQueryRes = await pgPool.query(queryDef[key].qstr, sqlParams || []);
 
         // Update cache
         invalidate(queryDef[key]);
