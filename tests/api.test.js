@@ -9,19 +9,18 @@ import {
     removeUserAndDevices,
 } from './helpers/database.js';
 import {
-    adm1Auth,
     adm1,
+    adm1Auth,
     adm1Devs,
-    man1Auth,
-    man1,
-    man1Devs,
-    vwr1Auth,
+    // man1,
+    // man1Auth,
+    // man1Devs,
     vwr1,
+    vwr1Auth,
     vwr1Devs,
-    vwr2Auth,
     vwr2,
-    vwr3Auth,
-    vwr3,
+    vwr2Auth,
+    vwr2Devs,
     devPositions,
 } from './helpers/fixtures.js';
 import { createWebServer, destroyWebServer } from './helpers/webserver.js';
@@ -83,11 +82,9 @@ describe('REST API', function () {
         let token;
 
         beforeEach(async function () {
-            // Add 3 users and their devices
-            await addUserAndDevices({ ...adm1Auth, ...adm1 }, adm1Devs);
-            await addUserAndDevices({ ...man1Auth, ...man1 }, man1Devs);
-            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, vwr1Devs);
-            await addUserAndDevices({ ...vwr2Auth, ...vwr2 }, []);
+            // Add 2 users and their devices
+            await addUserAndDevices({ ...adm1, ...adm1Auth }, adm1Devs);
+            await addUserAndDevices({ ...vwr1, ...vwr1Auth }, vwr1Devs);
             // Login as admin user
             const data = {
                 username: adm1.username,
@@ -101,12 +98,10 @@ describe('REST API', function () {
         });
 
         afterEach(async function () {
-            // Remove the admin user and its owned devices
+            // Remove users and their owned devices
             await removeUserAndDevices(adm1);
-            await removeUserAndDevices(man1);
             await removeUserAndDevices(vwr1);
             await removeUserAndDevices(vwr2);
-            await removeUserAndDevices(vwr3);
         });
 
         describe('GET /account', function () {
@@ -134,7 +129,6 @@ describe('REST API', function () {
                 const devices = subset(res.body, Object.keys(vwr1Devs[0]));
                 expect(devices).to.include.deep.members([
                     ...vwr1Devs,
-                    ...man1Devs,
                     ...adm1Devs,
                 ]);
             });
@@ -201,7 +195,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
-                expect(res.body).to.containSubset([adm1, man1, vwr1]);
+                expect(res.body).to.containSubset([adm1, vwr1]);
             });
             it('should respond with 401 if auth token is missing', async function () {
                 const res = await request(app).get('/api/v1/users').send();
@@ -211,7 +205,7 @@ describe('REST API', function () {
 
         describe('POST /users', function () {
             it('should add a new user', async function () {
-                const data = { ...vwr3Auth, ...vwr3 };
+                const data = { ...vwr2Auth, ...vwr2 };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
@@ -220,7 +214,7 @@ describe('REST API', function () {
                 expect(res).to.have.status(201);
             });
             it('should add a new user with a generated api key', async function () {
-                const data = { ...vwr3Auth, ...vwr3, api_key: null };
+                const data = { ...vwr2Auth, ...vwr2, api_key: null };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
@@ -231,7 +225,7 @@ describe('REST API', function () {
                 expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
             });
             it('should respond with 422 if full name too short', async function () {
-                const data = { ...vwr3Auth, ...vwr3, fullname: '3' };
+                const data = { ...vwr2Auth, ...vwr2, fullname: '2' };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
@@ -246,7 +240,7 @@ describe('REST API', function () {
                 ]);
             });
             it('should respond with 409 if api key already exists', async function () {
-                const data = { ...vwr3Auth, ...vwr3, api_key: 'apikey-adm1' };
+                const data = { ...vwr2Auth, ...vwr2, api_key: 'apikey-adm1' };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
@@ -358,7 +352,8 @@ describe('REST API', function () {
         });
 
         describe('DELETE /users/:userId', function () {
-            it('should delete a user', async function () {
+            it('should delete a user without devices', async function () {
+                await addUserAndDevices({ ...vwr2, ...vwr2Auth }, []);
                 const user = await getUser(vwr2);
                 const res = await request(app)
                     .delete('/api/v1/users/' + user.user_id)
@@ -367,6 +362,16 @@ describe('REST API', function () {
                 expect(res).to.have.status(204);
                 const deletedUser = await getUser(vwr2);
                 expect(deletedUser).to.be.null;
+            });
+            it('should respond with 409 if user owns devices', async function () {
+                await addUserAndDevices({ ...vwr2, ...vwr2Auth }, vwr2Devs);
+                const user = await getUser(vwr2);
+                const res = await request(app)
+                    .delete('/api/v1/users/' + user.user_id)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                await removeUserAndDevices(vwr2);
+                expect(res).to.have.status(409);
             });
             it('should respond with 404 if user does not exist', async function () {
                 const res = await request(app)
