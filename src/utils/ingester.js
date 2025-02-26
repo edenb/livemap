@@ -188,9 +188,8 @@ async function processMqtt(payload, validator) {
 export async function processLocation(parentLogger, format, payload) {
     const logger = parentLogger?.child({ fileUrl: import.meta.url });
 
-    // Retrieve latest information about users and devices
+    // Retrieve latest information about devices
     await dev.getAllDevices();
-    await usr.getAllUsers();
 
     livemapValidator ||= new Validator(logger, 'livemap');
     MQTTValidator ||= new Validator(logger, 'mqtt');

@@ -54,8 +54,7 @@ export async function removeUserAndDevices(fromUser) {
             if (queryRes2.rowCount !== 1) {
                 throw new Error('Unable to remove user');
             }
-            // Update in-memory user list and device list
-            await usr.getAllUsers();
+            // Update in-memory device list
             await dev.getAllDevices();
         }
     } catch (err) {
