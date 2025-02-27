@@ -12,9 +12,9 @@ import {
     adm1,
     adm1Auth,
     adm1Devs,
-    // man1,
-    // man1Auth,
-    // man1Devs,
+    man1,
+    man1Auth,
+    man1Devs,
     vwr1,
     vwr1Auth,
     vwr1Devs,
@@ -678,6 +678,90 @@ describe('REST API', function () {
                         message: 'New passwords do not match',
                     },
                 ]);
+            });
+        });
+    });
+
+    describe.only('Manager user', function () {
+        let token;
+
+        beforeEach(async function () {
+            // Add 2 users and their devices
+            await addUserAndDevices({ ...man1, ...man1Auth }, man1Devs);
+            await addUserAndDevices({ ...vwr1, ...vwr1Auth }, vwr1Devs);
+            // Login as manager user
+            const data = {
+                username: man1.username,
+                password: man1Auth.password,
+            };
+            const res = await request(app)
+                .post('/api/v1/login')
+                .type('json')
+                .send(data);
+            token = res.body.access_token;
+        });
+
+        afterEach(async function () {
+            // Remove users and their owned devices
+            await removeUserAndDevices(man1);
+            await removeUserAndDevices(vwr1);
+        });
+
+        describe('GET /users', function () {
+            it('should respond with 403', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(403);
+                expect(res.body.message).to.equal('Access denied');
+            });
+        });
+
+        describe('GET /users/:userId', function () {
+            it('should respond with 401 if auth token is missing', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get('/api/v1/users/' + user.user_id)
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Token required');
+            });
+            it('should respond with 401 if token type is invalid', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get('/api/v1/users/' + user.user_id)
+                    .auth(token, { type: 'unknown' })
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Token required');
+            });
+            it('should respond with 401 if token is empty', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get('/api/v1/users/' + user.user_id)
+                    .auth('', { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Token required');
+            });
+            it('should respond with 401 if token is invalid', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get('/api/v1/users/' + user.user_id)
+                    .auth('invalid-token', { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Invalid token');
+            });
+            it('should respond with 403 if userId from another user', async function () {
+                const user = await getUser(vwr1);
+                const res = await request(app)
+                    .get('/api/v1/users/' + user.user_id)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(403);
+                expect(res.body.message).to.equal('Access denied');
             });
         });
     });
