@@ -186,10 +186,6 @@ export async function addUser(user, modUser) {
 export async function modifyUser(user, modUser) {
     let validationError;
 
-    // If the API key is empty generate one
-    if (!modUser.api_key || modUser.api_key === '') {
-        modUser.api_key = generateAPIkey();
-    }
     validationError = validateUserId(modUser.user_id);
     if (validationError) {
         throw new ValidationError(validationError);

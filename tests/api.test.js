@@ -297,6 +297,21 @@ describe('REST API', function () {
                 const modifiedUser = await getUser(vwr1);
                 expect(modifiedUser).to.include(data);
             });
+            it('should respond with 409 if api key changed', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    ...vwr1,
+                    api_key: 'aaa',
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/' + user.user_id)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(409);
+            });
             it('should respond with 404 if user does not exist', async function () {
                 const data = {
                     ...vwr1,
