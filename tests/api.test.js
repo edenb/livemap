@@ -682,7 +682,7 @@ describe('REST API', function () {
         });
     });
 
-    describe.only('Manager user', function () {
+    describe('Manager user', function () {
         let token;
 
         beforeEach(async function () {
