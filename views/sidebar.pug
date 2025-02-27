@@ -20,5 +20,6 @@ table#table-locations(
         th(data-field='state', data-checkbox='true') state
         th(data-field='alias') Device
         th(data-field='loc_timestamp', data-formatter='dateTimeFormatter') Date/time stamp
+script lastPositions=!{JSON.stringify({lastPositions})};
 script
   include main/sidebar.js

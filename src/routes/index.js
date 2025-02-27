@@ -5,6 +5,8 @@ import { rateLimit } from 'express-rate-limit';
 import { getNewToken } from '../auth/jwt.js';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
+import * as pos from '../models/position.js';
+import * as sl from '../models/staticlayer.js';
 import { getBrokerUrl } from '../services/mqtt.js';
 
 const router = Router();
@@ -101,12 +103,17 @@ export default (passport) => {
     // );
 
     // GET Start Page
-    router.get('/main', ensureAuthenticated, (req, res) => {
+    router.get('/main', ensureAuthenticated, async (req, res) => {
+        const lastPositions = (await pos.getLastPositions(req.user.user_id))
+            .rows;
+        const staticLayers = await sl.getStaticLayers();
         res.render('main', {
             wclient: config.get('wclient'),
             broker: getBrokerUrl(),
             flash: req.flash(),
             user: req.user,
+            lastPositions,
+            staticLayers,
         });
     });
 

@@ -34,14 +34,11 @@ export function getTokenPayload(token) {
 export function isAuthorized(rolesAllowed) {
     return (req, _res, next) => {
         try {
-            // Get the token from the header (API requests) or from the session (web client requests)
+            // Get the token from the header
             let token;
             const authHeader = req.get('authorization');
             if (authHeader?.split(' ')[0] === 'Bearer') {
                 token = authHeader?.split(' ')[1];
-            }
-            if (req.isAuthenticated() && req.session?.token) {
-                token = req.session.token;
             }
 
             if (!token) {
@@ -54,15 +51,15 @@ export function isAuthorized(rolesAllowed) {
             if (!rolesAllowed.includes(tokenPayload.role)) {
                 throw new HttpError(403, 'Access denied');
             }
-            req.tokenPayload = tokenPayload;
             // Only admins have access to resources of other users
             if (
                 tokenPayload.role !== 'admin' &&
                 req.params?.userId &&
-                req.tokenPayload.userId !== Number(req.params?.userId)
+                tokenPayload.userId !== Number(req.params?.userId)
             ) {
                 throw new HttpError(403, 'Access denied');
             }
+            req.tokenPayload = tokenPayload;
             return next();
         } catch (err) {
             next(err);
