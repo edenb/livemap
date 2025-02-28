@@ -258,7 +258,7 @@ describe('REST API', function () {
             it('should get details about a user', async function () {
                 const user = await getUser(vwr1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
+                    .get(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
@@ -289,7 +289,7 @@ describe('REST API', function () {
                     fullname: 'Viewer 1 modified',
                 };
                 const res = await request(app)
-                    .put('/api/v1/users/' + user.user_id)
+                    .put(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -306,7 +306,7 @@ describe('REST API', function () {
                     fullname: 'Viewer 1 modified',
                 };
                 const res = await request(app)
-                    .put('/api/v1/users/' + user.user_id)
+                    .put(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -371,7 +371,7 @@ describe('REST API', function () {
                 await addUserAndDevices({ ...vwr2, ...vwr2Auth }, []);
                 const user = await getUser(vwr2);
                 const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id)
+                    .delete(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(204);
@@ -382,7 +382,7 @@ describe('REST API', function () {
                 await addUserAndDevices({ ...vwr2, ...vwr2Auth }, vwr2Devs);
                 const user = await getUser(vwr2);
                 const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id)
+                    .delete(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 await removeUserAndDevices(vwr2);
@@ -398,7 +398,7 @@ describe('REST API', function () {
             it('should respond with 422 when deleting own account', async function () {
                 const user = await getUser(adm1);
                 const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id)
+                    .delete(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(422);
@@ -418,7 +418,7 @@ describe('REST API', function () {
             it('should get all devices of a user', async function () {
                 const user = await getUser(adm1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id + '/devices')
+                    .get(`/api/v1/users/${user.user_id}/devices`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
@@ -437,7 +437,7 @@ describe('REST API', function () {
                     fixed_loc_lon: -73.9,
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/devices')
+                    .post(`/api/v1/users/${user.user_id}/devices`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -460,10 +460,7 @@ describe('REST API', function () {
                 };
                 const res = await request(app)
                     .put(
-                        '/api/v1/users/' +
-                            user.user_id +
-                            '/devices/' +
-                            orgDevices[0].device_id,
+                        `/api/v1/users/${user.user_id}/devices/${orgDevices[0].device_id}`,
                     )
                     .auth(token, { type: 'bearer' })
                     .type('json')
@@ -482,7 +479,7 @@ describe('REST API', function () {
                     fixed_loc_lon: -84,
                 };
                 const res = await request(app)
-                    .put('/api/v1/users/' + user.user_id + '/devices/-1')
+                    .put(`/api/v1/users/${user.user_id}/devices/-1`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -496,7 +493,7 @@ describe('REST API', function () {
                 const devices = await getDevices(adm1);
                 const ids = devices.map(({ device_id }) => device_id);
                 const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id + '/devices/' + ids)
+                    .delete(`/api/v1/users/${user.user_id}/devices/${ids}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(204);
@@ -507,7 +504,7 @@ describe('REST API', function () {
                 const user = await getUser(adm1);
                 const ids = [-1, -2];
                 const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id + '/devices/' + ids)
+                    .delete(`/api/v1/users/${user.user_id}/devices/${ids}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(404);
@@ -522,11 +519,7 @@ describe('REST API', function () {
                 const data = vwr1;
                 const res = await request(app)
                     .post(
-                        '/api/v1/users/' +
-                            user.user_id +
-                            '/devices/' +
-                            ids +
-                            '/shareduser',
+                        `/api/v1/users/${user.user_id}/devices/${ids}/shareduser`,
                     )
                     .auth(token, { type: 'bearer' })
                     .type('json')
@@ -549,11 +542,7 @@ describe('REST API', function () {
                 await addShare(vwr1, ids);
                 const res = await request(app)
                     .delete(
-                        '/api/v1/users/' +
-                            user.user_id +
-                            '/devices/' +
-                            ids +
-                            '/shareduser',
+                        `/api/v1/users/${user.user_id}/devices/${ids}/shareduser`,
                     )
                     .auth(token, { type: 'bearer' })
                     .send(vwr1);
@@ -573,7 +562,7 @@ describe('REST API', function () {
                     currentpwd: adm1Auth.password,
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
+                    .post(`/api/v1/users/${user.user_id}/password/change`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -587,7 +576,7 @@ describe('REST API', function () {
                     currentpwd: vwr1Auth.password,
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
+                    .post(`/api/v1/users/${user.user_id}/password/change`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -601,7 +590,7 @@ describe('REST API', function () {
                     currentpwd: 'wrong current password',
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
+                    .post(`/api/v1/users/${user.user_id}/password/change`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -622,7 +611,7 @@ describe('REST API', function () {
                     confirmpwd: 'my modified password',
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -647,7 +636,7 @@ describe('REST API', function () {
                     confirmpwd: '',
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -665,7 +654,7 @@ describe('REST API', function () {
                     confirmpwd: 'pw',
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -683,7 +672,7 @@ describe('REST API', function () {
                     confirmpwd: 'a different password',
                 };
                 const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/reset')
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
                     .auth(token, { type: 'bearer' })
                     .type('json')
                     .send(data);
@@ -737,7 +726,7 @@ describe('REST API', function () {
             it('should respond with 401 if auth token is missing', async function () {
                 const user = await getUser(man1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
+                    .get(`/api/v1/users/${user.user_id}`)
                     .send();
                 expect(res).to.have.status(401);
                 expect(res.body.message).to.equal('Token required');
@@ -745,7 +734,7 @@ describe('REST API', function () {
             it('should respond with 401 if token type is invalid', async function () {
                 const user = await getUser(man1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
+                    .get(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'unknown' })
                     .send();
                 expect(res).to.have.status(401);
@@ -754,7 +743,7 @@ describe('REST API', function () {
             it('should respond with 401 if token is empty', async function () {
                 const user = await getUser(man1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
+                    .get(`/api/v1/users/${user.user_id}`)
                     .auth('', { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(401);
@@ -763,7 +752,7 @@ describe('REST API', function () {
             it('should respond with 401 if token is invalid', async function () {
                 const user = await getUser(man1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
+                    .get(`/api/v1/users/${user.user_id}`)
                     .auth('invalid-token', { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(401);
@@ -772,7 +761,7 @@ describe('REST API', function () {
             it('should respond with 403 if userId from another user', async function () {
                 const user = await getUser(vwr1);
                 const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
+                    .get(`/api/v1/users/${user.user_id}`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(403);
