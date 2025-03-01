@@ -81,16 +81,6 @@ async function validateAccountInput(modUser) {
             },
         ];
     }
-    // An API key should be unique (mainly for manually changed API keys)
-    if (await isKnownAPIkey(modUser.api_key, modUser)) {
-        return [
-            {
-                code: 'apiKeyInUse',
-                field: 'api_key',
-                message: 'API key already in use',
-            },
-        ];
-    }
     return null;
 }
 
@@ -285,11 +275,11 @@ export async function credentialsMatch(user_id, password) {
     }
 }
 
-export async function isKnownAPIkey(apiKey, ignoreUser) {
+export async function isKnownAPIkey(apiKey, modUser) {
     try {
         const queryRes = await getAllUsers();
         const foundUser = queryRes.rows.find(
-            (e) => e.api_key === apiKey && e.api_key !== ignoreUser?.api_key,
+            (e) => e.api_key === apiKey && e.user_id !== modUser?.user_id,
         );
         if (foundUser) {
             return true;

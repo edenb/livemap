@@ -239,8 +239,8 @@ describe('REST API', function () {
                     },
                 ]);
             });
-            it('should respond with 409 if api key already exists', async function () {
-                const data = { ...vwr2Auth, ...vwr2, api_key: 'apikey-adm1' };
+            it('should respond with 409 if api key already in use', async function () {
+                const data = { ...vwr2Auth, ...vwr2, api_key: adm1.api_key };
                 const res = await request(app)
                     .post('/api/v1/users')
                     .auth(token, { type: 'bearer' })
