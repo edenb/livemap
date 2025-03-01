@@ -239,6 +239,36 @@ describe('REST API', function () {
                     },
                 ]);
             });
+            it('should respond with 422 if role empty', async function () {
+                const data = { ...vwr2Auth, ...vwr2, role: '' };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No role',
+                    },
+                ]);
+            });
+            it('should respond with 422 if password empty', async function () {
+                const data = { ...vwr2Auth, ...vwr2, password: '' };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No password',
+                    },
+                ]);
+            });
             it('should respond with 409 if api key already in use', async function () {
                 const data = { ...vwr2Auth, ...vwr2, api_key: adm1.api_key };
                 const res = await request(app)
@@ -297,21 +327,6 @@ describe('REST API', function () {
                 const modifiedUser = await getUser(vwr1);
                 expect(modifiedUser).to.include(data);
             });
-            it('should respond with 409 if api key changed', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    ...vwr1,
-                    api_key: 'aaa',
-                    email: 'viewer1modified@example.com',
-                    fullname: 'Viewer 1 modified',
-                };
-                const res = await request(app)
-                    .put(`/api/v1/users/${user.user_id}`)
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(409);
-            });
             it('should respond with 404 if user does not exist', async function () {
                 const data = {
                     ...vwr1,
@@ -363,6 +378,69 @@ describe('REST API', function () {
                     .type('json')
                     .send(data);
                 expect(res).to.have.status(422);
+            });
+            it('should respond with 422 if role empty', async function () {
+                const user = await getUser(vwr1);
+                const data = { ...vwr1, role: '' };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No role',
+                    },
+                ]);
+            });
+            it('should respond with 422 if own role changed', async function () {
+                const user = await getUser(adm1);
+                const data = { ...adm1, role: 'viewer' };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Can not change own role',
+                    },
+                ]);
+            });
+            it('should respond with 422 if full name too short', async function () {
+                const user = await getUser(vwr1);
+                const data = { ...vwr1, fullname: '1' };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Full name too short',
+                    },
+                ]);
+            });
+            it('should respond with 409 if api key changed', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    ...vwr1,
+                    api_key: 'aaa',
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(409);
             });
         });
 
