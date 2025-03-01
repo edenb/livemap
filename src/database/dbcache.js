@@ -53,7 +53,3 @@ export function invalidate(qry) {
         }
     }
 }
-
-export function clearAll() {
-    cache = [];
-}
