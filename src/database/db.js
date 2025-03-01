@@ -17,13 +17,13 @@ queryDef.getAllUsers = {
     cached: true,
 };
 queryDef.getUserByUserId = {
-    qstr: 'SELECT * FROM users WHERE user_id = $1',
+    qstr: 'SELECT user_id, username, fullname, email, role, api_key FROM users WHERE user_id = $1',
     readTables: ['users'],
     writeTables: [],
     cached: true,
 };
 queryDef.getUserByUsername = {
-    qstr: 'SELECT * FROM users WHERE username = $1',
+    qstr: 'SELECT user_id, username, fullname, email, role, api_key FROM users WHERE username = $1',
     readTables: ['users'],
     writeTables: [],
     cached: true,
