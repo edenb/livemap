@@ -28,12 +28,6 @@ queryDef.getUserByUsername = {
     writeTables: [],
     cached: true,
 };
-queryDef.getUserByApiKey = {
-    qstr: 'SELECT * FROM users WHERE api_key = $1',
-    readTables: ['users'],
-    writeTables: [],
-    cached: true,
-};
 queryDef.insertUser = {
     qstr: 'INSERT INTO users(username, fullname, email, role, api_key, password) VALUES ($1, $2, $3, $4, $5, $6)',
     readTables: [],

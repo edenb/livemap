@@ -130,9 +130,6 @@ export async function getUserByField(field, value) {
     if (field === 'username') {
         key = 'getUserByUsername';
     }
-    if (field === 'api_key') {
-        key = 'getUserByApiKey';
-    }
     if (!key) {
         throw new TypeError(`No key for field: ${field}`);
     }
