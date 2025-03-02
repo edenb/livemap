@@ -200,9 +200,9 @@ pgPool.on('error', (err) => {
 //
 
 export async function queryDbAsync(key, sqlParams) {
-    let dbQueryRes = getEmptyQueryRes();
+    let queryRes = getEmptyQueryRes();
 
-    if (typeof queryDef[key] !== 'undefined') {
+    if (queryDef[key]) {
         // Try to get the query result from cache
         if (queryDef[key].cached) {
             const cachedQueryRes = load(queryDef[key], sqlParams);
@@ -213,18 +213,18 @@ export async function queryDbAsync(key, sqlParams) {
         }
 
         // Query the database
-        dbQueryRes = await pgPool.query(queryDef[key].qstr, sqlParams || []);
+        queryRes = await pgPool.query(queryDef[key].qstr, sqlParams || []);
 
         // Update cache
         invalidate(queryDef[key]);
         if (queryDef[key].cached) {
-            save(queryDef[key], sqlParams, dbQueryRes);
+            save(queryDef[key], sqlParams, queryRes);
         }
     } else {
         throw new Error(`Database query failed. No query for key: ${key}`);
     }
 
-    return dbQueryRes;
+    return queryRes;
 }
 
 //
@@ -245,15 +245,9 @@ function readQueryFromFile(fileName) {
 
 async function queryDbFromFile(fileName) {
     const fileData = await readQueryFromFile(fileName);
-    const pgClient = await pgPool.connect();
-    let result;
-    try {
-        result = await pgClient.query(fileData.toString());
-    } finally {
-        pgClient.release();
-    }
+    const queryRes = await pgPool.query(fileData.toString());
     logger.debug(`queryDbFromFile: ${fileName}`);
-    return result;
+    return queryRes;
 }
 
 //
