@@ -8,6 +8,9 @@
     "limit": 100,
     "window": 10000
   },
+  "logger": {
+    "level": "debug"
+  },
   "db": {
     "ssl": false
   },
