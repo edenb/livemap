@@ -9,8 +9,6 @@ import * as pos from '../models/position.js';
 import * as sl from '../models/staticlayer.js';
 import { getBrokerUrl } from '../services/mqtt.js';
 
-const router = Router();
-
 function isNumber(num) {
     if (parseInt(num) == num || parseFloat(num) == num) {
         return true;
@@ -45,6 +43,8 @@ function ensureAuthenticated(req, res, next) {
 }
 
 export default (passport) => {
+    const router = Router();
+
     // Apply rate limiting middleware to index routes
     const rateLimiter = rateLimit({
         windowMs: config.get('rateLimiter.window'),
