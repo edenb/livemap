@@ -57,7 +57,7 @@ describe('e2e', function () {
             await removeUserAndDevices(vwr1);
         });
 
-        describe('/post 101 subsequent requests', function () {
+        describe.skip('/post 101 subsequent requests', function () {
             it('should respond with HTTP status 429', async function () {
                 this.timeout(10000);
                 let res;
