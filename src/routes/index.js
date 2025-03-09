@@ -129,8 +129,7 @@ export default (passport) => {
     // GET Change Details Page. Only Admins and Managers are allowed to make changes.
     router.get('/changedetails', ensureAuthenticated, async (req, res) => {
         if (req.user.role === 'admin') {
-            const queryRes = await usr.getAllUsers();
-            let allUsers = queryRes.rows;
+            const { rows: allUsers } = await usr.getAllUsers();
             res.render('changedetails', {
                 wclient: config.get('wclient'),
                 broker: getBrokerUrl(),
@@ -160,7 +159,6 @@ export default (passport) => {
         modUser.api_key = req.body.api_key;
         modUser.password = req.body.password;
 
-        let queryRes;
         switch (req.body.action) {
             case 'cancel':
                 res.redirect('/main');
@@ -168,9 +166,9 @@ export default (passport) => {
             case 'submit':
                 try {
                     if (modUser.user_id <= 0) {
-                        queryRes = await usr.addUser(req.user, modUser);
+                        await usr.addUser(req.user, modUser);
                     } else {
-                        queryRes = await usr.modifyUser(req.user, modUser);
+                        await usr.modifyUser(req.user, modUser);
                     }
                     req.flash('info', 'Details changed');
                     req.session.save(() => {
@@ -185,8 +183,11 @@ export default (passport) => {
                 break;
             case 'delete':
                 try {
-                    queryRes = await usr.deleteUser(req.user, modUser);
-                    if (queryRes.rowCount === 1) {
+                    const { rowCount } = await usr.deleteUser(
+                        req.user,
+                        modUser,
+                    );
+                    if (rowCount === 1) {
                         req.flash('info', 'User deleted');
                         req.session.save(() => {
                             res.redirect('/changedetails');
@@ -212,11 +213,9 @@ export default (passport) => {
 
     // GET Change Devices Page.
     router.get('/changedevices', ensureAuthenticated, async (req, res) => {
-        const queryRes = await dev.getOwnedDevicesByField(
-            'user_id',
+        const { rows: userdevices } = await dev.getOwnedDevicesByUserId(
             req.user.user_id,
         );
-        const userdevices = queryRes.rows;
         res.render('changedevices', {
             wclient: config.get('wclient'),
             broker: getBrokerUrl(),
@@ -229,7 +228,7 @@ export default (passport) => {
     // Handle change devices POST
     router.post('/changedevices', ensureAuthenticated, async (req, res) => {
         let modDevice = {};
-        modDevice.device_id = parseInt(req.body.device_id);
+        modDevice.device_id = Number(req.body.device_id);
         modDevice.api_key = req.user.api_key;
         modDevice.identifier = req.body.identifier;
         modDevice.alias = req.body.alias;
@@ -244,88 +243,111 @@ export default (passport) => {
             modDevice.fixed_loc_lon = null;
         }
 
-        let queryRes;
         switch (req.body.action) {
             case 'cancel':
                 res.redirect('/main');
                 break;
             case 'submit':
-                if (modDevice.device_id <= 0) {
-                    queryRes = await dev.addDevice(modDevice);
-                } else {
-                    queryRes = await dev.modifyDevice(modDevice);
-                }
-                if (queryRes.rowCount === 1) {
-                    req.flash('info', 'Device changed');
-                    req.session.save(() => {
-                        res.redirect('/changedevices');
-                    });
-                } else {
-                    req.flash('error', queryRes.userMessage || 'Unknown error');
+                try {
+                    const { rowCount } = await dev.modifyDevice(modDevice);
+                    if (rowCount === 1) {
+                        req.flash('info', 'Device changed');
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', 'User not found');
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                } catch (err) {
+                    req.flash('error', flashMessage(err));
                     req.session.save(() => {
                         res.redirect('/changedevices');
                     });
                 }
                 break;
             case 'addSharedUser':
-                queryRes = await dev.addSharedUser(
-                    req.body.shareduser,
-                    req.body.checkedIds.split(','),
-                );
-                if (queryRes.rowCount > 0) {
-                    req.flash(
-                        'info',
-                        req.body.checkedIds.split(',').length +
-                            ' device(s) shared with user: ' +
-                            req.body.shareduser,
+                try {
+                    const { rowCount } = await dev.addSharedUser(
+                        req.body.shareduser,
+                        req.body.checkedIds.split(','),
                     );
-                    req.session.save(() => {
-                        res.redirect('/changedevices');
-                    });
-                } else {
-                    req.flash('error', queryRes.userMessage || 'Unknown error');
+                    if (rowCount > 0) {
+                        req.flash(
+                            'info',
+                            req.body.checkedIds.split(',').length +
+                                ' device(s) shared with user: ' +
+                                req.body.shareduser,
+                        );
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', 'User not found');
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                } catch (err) {
+                    req.flash('error', flashMessage(err));
                     req.session.save(() => {
                         res.redirect('/changedevices');
                     });
                 }
                 break;
             case 'delSharedUser':
-                queryRes = await dev.deleteSharedUser(
-                    req.body.shareduser,
-                    req.body.checkedIds.split(','),
-                );
-                if (queryRes.rowCount > 0) {
-                    req.flash(
-                        'info',
-                        req.body.checkedIds.split(',').length +
-                            ' device(s) no longer shared with user: ' +
-                            req.body.shareduser,
+                try {
+                    const { rowCount } = await dev.deleteSharedUser(
+                        req.body.shareduser,
+                        req.body.checkedIds.split(','),
                     );
-                    req.session.save(() => {
-                        res.redirect('/changedevices');
-                    });
-                } else {
-                    req.flash('error', queryRes.userMessage || 'Unknown error');
+                    if (rowCount > 0) {
+                        req.flash(
+                            'info',
+                            req.body.checkedIds.split(',').length +
+                                ' device(s) no longer shared with user: ' +
+                                req.body.shareduser,
+                        );
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', 'User not found');
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                } catch (err) {
+                    req.flash('error', flashMessage(err));
                     req.session.save(() => {
                         res.redirect('/changedevices');
                     });
                 }
                 break;
             case 'delDevices':
-                queryRes = await dev.deleteDevicesById(
-                    req.body.checkedIds.split(','),
-                );
-                if (queryRes.rowCount > 0) {
-                    req.flash(
-                        'info',
-                        req.body.checkedIds.split(',').length +
-                            ' device(s) removed',
+                try {
+                    const { rowCount } = await dev.deleteDevicesById(
+                        req.body.checkedIds.split(','),
                     );
-                    req.session.save(() => {
-                        res.redirect('/changedevices');
-                    });
-                } else {
-                    req.flash('error', queryRes.userMessage || 'Unknown error');
+                    if (rowCount > 0) {
+                        req.flash(
+                            'info',
+                            req.body.checkedIds.split(',').length +
+                                ' device(s) removed',
+                        );
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    } else {
+                        req.flash('error', 'User not found');
+                        req.session.save(() => {
+                            res.redirect('/changedevices');
+                        });
+                    }
+                } catch (err) {
+                    req.flash('error', flashMessage(err));
                     req.session.save(() => {
                         res.redirect('/changedevices');
                     });
@@ -353,13 +375,13 @@ export default (passport) => {
             res.redirect('/main');
         } else {
             try {
-                const queryRes = await usr.changePassword(
+                const { rowCount } = await usr.changePassword(
                     req.user.user_id,
                     req.body.password,
                     req.body.confirm,
                     req.body.oldpassword,
                 );
-                if (queryRes.rowCount === 1) {
+                if (rowCount === 1) {
                     req.flash('info', 'Password changed');
                     req.session.save(() => {
                         res.redirect('/main');

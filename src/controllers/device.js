@@ -1,134 +1,111 @@
 import * as dev from '../models/device.js';
+import * as usr from '../models/user.js';
+import { HttpError } from '../utils/error.js';
 
-export async function getAllDevices(req, res) {
-    const queryRes = await dev.getAllDevices();
-    if (queryRes.rowCount < 0) {
-        res.status(500).send(`Internal Server Error`);
-    } else {
-        res.status(200).send(queryRes.rows);
+export async function getAllDevices(_req, res, next) {
+    try {
+        const { rows } = await dev.getAllDevices();
+        res.status(200).send(rows);
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function getDevicesByUserId(req, res) {
-    const userId = req.tokenPayload && req.tokenPayload.userId;
-    if (userId) {
-        const queryRes1 = await dev.getOwnedDevicesByField('user_id', userId);
-        let ownedDevices = null;
-        if (queryRes1.rowCount >= 0) {
-            ownedDevices = queryRes1.rows;
-        }
-        const queryRes2 = await dev.getSharedDevicesByField('user_id', userId);
-        let sharedDevices = null;
-        if (queryRes2.rowCount >= 0) {
-            sharedDevices = queryRes2.rows;
-        }
-        if (ownedDevices === null || sharedDevices === null) {
-            res.status(500).send(`Internal Server Error`);
+export async function getDevicesByUserId(req, res, next) {
+    try {
+        const [user, owned, shared] = await Promise.all([
+            usr.getUserByField('user_id', Number(req.params?.userId)),
+            dev.getOwnedDevicesByUserId(Number(req.params?.userId)),
+            dev.getSharedDevicesByUserId(Number(req.params?.userId)),
+        ]);
+        if (user.rowCount > 0) {
+            res.status(200).send(owned.rows.concat(shared.rows));
         } else {
-            res.status(200).send(ownedDevices.concat(sharedDevices));
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function addDeviceByUserId(req, res) {
-    const userId = req.tokenPayload && req.tokenPayload.userId;
-    if (userId) {
-        const queryRes = await dev.addDeviceByUserId(userId, req.body);
-        if (queryRes.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
+export async function addDeviceByUserId(req, res, next) {
+    try {
+        const { rowCount } = await dev.addDeviceByUserId(
+            Number(req.params?.userId),
+            req.body,
+        );
+        if (rowCount > 0) {
+            res.status(201).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(201).send();
-            } else {
-                res.status(409).send();
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function modifyDeviceByUserId(req, res) {
-    const userId = req.tokenPayload && req.tokenPayload.userId;
-    if (userId) {
-        const queryRes = await dev.modifyDeviceByUserId(userId, req.body);
-        if (queryRes.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
+export async function modifyDeviceByUserId(req, res, next) {
+    try {
+        const { rowCount } = await dev.modifyDeviceByUserId(
+            Number(req.params?.userId),
+            req.body,
+        );
+        if (rowCount > 0) {
+            res.status(204).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(204).send();
-            } else {
-                res.status(404).send();
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function removeDevicesByUserId(req, res) {
-    const userId = req.tokenPayload && req.tokenPayload.userId;
-    if (userId) {
-        const queryRes = await dev.deleteDevicesByUserId(
-            userId,
+export async function removeDevicesByUserId(req, res, next) {
+    try {
+        const { rowCount } = await dev.deleteDevicesByUserId(
+            Number(req.params?.userId),
             req.params.deviceIds.split(','),
         );
-        if (queryRes.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
+        if (rowCount > 0) {
+            res.status(204).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(204).send();
-            } else {
-                res.status(404).send();
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function addSharedUserByUserId(req, res) {
-    const userId = req.tokenPayload && req.tokenPayload.userId;
-    if (userId) {
-        const queryRes = await dev.addSharedUserByUserId(
-            userId,
+export async function addSharedUserByUserId(req, res, next) {
+    try {
+        const { rowCount } = await dev.addSharedUserByUserId(
+            Number(req.params?.userId),
             req.body,
             req.params.deviceIds.split(','),
         );
-        if (queryRes.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
+        if (rowCount > 0) {
+            res.status(201).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(201).send();
-            } else {
-                res.status(409).send();
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }
 
-export async function removeSharedUserByUserId(req, res) {
-    const userId = req.tokenPayload && req.tokenPayload.userId;
-    if (userId) {
-        const queryRes = await dev.deleteSharedUserByUserId(
-            userId,
+export async function removeSharedUserByUserId(req, res, next) {
+    try {
+        const { rowCount } = await dev.deleteSharedUserByUserId(
+            Number(req.params?.userId),
             req.body,
             req.params.deviceIds.split(','),
         );
-        if (queryRes.rowCount < 0) {
-            res.status(500).send(`Internal Server Error`);
+        if (rowCount > 0) {
+            res.status(204).send();
         } else {
-            if (queryRes.rowCount > 0) {
-                res.status(204).send();
-            } else {
-                res.status(404).send();
-            }
+            throw new HttpError(404, 'User not found');
         }
-    } else {
-        res.status(403).send();
+    } catch (err) {
+        next(err);
     }
 }

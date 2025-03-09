@@ -132,6 +132,10 @@ describe('REST API', function () {
                     ...adm1Devs,
                 ]);
             });
+            it('should respond with 401 if auth token is missing', async function () {
+                const res = await request(app).get('/api/v1/devices').send();
+                expect(res).to.have.status(401);
+            });
         });
 
         describe('GET /positions', function () {
@@ -493,15 +497,41 @@ describe('REST API', function () {
         });
 
         describe('GET /users/:userId/devices', function () {
-            it('should get all devices of a user', async function () {
+            it('should get all owned and shared devices of a user', async function () {
+                // Share both devices of vwr1 with adm1
+                const ids = (await getDevices(vwr1)).map(
+                    ({ device_id }) => device_id,
+                );
+                await addShare(adm1, ids);
                 const user = await getUser(adm1);
                 const res = await request(app)
                     .get(`/api/v1/users/${user.user_id}/devices`)
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
-                const devices = subset(res.body, Object.keys(adm1Devs[0]));
-                expect(devices).to.eql(adm1Devs);
+                expect(res.body).to.containSubset(adm1Devs);
+                expect(res.body).to.containSubset([
+                    { alias: vwr1Devs[0].alias, owner: 'vwr1' },
+                    { alias: vwr1Devs[1].alias, owner: 'vwr1' },
+                ]);
+            });
+            it('should get zero owned and shared devices of a user', async function () {
+                // Create a user with no devices
+                await addUserAndDevices({ ...vwr2, ...vwr2Auth }, []);
+                const user = await getUser(vwr2);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}/devices`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.be.empty;
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/2147483647/devices')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
             });
         });
 
@@ -509,8 +539,8 @@ describe('REST API', function () {
             it('should add a new device', async function () {
                 const user = await getUser(vwr1);
                 const data = {
-                    identifier: 'vwr1Dev2',
-                    alias: 'Viewer 1 device 2',
+                    identifier: 'vwr1Dev3',
+                    alias: 'Viewer 1 device 3',
                     fixed_loc_lat: 40.7,
                     fixed_loc_lon: -73.9,
                 };
@@ -520,9 +550,31 @@ describe('REST API', function () {
                     .type('json')
                     .send(data);
                 expect(res).to.have.status(201);
-                const addedDevices = await getDevices(adm1);
-                const devices = subset(addedDevices, Object.keys(data));
-                expect(devices).to.include.deep.members([data]);
+                expect(await getDevices(vwr1)).to.containSubset([data]);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const data = {
+                    identifier: 'vwr1Dev3',
+                    alias: 'Viewer 1 device 3',
+                    fixed_loc_lat: 40.7,
+                    fixed_loc_lon: -73.9,
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/2147483647/devices')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 409 if device already exists', async function () {
+                const user = await getUser(vwr1);
+                const data = vwr1Devs[0];
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/devices`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(409);
             });
         });
 

@@ -145,8 +145,8 @@ describe('Integrations', function () {
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(1);
             expect(devices[0]).to.include({
-                identifier: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
-                alias: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
+                identifier: '01234567-ABCD-0123-ABCD-0123456789AB',
+                alias: '01234567-ABCD-0123-ABCD-0123456789AB',
             });
         });
         it('should process a message from an already created device', async function () {
@@ -181,8 +181,8 @@ describe('Integrations', function () {
                 subset(devices, ['identifier', 'alias']),
             ).to.include.deep.members([
                 {
-                    identifier: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
-                    alias: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
+                    identifier: '01234567-ABCD-0123-ABCD-0123456789AB',
+                    alias: '01234567-ABCD-0123-ABCD-0123456789AB',
                 },
                 { identifier: 'tag1', alias: 'tag1' },
             ]);

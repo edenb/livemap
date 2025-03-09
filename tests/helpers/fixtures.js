@@ -129,59 +129,65 @@ export const mqttMessage =
     '{"id":"vwr1Dev1", "apikey":"apikey-vwr1", "timestamp":"2024-05-10T15:14:31.191Z", "lat":"32.123", "lon":"-110.123"}';
 
 export const mqttMessageProcessed = {
-    api_key: 'apikey-vwr1',
-    identifier: 'vwr1Dev1',
-    device_id_tag: null,
-    identifier_tag: null,
-    api_key_tag: null,
     alias: 'vwr1Dev1',
-    loc_timestamp: '2024-05-10T15:14:31.191Z',
+    api_key: 'apikey-vwr1',
+    api_key_tag: null,
+    device_id_tag: null,
+    identifier: 'vwr1Dev1',
+    identifier_tag: null,
+    loc_attr: undefined,
     loc_lat: 32.123,
     loc_lon: -110.123,
+    loc_timestamp: '2024-05-10T15:14:31.191Z',
     loc_type: null,
-    loc_attr: undefined,
 };
 
 export const gpxMessage =
     'device_id=apikey-vwr1_vwr1Dev1&gps_latitude=40.7579747&gps_longitude=-73.9855426&gps_time=2019-01-01T00%3A00%3A00.000Z';
 
 export const gpxMessageProcessed = {
-    api_key: 'apikey-vwr1',
-    identifier: 'vwr1Dev1',
     alias: 'vwr1Dev1',
-    device_id_tag: null,
+    api_key: 'apikey-vwr1',
     api_key_tag: null,
+    device_id_tag: null,
+    identifier: 'vwr1Dev1',
     identifier_tag: null,
-    loc_timestamp: '2019-01-01T00:00:00.000Z',
+    loc_attr: null,
     loc_lat: 40.7579747,
     loc_lon: -73.9855426,
+    loc_timestamp: '2019-01-01T00:00:00.000Z',
     loc_type: 'rec',
-    loc_attr: null,
 };
 
 export const locDevMessage =
-    'device=apikey-vwr1-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=apikey-vwr1&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
+    'device=01234567-ABCD-0123-ABCD-0123456789AB&device_model=iPad5%2C4&device_type=iOS&id=apikey-vwr1&latitude=40.7579747&longitude=-73.9855426&timestamp=1566486660.187957&trigger=enter';
 
 export const locDevMessageProcessed = {
+    alias: '01234567-ABCD-0123-ABCD-0123456789AB',
     api_key: 'apikey-vwr1',
+    api_key_tag: null,
     device_id_tag: null,
-    alias: 'apikey-vwr1-ABCD-1234-ABCD-123456789ABC',
-    loc_timestamp: '2019-08-22T15:11:00.187Z',
+    identifier: '01234567-ABCD-0123-ABCD-0123456789AB',
+    identifier_tag: null,
+    loc_attr: null,
     loc_lat: 40.7579747,
     loc_lon: -73.9855426,
-    loc_attr: null,
+    loc_timestamp: '2019-08-22T15:11:00.187Z',
     loc_type: 'now',
 };
 
 export const locTagMessage =
-    'device=apikey-vwr1-ABCD-1234-ABCD-123456789ABC&device_model=iPad5%2C4&device_type=iOS&id=apikey-vwr1:tag1&latitude=0&longitude=0&timestamp=1571508472.691251&trigger=enter';
+    'device=01234567-ABCD-0123-ABCD-0123456789AB&device_model=iPad5%2C4&device_type=iOS&id=apikey-vwr1:tag1&latitude=0&longitude=0&timestamp=1571508472.691251&trigger=enter';
 
 export const locTagMessageProcessed = {
-    loc_timestamp: '2019-10-19T18:07:52.691Z',
+    alias: '01234567-ABCD-0123-ABCD-0123456789AB',
     api_key: 'apikey-vwr1',
-    alias: 'tag1',
+    api_key_tag: 'apikey-vwr1',
+    identifier: '01234567-ABCD-0123-ABCD-0123456789AB',
+    identifier_tag: 'tag1',
+    loc_attr: null,
     loc_lat: 0,
     loc_lon: 0,
-    loc_attr: null,
+    loc_timestamp: '2019-10-19T18:07:52.691Z',
     loc_type: 'now',
 };

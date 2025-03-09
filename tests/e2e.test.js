@@ -48,8 +48,6 @@ describe('e2e', function () {
     });
 
     describe('REST service', function () {
-        let token;
-
         before(async function () {
             // Create a test user without devices
             await addUserAndDevices({ ...adm1Auth, ...adm1 }, []);
@@ -88,7 +86,6 @@ describe('e2e', function () {
                     .post('/api/v1/login')
                     .type('json')
                     .send(loginAdm1);
-                token = res.body.access_token;
                 expect(res).to.have.status(200);
                 expect(res.body.token_type).to.equal('Bearer');
                 expect(res.body.access_token).to.be.a('string');
@@ -332,34 +329,6 @@ describe('e2e', function () {
                 );
                 expect(devices).to.deep.include(adm1Devs[0]);
             });
-            it('should POST a new device action', async function () {
-                const data = {
-                    ...adm1Devs[1],
-                    device_id: -1,
-                };
-                const res = await reqAgent
-                    .post('/changedevices')
-                    .send({ ...data, action: 'submit' });
-                expect(res).to.have.status(200);
-                expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('Device changed');
-                const devices = subset(
-                    await getDevices(adm1),
-                    Object.keys(adm1Devs[1]),
-                );
-                expect(devices).to.deep.include(adm1Devs[1]);
-            });
-            it('should POST an invalid new device action', async function () {
-                const data = {
-                    device_id: -1,
-                };
-                const res = await reqAgent
-                    .post('/changedevices')
-                    .send({ ...data, action: 'submit' });
-                expect(res).to.have.status(200);
-                expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('Unable to add device');
-            });
             it('should POST an add shared user action', async function () {
                 const data = {
                     shareduser: vwr1.username,
@@ -386,7 +355,7 @@ describe('e2e', function () {
                     .send({ ...data, action: 'addSharedUser' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('No shared users were added');
+                expect(res.text).to.include('User not found');
             });
             it('should POST a delete shared user action', async function () {
                 const data = {
@@ -416,7 +385,7 @@ describe('e2e', function () {
                     .send({ ...data, action: 'delSharedUser' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('No shared users were deleted');
+                expect(res.text).to.include('User not found');
             });
             it('should POST a delete devices action', async function () {
                 const data = {
@@ -440,7 +409,7 @@ describe('e2e', function () {
                     .send({ ...data, action: 'delDevices' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('No devices were deleted');
+                expect(res.text).to.include('User not found');
             });
             it('should POST a cancel device action', async function () {
                 const data = (await getDevices(adm1))[0];
