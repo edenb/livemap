@@ -662,6 +662,17 @@ describe('REST API', function () {
                     ...adm1Devs,
                 ]);
             });
+            it('should respond with 404 if user does not exist', async function () {
+                const orgDevices = await getDevices(adm1);
+                const ids = orgDevices.map(({ device_id }) => device_id);
+                const data = vwr1;
+                const res = await request(app)
+                    .post(`/api/v1/users/2147483647/devices/${ids}/shareduser`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
         });
 
         describe('DELETE /users/:userId/devices/:deviceIds/shareduser', function () {
@@ -680,6 +691,18 @@ describe('REST API', function () {
                 const sharedDevices = await getDevices(vwr1);
                 const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
                 expect(devices).to.not.include.deep.members([...adm1Devs]);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const orgDevices = await getDevices(adm1);
+                const ids = orgDevices.map(({ device_id }) => device_id);
+                await addShare(vwr1, ids);
+                const res = await request(app)
+                    .delete(
+                        `/api/v1/users/2147483647/devices/${ids}/shareduser`,
+                    )
+                    .auth(token, { type: 'bearer' })
+                    .send(vwr1);
+                expect(res).to.have.status(404);
             });
         });
 
