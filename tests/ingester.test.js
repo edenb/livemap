@@ -71,6 +71,62 @@ describe('Ingester', function () {
                 `Invalid: data/loc_lat must be <= 90`,
             );
         });
+        it('should log an error if the device identity is not a string', async function () {
+            const message = {
+                ...parse(gpxMessage),
+                device_id: 123,
+            };
+            const result = await processLocation(logger, 'gpx', message);
+            expect(result).to.be.null;
+            expect(logger.error.args[0][0]).to.equal(
+                `Ingester for 'gpx' failed. Device identity should be a string`,
+            );
+        });
+        it('should log an error if the device identity has no divider character', async function () {
+            const message = {
+                ...parse(gpxMessage),
+                device_id: 'a device identity',
+            };
+            const result = await processLocation(logger, 'gpx', message);
+            expect(result).to.be.null;
+            expect(logger.error.args[0][0]).to.equal(
+                `Ingester for 'gpx' failed. No divider (_) found`,
+            );
+        });
+        it('should log an error if the api key is too short', async function () {
+            const message = {
+                ...parse(gpxMessage),
+                device_id: 'aaa_vwr1Dev1',
+            };
+            const result = await processLocation(logger, 'gpx', message);
+            expect(result).to.be.null;
+            expect(logger.error.args[0][0]).to.equal(
+                `Ingester for 'gpx' failed. API key too short`,
+            );
+        });
+        it('should log an error if the identifier is too short', async function () {
+            const message = {
+                ...parse(gpxMessage),
+                device_id: 'apikey-vwr1_a',
+            };
+            const result = await processLocation(logger, 'gpx', message);
+            expect(result).to.be.null;
+            expect(logger.error.args[0][0]).to.equal(
+                `Ingester for 'gpx' failed. Identifier should be between 2 - 50 characters`,
+            );
+        });
+        it('should log an error if the identifier is too long', async function () {
+            const message = {
+                ...parse(gpxMessage),
+                device_id:
+                    'apikey-vwr1_012345678901234567890123456789012345678901234567890',
+            };
+            const result = await processLocation(logger, 'gpx', message);
+            expect(result).to.be.null;
+            expect(logger.error.args[0][0]).to.equal(
+                `Ingester for 'gpx' failed. Identifier should be between 2 - 50 characters`,
+            );
+        });
     });
 
     describe('Locative', function () {
