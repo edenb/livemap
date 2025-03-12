@@ -355,23 +355,16 @@ export default (passport) => {
             res.redirect('/main');
         } else {
             try {
-                const { rowCount } = await usr.changePassword(
+                await usr.changePassword(
                     req.user.user_id,
                     req.body.password,
                     req.body.confirm,
                     req.body.oldpassword,
                 );
-                if (rowCount === 1) {
-                    req.flash('info', 'Password changed');
-                    req.session.save(() => {
-                        res.redirect('/main');
-                    });
-                } else {
-                    req.flash('error', 'User not found');
-                    req.session.save(() => {
-                        res.redirect('/changepassword');
-                    });
-                }
+                req.flash('info', 'Password changed');
+                req.session.save(() => {
+                    res.redirect('/main');
+                });
             } catch (err) {
                 req.flash('error', flashMessage(err));
                 req.session.save(() => {
