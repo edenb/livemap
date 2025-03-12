@@ -354,6 +354,32 @@ describe('e2e', function () {
                 );
                 expect(devices).to.deep.include(adm1Devs[0]);
             });
+            it('should POST a modify device action with with an unknown device id', async function () {
+                const data = {
+                    ...(await getDevices(adm1))[0],
+                    device_id: -1,
+                };
+                const res = await reqAgent
+                    .post('/changedevices')
+                    .send({ ...data, action: 'submit' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedevices$/);
+                expect(res.text).to.include('User not found');
+            });
+            it('should POST a modify device action with with an invalid device id', async function () {
+                const data = {
+                    ...(await getDevices(adm1))[0],
+                    device_id: 'aaa',
+                };
+                const res = await reqAgent
+                    .post('/changedevices')
+                    .send({ ...data, action: 'submit' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedevices$/);
+                expect(res.text).to.include(
+                    'invalid input syntax for type integer:',
+                );
+            });
             it('should POST an add shared user action', async function () {
                 const devices = await getDevices(adm1);
                 const data = {
@@ -381,6 +407,20 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
                 expect(res.text).to.include('User not found');
+            });
+            it('should POST an add shared user action with an invalid device id', async function () {
+                const data = {
+                    shareduser: vwr1.username,
+                    checkedIds: 'aaa',
+                };
+                const res = await reqAgent
+                    .post('/changedevices')
+                    .send({ ...data, action: 'addSharedUser' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedevices$/);
+                expect(res.text).to.include(
+                    'invalid input syntax for type integer:',
+                );
             });
             it('should POST a delete shared user action', async function () {
                 const devices = await getDevices(adm1);
