@@ -303,22 +303,13 @@ export default (passport) => {
                         req.body.shareduser,
                         req.body.checkedIds.split(','),
                     );
-                    if (rowCount > 0) {
-                        req.flash(
-                            'info',
-                            req.body.checkedIds.split(',').length +
-                                ' device(s) no longer shared with user: ' +
-                                req.body.shareduser,
-                        );
-                        req.session.save(() => {
-                            res.redirect('/changedevices');
-                        });
-                    } else {
-                        req.flash('error', 'User not found');
-                        req.session.save(() => {
-                            res.redirect('/changedevices');
-                        });
-                    }
+                    req.flash(
+                        'info',
+                        `${rowCount} device(s) no longer shared with user: ${req.body.shareduser}`,
+                    );
+                    req.session.save(() => {
+                        res.redirect('/changedevices');
+                    });
                 } catch (err) {
                     req.flash('error', flashMessage(err));
                     req.session.save(() => {
@@ -331,21 +322,10 @@ export default (passport) => {
                     const { rowCount } = await dev.deleteDevicesById(
                         req.body.checkedIds.split(','),
                     );
-                    if (rowCount > 0) {
-                        req.flash(
-                            'info',
-                            req.body.checkedIds.split(',').length +
-                                ' device(s) removed',
-                        );
-                        req.session.save(() => {
-                            res.redirect('/changedevices');
-                        });
-                    } else {
-                        req.flash('error', 'User not found');
-                        req.session.save(() => {
-                            res.redirect('/changedevices');
-                        });
-                    }
+                    req.flash('info', `${rowCount} device(s) removed`);
+                    req.session.save(() => {
+                        res.redirect('/changedevices');
+                    });
                 } catch (err) {
                     req.flash('error', flashMessage(err));
                     req.session.save(() => {
