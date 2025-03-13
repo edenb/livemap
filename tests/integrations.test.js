@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
-import { request, subset } from './helpers/chai.js';
+import { request } from './helpers/chai.js';
 import {
     addUserAndDevices,
     getDevices,
@@ -177,9 +177,7 @@ describe('Integrations', function () {
             expect(res).to.have.status(200);
             const devices = await getDevices(vwr1);
             expect(devices.length).to.equal(2);
-            expect(
-                subset(devices, ['identifier', 'alias']),
-            ).to.include.deep.members([
+            expect(devices).to.containSubset([
                 {
                     identifier: '01234567-ABCD-0123-ABCD-0123456789AB',
                     alias: '01234567-ABCD-0123-ABCD-0123456789AB',

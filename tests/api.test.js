@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { request, subset } from './helpers/chai.js';
+import { request } from './helpers/chai.js';
 import {
     addPosition,
     addShare,
@@ -126,11 +126,7 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
-                const devices = subset(res.body, Object.keys(vwr1Devs[0]));
-                expect(devices).to.include.deep.members([
-                    ...vwr1Devs,
-                    ...adm1Devs,
-                ]);
+                expect(res.body).to.containSubset([...vwr1Devs, ...adm1Devs]);
             });
             it('should respond with 401 if auth token is missing', async function () {
                 const res = await request(app).get('/api/v1/devices').send();
@@ -597,8 +593,7 @@ describe('REST API', function () {
                     .send(data);
                 expect(res).to.have.status(204);
                 const modifiedDevices = await getDevices(adm1);
-                const devices = subset(modifiedDevices, Object.keys(data));
-                expect(devices).to.include.deep.members([data]);
+                expect(modifiedDevices).to.containSubset([data]);
             });
             it('should respond with 404 if the device does not exist', async function () {
                 const user = await getUser(adm1);
@@ -656,8 +651,7 @@ describe('REST API', function () {
                     .send(data);
                 expect(res).to.have.status(201);
                 const sharedDevices = await getDevices(vwr1);
-                const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
-                expect(devices).to.include.deep.members([
+                expect(sharedDevices).to.containSubset([
                     ...vwr1Devs,
                     ...adm1Devs,
                 ]);
@@ -689,8 +683,7 @@ describe('REST API', function () {
                     .send(vwr1);
                 expect(res).to.have.status(204);
                 const sharedDevices = await getDevices(vwr1);
-                const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
-                expect(devices).to.not.include.deep.members([...adm1Devs]);
+                expect(sharedDevices).not.to.containSubset(adm1Devs);
             });
             it('should respond with 404 if user does not exist', async function () {
                 const orgDevices = await getDevices(adm1);
