@@ -44,11 +44,13 @@ export async function removeUserAndDevices(fromUser) {
     try {
         const user = await getUser(fromUser);
         if (user) {
-            const queryRes1 = await dev.getOwnedDevicesByUserId(user.user_id);
-            const ids = queryRes1.rows.map(({ device_id }) => device_id);
+            const { rows: owned } = await dev.getOwnedDevicesByUserId(
+                user.user_id,
+            );
+            const ids = owned.map(({ device_id }) => device_id);
             await dev.deleteDevicesById(ids);
-            const queryRes2 = await usr.deleteUser(requestUser, user);
-            if (queryRes2.rowCount !== 1) {
+            const { rowCount } = await usr.deleteUser(requestUser, user);
+            if (rowCount !== 1) {
                 throw new Error('Unable to remove user');
             }
         }
@@ -59,11 +61,8 @@ export async function removeUserAndDevices(fromUser) {
 
 export async function getUser(user) {
     try {
-        const queryRes = await usr.getUserByField('username', user.username);
-        if (queryRes.rowCount <= 0) {
-            return null;
-        }
-        return queryRes.rows[0];
+        const { rows } = await usr.getUserByField('username', user.username);
+        return rows[0] || null;
     } catch (err) {
         throw new Error(err.message);
     }
@@ -72,11 +71,8 @@ export async function getUser(user) {
 export async function getDevices(fromUser) {
     try {
         const user = await getUser(fromUser);
-        const queryRes = await dev.getAllowedDevices(user.user_id);
-        if (queryRes.rowCount <= 0) {
-            return [];
-        }
-        return queryRes.rows;
+        const { rows } = await dev.getAllowedDevices(user.user_id);
+        return rows;
     } catch (err) {
         throw new Error(err.message);
     }
@@ -84,7 +80,7 @@ export async function getDevices(fromUser) {
 
 export async function addPosition(position) {
     try {
-        const queryRes = await pos.insertPosition([
+        await pos.insertPosition([
             position.device_id,
             position.device_id_tag,
             position.loc_timestamp,
@@ -93,9 +89,6 @@ export async function addPosition(position) {
             position.loc_type,
             position.loc_attr,
         ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No position inserted';
-        }
     } catch (err) {
         throw new Error(err.message);
     }
