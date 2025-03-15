@@ -38,10 +38,8 @@ async function joinRooms(socket, token) {
     if (payload && payload.userId) {
         socket.userId = payload.userId;
         socket.expiryTime = payload.iat; // Unix Timestamp in seconds
-        const queryRes = await dev.getAllowedDevices(socket.userId);
-        const deviceRooms = queryRes.rows.map(({ device_id }) =>
-            getRoomName(device_id),
-        );
+        const { rows } = await dev.getAllowedDevices(socket.userId);
+        const deviceRooms = rows.map(({ device_id }) => getRoomName(device_id));
         await socket.join(deviceRooms);
     } else {
         throw new Error('Unable to join rooms. User token invalid.');
@@ -52,16 +50,17 @@ async function startGpxPlayer(userId) {
     // Create al list of all available gpx files
     await gpxPlayer.createFileList('./tracks/');
     // Start tracks of own devices
-    let queryRes = await usr.getUserByField('user_id', userId);
-    if (queryRes.rows && queryRes.rows.length > 0) {
-        gpxPlayer.addTracksByApiKey(queryRes.rows[0].api_key);
+    // ToDo: probably remove this because allowed devices also includes own devices
+    const { rows } = await usr.getUserByField('user_id', userId);
+    if (rows.length > 0) {
+        gpxPlayer.addTracksByApiKey(rows[0].api_key);
     }
     // Start tracks of shared devices
-    queryRes = await dev.getAllowedDevices(userId);
-    if (queryRes.rows && queryRes.rows.length > 0) {
-        const deviceList = queryRes.rows.map((item) => ({
-            identifier: item.identifier,
-            api_key: item.api_key,
+    const { rows: devices } = await dev.getAllowedDevices(userId);
+    if (devices.length > 0) {
+        const deviceList = devices.map((device) => ({
+            identifier: device.identifier,
+            api_key: device.api_key,
         }));
         gpxPlayer.addTracksByDevice(deviceList);
     }
