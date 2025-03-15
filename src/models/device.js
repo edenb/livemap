@@ -8,72 +8,64 @@ const logger = Logger(import.meta.url);
 //
 
 export async function getAllDevices() {
-    const queryRes = await queryDbAsync('getAllDevices', []);
-    return queryRes;
+    return await queryDbAsync('getAllDevices', []);
 }
 
 export async function getAllowedDevices(userId) {
-    const queryRes = await queryDbAsync('getAllowedDevices', [userId]);
-    return queryRes;
+    return await queryDbAsync('getAllowedDevices', [userId]);
 }
 
 export async function getDeviceByIdentity(apiKey, identifier) {
-    const queryRes = await getAllDevices();
-    const foundDevice = queryRes.rows.find(
+    const { rows } = await getAllDevices();
+    const foundDevice = rows.find(
         (e) => e.api_key === apiKey && e.identifier === identifier,
     );
     return foundDevice || null;
 }
 
 export async function getOwnedDevicesByUserId(userId) {
-    const queryRes = await queryDbAsync('getOwnedDevicesByUserId', [userId]);
-    return queryRes;
+    return await queryDbAsync('getOwnedDevicesByUserId', [userId]);
 }
 
 export async function getSharedDevicesByUserId(userId) {
-    const queryRes = await queryDbAsync('getSharedDevicesByUserId', [userId]);
-    return queryRes;
+    return await queryDbAsync('getSharedDevicesByUserId', [userId]);
 }
 
 export async function addDevice(device) {
-    const queryRes = await queryDbAsync('insertDevice', [
+    return await queryDbAsync('insertDevice', [
         device.api_key,
         device.identifier,
         device.alias,
     ]);
-    return queryRes;
 }
 
 export async function addDeviceByUserId(userId, device) {
-    const queryRes = await queryDbAsync('addDeviceByUserId', [
+    return await queryDbAsync('addDeviceByUserId', [
         userId,
         device.identifier,
         device.alias,
         device.fixed_loc_lat,
         device.fixed_loc_lon,
     ]);
-    return queryRes;
 }
 
 export async function modifyDevice(device) {
-    const queryRes = await queryDbAsync('modifyDeviceById', [
+    return await queryDbAsync('modifyDeviceById', [
         device.device_id,
         device.alias,
         device.fixed_loc_lat,
         device.fixed_loc_lon,
     ]);
-    return queryRes;
 }
 
 export async function modifyDeviceByUserId(userId, device) {
-    const queryRes = await queryDbAsync('modifyDeviceByUserId', [
+    return await queryDbAsync('modifyDeviceByUserId', [
         userId,
         device.device_id,
         device.alias,
         device.fixed_loc_lat,
         device.fixed_loc_lon,
     ]);
-    return queryRes;
 }
 
 export function splitDeviceIdentity(devIdent, dividerChar) {
@@ -103,39 +95,33 @@ export function splitDeviceIdentity(devIdent, dividerChar) {
 
 export async function addSharedUser(sharedUser, ids) {
     // ToDo: check for valid sharedUser and ids ?
-    const queryRes = await queryDbAsync('addSharedUser', [sharedUser, ids]);
-    return queryRes;
+    return await queryDbAsync('addSharedUser', [sharedUser, ids]);
 }
 
 export async function addSharedUserByUserId(userId, sharedUser, ids) {
-    const queryRes = await queryDbAsync('addSharedUserByUserId', [
+    return await queryDbAsync('addSharedUserByUserId', [
         userId,
         sharedUser.username,
         ids,
     ]);
-    return queryRes;
 }
 
 export async function deleteSharedUser(sharedUser, ids) {
-    const queryRes = await queryDbAsync('deleteSharedUser', [sharedUser, ids]);
-    return queryRes;
+    return await queryDbAsync('deleteSharedUser', [sharedUser, ids]);
 }
 
 export async function deleteSharedUserByUserId(userId, sharedUser, ids) {
-    const queryRes = await queryDbAsync('deleteSharedUserByUserId', [
+    return await queryDbAsync('deleteSharedUserByUserId', [
         userId,
         sharedUser.username,
         ids,
     ]);
-    return queryRes;
 }
 
 export async function deleteDevicesById(ids) {
-    const queryRes = await queryDbAsync('deleteDevices', [ids]);
-    return queryRes;
+    return await queryDbAsync('deleteDevices', [ids]);
 }
 
 export async function deleteDevicesByUserId(userId, ids) {
-    const queryRes = await queryDbAsync('deleteDevicesByUserId', [userId, ids]);
-    return queryRes;
+    return await queryDbAsync('deleteDevicesByUserId', [userId, ids]);
 }

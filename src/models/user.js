@@ -112,8 +112,7 @@ function validatePasswordInput(password) {
 //
 
 export async function getAllUsers() {
-    const queryRes = await queryDbAsync('getAllUsers', []);
-    return queryRes;
+    return await queryDbAsync('getAllUsers', []);
 }
 
 export async function getUserByField(field, value) {
@@ -134,8 +133,7 @@ export async function getUserByField(field, value) {
         throw new TypeError(`No key for field: ${field}`);
     }
 
-    const queryRes = await queryDbAsync(key, [value]);
-    return queryRes;
+    return await queryDbAsync(key, [value]);
 }
 
 export async function addUser(user, modUser) {
@@ -159,7 +157,7 @@ export async function addUser(user, modUser) {
     }
 
     const passwordHash = await createHash(modUser.password);
-    const queryRes = await queryDbAsync('insertUser', [
+    return await queryDbAsync('insertUser', [
         modUser.username,
         modUser.fullname,
         modUser.email,
@@ -167,7 +165,6 @@ export async function addUser(user, modUser) {
         modUser.api_key,
         passwordHash,
     ]);
-    return queryRes;
 }
 
 export async function modifyUser(user, modUser) {
@@ -186,7 +183,7 @@ export async function modifyUser(user, modUser) {
         throw new ValidationError(validationError);
     }
 
-    const queryRes = await queryDbAsync('modifyUserById', [
+    return await queryDbAsync('modifyUserById', [
         modUser.user_id,
         modUser.username,
         modUser.fullname,
@@ -194,7 +191,6 @@ export async function modifyUser(user, modUser) {
         modUser.role,
         modUser.api_key,
     ]);
-    return queryRes;
 }
 
 export async function changePassword(user_id, newPwd, confirmPwd, currentPwd) {
@@ -209,8 +205,7 @@ export async function changePassword(user_id, newPwd, confirmPwd, currentPwd) {
         throw new ValidationError(validationError);
     }
 
-    const queryRes = await resetPassword(user_id, newPwd, confirmPwd);
-    return queryRes;
+    return await resetPassword(user_id, newPwd, confirmPwd);
 }
 
 export async function resetPassword(user_id, newPwd, confirmPwd) {
@@ -232,11 +227,7 @@ export async function resetPassword(user_id, newPwd, confirmPwd) {
     }
 
     const newPasswordHash = await createHash(newPwd);
-    const queryRes = await queryDbAsync('changePwdByUserId', [
-        user_id,
-        newPasswordHash,
-    ]);
-    return queryRes;
+    return await queryDbAsync('changePwdByUserId', [user_id, newPasswordHash]);
 }
 
 export async function deleteUser(user, modUser) {
@@ -257,14 +248,13 @@ export async function deleteUser(user, modUser) {
         throw new ValidationError(validationError);
     }
 
-    const queryRes = await queryDbAsync('deleteUser', [modUser.user_id]);
-    return queryRes;
+    return await queryDbAsync('deleteUser', [modUser.user_id]);
 }
 
 export async function credentialsMatch(user_id, password) {
-    const queryRes = await queryDbAsync('getPwdByUserId', [user_id]);
-    if (queryRes.rowCount > 0) {
-        const currentPasswordHash = queryRes.rows[0].password;
+    const { rows, rowCount } = await queryDbAsync('getPwdByUserId', [user_id]);
+    if (rowCount > 0) {
+        const currentPasswordHash = rows[0].password;
         const match = await bcrypt.compare(password, currentPasswordHash);
         return match;
     } else {
@@ -274,8 +264,8 @@ export async function credentialsMatch(user_id, password) {
 
 export async function isKnownAPIkey(apiKey, modUser) {
     try {
-        const queryRes = await getAllUsers();
-        const foundUser = queryRes.rows.find(
+        const { rows } = await getAllUsers();
+        const foundUser = rows.find(
             (e) => e.api_key === apiKey && e.user_id !== modUser?.user_id,
         );
         if (foundUser) {
