@@ -167,14 +167,6 @@ queryDef.getNumberOfTables = {
     cached: false,
 };
 
-export function getEmptyQueryRes() {
-    const emptyQueryRes = {
-        rows: [],
-        rowCount: -1,
-    };
-    return emptyQueryRes;
-}
-
 // Initialize the pool
 // Get the PostgreSQL login details from the config.
 // Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE>
@@ -200,8 +192,6 @@ pgPool.on('error', (err) => {
 //
 
 export async function queryDbAsync(key, sqlParams) {
-    let queryRes = getEmptyQueryRes();
-
     if (queryDef[key]) {
         // Try to get the query result from cache
         if (queryDef[key].cached) {
@@ -213,18 +203,21 @@ export async function queryDbAsync(key, sqlParams) {
         }
 
         // Query the database
-        queryRes = await pgPool.query(queryDef[key].qstr, sqlParams || []);
+        const queryRes = await pgPool.query(
+            queryDef[key].qstr,
+            sqlParams || [],
+        );
 
         // Update cache
         invalidate(queryDef[key]);
         if (queryDef[key].cached) {
             save(queryDef[key], sqlParams, queryRes);
         }
+
+        return queryRes;
     } else {
         throw new Error(`Database query failed. No query for key: ${key}`);
     }
-
-    return queryRes;
 }
 
 //
@@ -244,10 +237,9 @@ function readQueryFromFile(fileName) {
 }
 
 async function queryDbFromFile(fileName) {
-    const fileData = await readQueryFromFile(fileName);
-    const queryRes = await pgPool.query(fileData.toString());
     logger.debug(`queryDbFromFile: ${fileName}`);
-    return queryRes;
+    const fileData = await readQueryFromFile(fileName);
+    return await pgPool.query(fileData.toString());
 }
 
 //
@@ -271,17 +263,15 @@ export function getStore() {
 
 export async function checkDbUp() {
     try {
-        let queryRes = await queryDbAsync('getNumberOfTables', []);
+        const { rows } = await queryDbAsync('getNumberOfTables', []);
         logger.info(
-            `Current number of tables in the database: ${queryRes.rows[0].count}`,
+            `Current number of tables in the database: ${rows[0].count}`,
         );
-        if (parseInt(queryRes.rows[0].count) < 5) {
-            queryRes = await queryDbFromFile('./setup/schema.sql');
+        if (Number(rows[0].count) < 5) {
+            await queryDbFromFile('./setup/schema.sql');
             logger.info(`New database created.`);
-            return true;
-        } else {
-            return true;
         }
+        return true;
     } catch (err) {
         return false;
     }
