@@ -63,9 +63,9 @@ describe('Live server', function () {
 
     describe('Broadcast positions to token authorized clients (auth by event)', async function () {
         let client1, client2, client3;
-        let callbackSpy1 = spy(),
-            callbackSpy2 = spy(),
-            callbackSpy3 = spy();
+        let client1Spy = spy(),
+            client2Spy = spy(),
+            client3Spy = spy();
 
         before(async function () {
             const res1 = await request(app)
@@ -83,14 +83,14 @@ describe('Live server', function () {
                 tokenAdm1,
                 null,
                 false,
-                callbackSpy1,
+                client1Spy,
             );
             client3 = await createLiveClient(
                 'http://localhost:3001',
                 tokenVwr1,
                 null,
                 false,
-                callbackSpy3,
+                client3Spy,
             );
         });
         after(async function () {
@@ -103,8 +103,8 @@ describe('Live server', function () {
             it('should receive the first position', async function () {
                 await liveServer.sendToClients(position); // First position
                 await sleep(100);
-                expect(callbackSpy1.calledOnce).to.equal(true);
-                const data = JSON.parse(callbackSpy1.args[0][0]).data;
+                expect(client1Spy.calledOnce).to.equal(true);
+                const data = JSON.parse(client1Spy.args[0][0]).data;
                 expect(data).to.eql(position);
             });
         });
@@ -116,29 +116,35 @@ describe('Live server', function () {
                     tokenAdm1,
                     null,
                     false,
-                    callbackSpy2,
+                    client2Spy,
                 );
             });
             it('should receive the second position', async function () {
                 await liveServer.sendToClients(position); // Second position
                 await sleep(100);
-                expect(callbackSpy2.calledOnce).to.equal(true);
-                const data = JSON.parse(callbackSpy2.args[0][0]).data;
+                expect(client2Spy.calledOnce).to.equal(true);
+                const data = JSON.parse(client2Spy.args[0][0]).data;
                 expect(data).to.eql(position);
             });
         });
 
         describe('Existing authorized client 1', async function () {
             it('should receive the second position', async function () {
-                expect(callbackSpy1.calledTwice).to.equal(true);
-                const data = JSON.parse(callbackSpy1.args[1][0]).data;
+                expect(client1Spy.calledTwice).to.equal(true);
+                const data = JSON.parse(client1Spy.args[1][0]).data;
                 expect(data).to.eql(position);
             });
         });
 
         describe('An unauthorized client 3', async function () {
             it('should not receive any positions', async function () {
-                expect(callbackSpy3.callCount).to.equal(0);
+                expect(client3Spy.callCount).to.equal(0);
+            });
+        });
+
+        describe('An unauthorized client 3', async function () {
+            it('should not receive any positions', async function () {
+                expect(client3Spy.callCount).to.equal(0);
             });
         });
 
@@ -152,14 +158,14 @@ describe('Live server', function () {
                 };
             });
             it('should not be received by any client', async function () {
-                callbackSpy1.resetHistory();
-                callbackSpy2.resetHistory();
-                callbackSpy3.resetHistory();
+                client1Spy.resetHistory();
+                client2Spy.resetHistory();
+                client3Spy.resetHistory();
                 await liveServer.sendToClients(invalidPosition);
                 await sleep(100);
-                expect(callbackSpy1.callCount).to.equal(0);
-                expect(callbackSpy2.callCount).to.equal(0);
-                expect(callbackSpy3.callCount).to.equal(0);
+                expect(client1Spy.callCount).to.equal(0);
+                expect(client2Spy.callCount).to.equal(0);
+                expect(client3Spy.callCount).to.equal(0);
             });
         });
     });
@@ -183,9 +189,9 @@ describe('Live server', function () {
 
     describe('Broadcast positions to token authorized clients (auth by handshake)', async function () {
         let client1, client2, client3;
-        let callbackSpy1 = spy(),
-            callbackSpy2 = spy(),
-            callbackSpy3 = spy();
+        let client1Spy = spy(),
+            client2Spy = spy(),
+            client3Spy = spy();
 
         before(async function () {
             const res1 = await request(app)
@@ -203,14 +209,14 @@ describe('Live server', function () {
                 tokenAdm1,
                 null,
                 true,
-                callbackSpy1,
+                client1Spy,
             );
             client3 = await createLiveClient(
                 'http://localhost:3001',
                 tokenVwr1,
                 null,
                 true,
-                callbackSpy3,
+                client3Spy,
             );
         });
         after(async function () {
@@ -223,8 +229,8 @@ describe('Live server', function () {
             it('should receive the first position', async function () {
                 await liveServer.sendToClients(position); // First position
                 await sleep(100);
-                expect(callbackSpy1.calledOnce).to.equal(true);
-                const data = JSON.parse(callbackSpy1.args[0][0]).data;
+                expect(client1Spy.calledOnce).to.equal(true);
+                const data = JSON.parse(client1Spy.args[0][0]).data;
                 expect(data).to.eql(position);
             });
         });
@@ -236,29 +242,29 @@ describe('Live server', function () {
                     tokenAdm1,
                     null,
                     true,
-                    callbackSpy2,
+                    client2Spy,
                 );
             });
             it('should receive the second position', async function () {
                 await liveServer.sendToClients(position); // Second position
                 await sleep(100);
-                expect(callbackSpy2.calledOnce).to.equal(true);
-                const data = JSON.parse(callbackSpy2.args[0][0]).data;
+                expect(client2Spy.calledOnce).to.equal(true);
+                const data = JSON.parse(client2Spy.args[0][0]).data;
                 expect(data).to.eql(position);
             });
         });
 
         describe('Existing authorized client 1', async function () {
             it('should receive the second position', async function () {
-                expect(callbackSpy1.calledTwice).to.equal(true);
-                const data = JSON.parse(callbackSpy1.args[1][0]).data;
+                expect(client1Spy.calledTwice).to.equal(true);
+                const data = JSON.parse(client1Spy.args[1][0]).data;
                 expect(data).to.eql(position);
             });
         });
 
         describe('An unauthorized client 3', async function () {
             it('should not receive any positions', async function () {
-                expect(callbackSpy3.callCount).to.equal(0);
+                expect(client3Spy.callCount).to.equal(0);
             });
         });
 
@@ -272,14 +278,14 @@ describe('Live server', function () {
                 };
             });
             it('should not be received by any client', async function () {
-                callbackSpy1.resetHistory();
-                callbackSpy2.resetHistory();
-                callbackSpy3.resetHistory();
+                client1Spy.resetHistory();
+                client2Spy.resetHistory();
+                client3Spy.resetHistory();
                 await liveServer.sendToClients(invalidPosition);
                 await sleep(100);
-                expect(callbackSpy1.callCount).to.equal(0);
-                expect(callbackSpy2.callCount).to.equal(0);
-                expect(callbackSpy3.callCount).to.equal(0);
+                expect(client1Spy.callCount).to.equal(0);
+                expect(client2Spy.callCount).to.equal(0);
+                expect(client3Spy.callCount).to.equal(0);
             });
         });
     });
@@ -315,7 +321,7 @@ describe('Live server', function () {
 
         describe('Existing authorized client', function () {
             let client;
-            let callbackSpy = spy();
+            let clientSpy = spy();
 
             before(async function () {
                 const res = await reqAgent.post('/login').send(loginAdm1);
@@ -324,7 +330,7 @@ describe('Live server', function () {
                     null,
                     res.headers['set-cookie'][0],
                     false,
-                    callbackSpy,
+                    clientSpy,
                 );
             });
             after(async function () {
@@ -334,8 +340,8 @@ describe('Live server', function () {
             it('should receive the first position', async function () {
                 await liveServer.sendToClients(position);
                 await sleep(100);
-                expect(callbackSpy.calledOnce).to.equal(true);
-                const data = JSON.parse(callbackSpy.args[0][0]).data;
+                expect(clientSpy.calledOnce).to.equal(true);
+                const data = JSON.parse(clientSpy.args[0][0]).data;
                 expect(data).to.eql(position);
             });
         });
