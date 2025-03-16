@@ -37,4 +37,5 @@ $(function () {
     });
 
     $('#table-locations').bootstrapTable('hideLoading');
+    $('#table-locations').bootstrapTable('load', lastPositions.lastPositions);
 });

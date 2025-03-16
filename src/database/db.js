@@ -17,19 +17,13 @@ queryDef.getAllUsers = {
     cached: true,
 };
 queryDef.getUserByUserId = {
-    qstr: 'SELECT * FROM users WHERE user_id = $1',
+    qstr: 'SELECT user_id, username, fullname, email, role, api_key FROM users WHERE user_id = $1',
     readTables: ['users'],
     writeTables: [],
     cached: true,
 };
 queryDef.getUserByUsername = {
-    qstr: 'SELECT * FROM users WHERE username = $1',
-    readTables: ['users'],
-    writeTables: [],
-    cached: true,
-};
-queryDef.getUserByApiKey = {
-    qstr: 'SELECT * FROM users WHERE api_key = $1',
+    qstr: 'SELECT user_id, username, fullname, email, role, api_key FROM users WHERE username = $1',
     readTables: ['users'],
     writeTables: [],
     cached: true,
@@ -46,8 +40,14 @@ queryDef.modifyUserById = {
     writeTables: ['users'],
     cached: false,
 };
-queryDef.changePwdByUsername = {
-    qstr: 'UPDATE users SET password = $2 WHERE username = $1',
+queryDef.getPwdByUserId = {
+    qstr: 'SELECT password FROM users WHERE user_id = $1',
+    readTables: ['users'],
+    writeTables: [],
+    cached: true,
+};
+queryDef.changePwdByUserId = {
+    qstr: 'UPDATE users SET password = $2 WHERE user_id = $1',
     readTables: [],
     writeTables: ['users'],
     cached: false,
@@ -167,14 +167,6 @@ queryDef.getNumberOfTables = {
     cached: false,
 };
 
-export function getEmptyQueryRes() {
-    const emptyQueryRes = {
-        rows: [],
-        rowCount: -1,
-    };
-    return emptyQueryRes;
-}
-
 // Initialize the pool
 // Get the PostgreSQL login details from the config.
 // Form: postgres://<PGUSER>:<PGPASS>@<URL>/<PGDATABASE>
@@ -200,9 +192,7 @@ pgPool.on('error', (err) => {
 //
 
 export async function queryDbAsync(key, sqlParams) {
-    let dbQueryRes = getEmptyQueryRes();
-
-    if (typeof queryDef[key] !== 'undefined') {
+    if (queryDef[key]) {
         // Try to get the query result from cache
         if (queryDef[key].cached) {
             const cachedQueryRes = load(queryDef[key], sqlParams);
@@ -213,30 +203,21 @@ export async function queryDbAsync(key, sqlParams) {
         }
 
         // Query the database
-        const pgClient = await pgPool.connect();
-        try {
-            dbQueryRes = await pgClient.query(
-                queryDef[key].qstr,
-                sqlParams || [],
-            );
-        } catch (err) {
-            logger.error(`Database access failed: ${err.message}`);
-            throw new Error(`Database access failed: ${err.message}`);
-        } finally {
-            pgClient.release();
-        }
+        const queryRes = await pgPool.query(
+            queryDef[key].qstr,
+            sqlParams || [],
+        );
 
         // Update cache
         invalidate(queryDef[key]);
         if (queryDef[key].cached) {
-            save(queryDef[key], sqlParams, dbQueryRes);
+            save(queryDef[key], sqlParams, queryRes);
         }
+
+        return queryRes;
     } else {
-        logger.error(`Database query failed. No query for key: ${key}`);
         throw new Error(`Database query failed. No query for key: ${key}`);
     }
-
-    return dbQueryRes;
 }
 
 //
@@ -256,16 +237,9 @@ function readQueryFromFile(fileName) {
 }
 
 async function queryDbFromFile(fileName) {
-    const fileData = await readQueryFromFile(fileName);
-    const pgClient = await pgPool.connect();
-    let result;
-    try {
-        result = await pgClient.query(fileData.toString());
-    } finally {
-        pgClient.release();
-    }
     logger.debug(`queryDbFromFile: ${fileName}`);
-    return result;
+    const fileData = await readQueryFromFile(fileName);
+    return await pgPool.query(fileData.toString());
 }
 
 //
@@ -289,19 +263,16 @@ export function getStore() {
 
 export async function checkDbUp() {
     try {
-        let queryRes = await queryDbAsync('getNumberOfTables', []);
+        const { rows } = await queryDbAsync('getNumberOfTables', []);
         logger.info(
-            `Current number of tables in the database: ${queryRes.rows[0].count}`,
+            `Current number of tables in the database: ${rows[0].count}`,
         );
-        if (parseInt(queryRes.rows[0].count) < 5) {
-            queryRes = await queryDbFromFile('./setup/schema.sql');
+        if (Number(rows[0].count) < 5) {
+            await queryDbFromFile('./setup/schema.sql');
             logger.info(`New database created.`);
-            return true;
-        } else {
-            return true;
         }
+        return true;
     } catch (err) {
-        logger.error(`Unable to check database status. ${err}`);
         return false;
     }
 }

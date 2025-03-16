@@ -1,10 +1,8 @@
 import bcrypt from 'bcrypt';
 import config from 'config';
 import { randomBytes } from 'node:crypto';
-import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
-
-// In memory list of all users with their attributes
-var users = [];
+import { queryDbAsync } from '../database/db.js';
+import { ValidationError } from '../utils/error.js';
 
 //
 // Local functions
@@ -14,31 +12,74 @@ function generateAPIkey() {
     return randomBytes(8).toString('hex').toUpperCase();
 }
 
-function checkChangesAllowed(user, modUser) {
+async function createHash(password) {
+    const passwordHash = await bcrypt.hash(
+        password,
+        config.get('user.pwdSaltRounds'),
+    );
+    return passwordHash;
+}
+
+function validateChangeUser(user, modUser) {
     // ToDo: add more checks here
     if (modUser.role === '') {
-        return 'No role selected';
+        return [{ code: 'roleEmpty', field: 'role', message: 'No role' }];
     }
-    if (
-        user.role === 'admin' &&
-        user.user_id === modUser.user_id &&
-        user.role !== modUser.role
-    ) {
-        return 'You can not change your own role';
+    if (user.user_id === modUser.user_id && user.role !== modUser.role) {
+        return [
+            {
+                code: 'roleNoOwnChange',
+                field: 'role',
+                message: 'Can not change own role',
+            },
+        ];
     }
     return null;
 }
 
-function validateAccountInput(modUser) {
+function validateUserId(user_id) {
+    if (Number.isNaN(user_id)) {
+        return [
+            {
+                code: 'userIdNotANumber',
+                field: 'user_id',
+                message: 'User ID is not a number',
+            },
+        ];
+    }
+    if (!Number.isSafeInteger(user_id)) {
+        return [
+            {
+                code: 'userIdNotAnInteger',
+                field: 'user_id',
+                message: 'User ID is not an integer',
+            },
+        ];
+    }
+    if (user_id < 1 || user_id > 2147483647) {
+        return [
+            {
+                code: 'userIdNotInRange',
+                field: 'user_id',
+                message: 'User ID is not in range',
+            },
+        ];
+    }
+    return null;
+}
+
+async function validateAccountInput(modUser) {
     // ToDo: add more validations here
 
     // The full name should have a minimal length
     if (modUser.fullname.length < config.get('user.nameMinLength')) {
-        return 'Full name too short';
-    }
-    // An API key should be unique (mainly for manually changed API keys)
-    if (isKnownAPIkey(modUser.api_key, modUser)) {
-        return 'API key already in use';
+        return [
+            {
+                code: 'fullNameTooShort',
+                field: 'fullname',
+                message: 'Full name too short',
+            },
+        ];
     }
     return null;
 }
@@ -46,10 +87,22 @@ function validateAccountInput(modUser) {
 function validatePasswordInput(password) {
     // A password should have a minimal length
     if (!password) {
-        return 'No password';
+        return [
+            {
+                code: 'passwordEmpty',
+                field: 'password',
+                message: 'No password',
+            },
+        ];
     }
     if (password.length < config.get('user.pwdMinLength')) {
-        return 'Password too short';
+        return [
+            {
+                code: 'passwordTooShort',
+                field: 'password',
+                message: 'Password too short',
+            },
+        ];
     }
     return null;
 }
@@ -59,232 +112,168 @@ function validatePasswordInput(password) {
 //
 
 export async function getAllUsers() {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('getAllUsers', []);
-        users = queryRes.rows;
-        return queryRes;
-    } catch (err) {
-        queryRes.userMessage = 'Unable to get users';
-        return queryRes;
-    }
+    return await queryDbAsync('getAllUsers', []);
 }
 
 export async function getUserByField(field, value) {
-    let queryRes = getEmptyQueryRes();
-    let queryDefinition = '';
+    let key;
+    let validationError;
+
     if (field === 'user_id') {
-        queryDefinition = 'getUserByUserId';
+        validationError = validateUserId(value);
+        if (validationError) {
+            throw new ValidationError(validationError);
+        }
+        key = 'getUserByUserId';
     }
     if (field === 'username') {
-        queryDefinition = 'getUserByUsername';
+        key = 'getUserByUsername';
     }
-    if (field === 'api_key') {
-        queryDefinition = 'getUserByApiKey';
+    if (!key) {
+        throw new TypeError(`No key for field: ${field}`);
     }
-    if (queryDefinition !== '') {
-        try {
-            queryRes = await queryDbAsync(queryDefinition, [value]);
-        } catch (err) {
-            queryRes.userMessage = 'Unable to get user';
-            return queryRes;
-        }
-    }
-    return queryRes;
+
+    return await queryDbAsync(key, [value]);
 }
 
 export async function addUser(user, modUser) {
-    let queryRes = getEmptyQueryRes();
-    let userMessage;
-    let hash;
+    let validationError;
+
     // If the API key is empty generate one
     if (!modUser.api_key || modUser.api_key === '') {
         modUser.api_key = generateAPIkey();
     }
-    userMessage = checkChangesAllowed(user, modUser);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
+    validationError = validateChangeUser(user, modUser);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
-    userMessage = validateAccountInput(modUser);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
+    validationError = await validateAccountInput(modUser);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
-    userMessage = validatePasswordInput(modUser.password);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
+    validationError = validatePasswordInput(modUser.password);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
-    try {
-        hash = await createHash(modUser.password);
-    } catch (err) {
-        queryRes.userMessage = 'Hashing failed';
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
-    if (typeof modUser.user_id === 'undefined' || modUser.user_id <= 0) {
-        try {
-            queryRes = await queryDbAsync('insertUser', [
-                modUser.username,
-                modUser.fullname,
-                modUser.email,
-                modUser.role,
-                modUser.api_key,
-                hash,
-            ]);
-        } catch (err) {
-            queryRes.userMessage = 'Unable to add user';
-        }
-    }
-    return queryRes;
+
+    const passwordHash = await createHash(modUser.password);
+    return await queryDbAsync('insertUser', [
+        modUser.username,
+        modUser.fullname,
+        modUser.email,
+        modUser.role,
+        modUser.api_key,
+        passwordHash,
+    ]);
 }
 
 export async function modifyUser(user, modUser) {
-    let queryRes = getEmptyQueryRes();
-    let userMessage;
-    // If the API key is empty generate one
-    if (modUser.api_key === '') {
-        modUser.api_key = generateAPIkey();
+    let validationError;
+
+    validationError = validateUserId(modUser.user_id);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
-    userMessage = checkChangesAllowed(user, modUser);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
+    validationError = validateChangeUser(user, modUser);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
-    userMessage = validateAccountInput(modUser);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
+    validationError = await validateAccountInput(modUser);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
-    try {
-        queryRes = await queryDbAsync('modifyUserById', [
-            modUser.user_id,
-            modUser.username,
-            modUser.fullname,
-            modUser.email,
-            modUser.role,
-            modUser.api_key,
-        ]);
-    } catch (err) {
-        queryRes.userMessage = 'Unable to change details';
-    }
-    return queryRes;
+
+    return await queryDbAsync('modifyUserById', [
+        modUser.user_id,
+        modUser.username,
+        modUser.fullname,
+        modUser.email,
+        modUser.role,
+        modUser.api_key,
+    ]);
 }
 
-export async function changePassword(user, curPwd, newPwd, confirmPwd) {
-    let queryRes = getEmptyQueryRes();
-    let authOK = false;
+export async function changePassword(user_id, newPwd, confirmPwd, currentPwd) {
+    if (!(await credentialsMatch(user_id, currentPwd))) {
+        const validationError = [
+            {
+                code: 'userPasswordMismatch',
+                field: 'password',
+                message: 'User and password do not match',
+            },
+        ];
+        throw new ValidationError(validationError);
+    }
 
-    // If a user has no password yet, any current password will work (for legacy UI)
-    if (user.password === null) {
-        authOK = true;
-    } else {
-        authOK = await checkPassword(curPwd, user.password);
-    }
-    if (authOK) {
-        queryRes = await resetPassword(user, newPwd, confirmPwd);
-        return queryRes;
-    } else {
-        queryRes.userMessage = 'Old password incorrect';
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
+    return await resetPassword(user_id, newPwd, confirmPwd);
 }
 
-export async function resetPassword(user, newPwd, confirmPwd) {
-    let queryRes = getEmptyQueryRes();
+export async function resetPassword(user_id, newPwd, confirmPwd) {
+    let validationError;
 
-    const userMessage = validatePasswordInput(newPwd);
-    if (userMessage !== null) {
-        queryRes.userMessage = userMessage;
-        queryRes.rowCount = -2;
-        return queryRes;
+    validationError = validatePasswordInput(newPwd);
+    if (validationError) {
+        throw new ValidationError(validationError);
     }
     if (newPwd !== confirmPwd) {
-        queryRes.userMessage = 'New passwords mismatch';
-        queryRes.rowCount = -2;
-        return queryRes;
+        validationError = [
+            {
+                code: 'newPasswordsMismatch',
+                field: 'password',
+                message: 'New passwords do not match',
+            },
+        ];
+        throw new ValidationError(validationError);
     }
-    let newHash;
-    try {
-        newHash = await createHash(newPwd);
-    } catch (err) {
-        queryRes.userMessage = 'Hashing failed';
-        queryRes.rowCount = -2;
-        return queryRes;
-    }
-    try {
-        queryRes = await queryDbAsync('changePwdByUsername', [
-            user.username,
-            newHash,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'User not found';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'Failed to change password';
-        return queryRes;
-    }
-    return queryRes;
-}
 
-export async function createHash(password) {
-    const passwordHash = await bcrypt.hash(
-        password,
-        config.get('user.pwdSaltRounds'),
-    );
-    return passwordHash;
-}
-
-export async function checkPassword(password, passwordHash) {
-    if (password === null) {
-        return true;
-    } else {
-        const match = await bcrypt.compare(password || '', passwordHash);
-        return match;
-    }
+    const newPasswordHash = await createHash(newPwd);
+    return await queryDbAsync('changePwdByUserId', [user_id, newPasswordHash]);
 }
 
 export async function deleteUser(user, modUser) {
-    let queryRes = getEmptyQueryRes();
+    let validationError;
+
     if (user.user_id === modUser.user_id) {
-        queryRes.userMessage = 'You can not delete your own account';
-        queryRes.rowCount = -2;
-    } else {
-        try {
-            queryRes = await queryDbAsync('deleteUser', [modUser.user_id]);
-        } catch (err) {
-            queryRes.userMessage = 'Failed to delete user';
-        }
+        validationError = [
+            {
+                code: 'accountNoOwnDelete',
+                field: 'user_id',
+                message: 'Can not delete own account',
+            },
+        ];
+        throw new ValidationError(validationError);
     }
-    return queryRes;
+    validationError = validateUserId(modUser.user_id);
+    if (validationError) {
+        throw new ValidationError(validationError);
+    }
+
+    return await queryDbAsync('deleteUser', [modUser.user_id]);
 }
 
-export function isKnownAPIkey(apiKey, ignoreUser) {
-    var i, ignoreId;
-
-    if (ignoreUser === null) {
-        ignoreId = -1;
+export async function credentialsMatch(user_id, password) {
+    const { rows, rowCount } = await queryDbAsync('getPwdByUserId', [user_id]);
+    if (rowCount > 0) {
+        const currentPasswordHash = rows[0].password;
+        const match = await bcrypt.compare(password, currentPasswordHash);
+        return match;
     } else {
-        ignoreId = ignoreUser.user_id;
+        return false;
     }
+}
 
-    i = 0;
-    while (
-        i < users.length &&
-        (users[i].api_key !== apiKey || users[i].user_id === ignoreId)
-    ) {
-        i++;
-    }
-    if (i !== users.length) {
-        return true;
-    } else {
+export async function isKnownAPIkey(apiKey, modUser) {
+    try {
+        const { rows } = await getAllUsers();
+        const foundUser = rows.find(
+            (e) => e.api_key === apiKey && e.user_id !== modUser?.user_id,
+        );
+        if (foundUser) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (err) {
         return false;
     }
 }

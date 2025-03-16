@@ -1,307 +1,127 @@
-import { getEmptyQueryRes, queryDbAsync } from '../database/db.js';
+import { queryDbAsync } from '../database/db.js';
 import Logger from '../utils/logger.js';
 
 const logger = Logger(import.meta.url);
-var devices = [];
 
 //
 // Exported modules
 //
 
 export async function getAllDevices() {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('getAllDevices', []);
-        devices = queryRes.rows;
-        return queryRes;
-    } catch (err) {
-        queryRes.userMessage = 'Unable to get devices';
-        return queryRes;
-    }
+    return await queryDbAsync('getAllDevices', []);
 }
 
 export async function getAllowedDevices(userId) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('getAllowedDevices', [userId]);
-        devices = queryRes.rows;
-        return queryRes;
-    } catch (err) {
-        queryRes.userMessage = 'Unable to get allowed devices';
-        return queryRes;
-    }
+    return await queryDbAsync('getAllowedDevices', [userId]);
 }
 
 export async function getDeviceByIdentity(apiKey, identifier) {
-    let queryRes = getEmptyQueryRes();
-    // Check if the device is already loaded in memory
-    let i = 0;
-    while (
-        i < devices.length &&
-        (devices[i].api_key !== apiKey || devices[i].identifier !== identifier)
-    ) {
-        i++;
-    }
-    if (i !== devices.length) {
-        logger.debug(
-            'findDeviceByIdentity - from memory: ' + JSON.stringify(devices[i]),
-        );
-        queryRes.rowCount = 1;
-        queryRes.rows = [devices[i]];
-    } else {
-        logger.debug('findDeviceByIdentity - from DB: ' + apiKey);
-        try {
-            queryRes = await queryDbAsync('insertDevice', [
-                apiKey,
-                identifier,
-                identifier,
-            ]);
-        } catch (err) {
-            logger.debug('findDeviceByIdentity - insert failed');
-        }
-        if (queryRes.rowCount === 1) {
-            logger.debug(
-                'findDeviceByIdentity - new: ' +
-                    JSON.stringify(queryRes.rows[0]),
-            );
-            devices.push(queryRes.rows[0]);
-        }
-    }
-    return queryRes;
+    const { rows } = await getAllDevices();
+    const foundDevice = rows.find(
+        (e) => e.api_key === apiKey && e.identifier === identifier,
+    );
+    return foundDevice || null;
 }
 
-export async function getOwnedDevicesByField(field, value) {
-    let queryRes = getEmptyQueryRes();
-    let queryDefinition = '';
-    if (field === 'user_id') {
-        queryDefinition = 'getOwnedDevicesByUserId';
-    }
-    if (queryDefinition !== '') {
-        try {
-            queryRes = await queryDbAsync(queryDefinition, [value]);
-        } catch (err) {
-            queryRes.userMessage = 'Unable to find devices.';
-        }
-    }
-    return queryRes;
+export async function getOwnedDevicesByUserId(userId) {
+    return await queryDbAsync('getOwnedDevicesByUserId', [userId]);
 }
 
-export async function getSharedDevicesByField(field, value) {
-    let queryRes = getEmptyQueryRes();
-    let queryDefinition = '';
-    if (field === 'user_id') {
-        queryDefinition = 'getSharedDevicesByUserId';
-    }
-    if (queryDefinition !== '') {
-        try {
-            queryRes = await queryDbAsync(queryDefinition, [value]);
-        } catch (err) {
-            queryRes.userMessage = 'Unable to find devices.';
-        }
-    }
-    return queryRes;
+export async function getSharedDevicesByUserId(userId) {
+    return await queryDbAsync('getSharedDevicesByUserId', [userId]);
 }
 
 export async function addDevice(device) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('insertDevice', [
-            device.api_key,
-            device.identifier,
-            device.alias,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'Unable to add device';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'Unable to add device';
-    }
-    return queryRes;
+    return await queryDbAsync('insertDevice', [
+        device.api_key,
+        device.identifier,
+        device.alias,
+    ]);
 }
 
 export async function addDeviceByUserId(userId, device) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('addDeviceByUserId', [
-            userId,
-            device.identifier,
-            device.alias,
-            device.fixed_loc_lat,
-            device.fixed_loc_lon,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'Unable to add device';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'Unable to add device';
-    }
-    return queryRes;
+    return await queryDbAsync('addDeviceByUserId', [
+        userId,
+        device.identifier,
+        device.alias,
+        device.fixed_loc_lat,
+        device.fixed_loc_lon,
+    ]);
 }
 
 export async function modifyDevice(device) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('modifyDeviceById', [
-            device.device_id,
-            device.alias,
-            device.fixed_loc_lat,
-            device.fixed_loc_lon,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'Unable to change device';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'Unable to change device';
-    }
-    return queryRes;
+    return await queryDbAsync('modifyDeviceById', [
+        device.device_id,
+        device.alias,
+        device.fixed_loc_lat,
+        device.fixed_loc_lon,
+    ]);
 }
 
 export async function modifyDeviceByUserId(userId, device) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('modifyDeviceByUserId', [
-            userId,
-            device.device_id,
-            device.alias,
-            device.fixed_loc_lat,
-            device.fixed_loc_lon,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'Unable to change device';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'Unable to change device';
-    }
-    return queryRes;
+    return await queryDbAsync('modifyDeviceByUserId', [
+        userId,
+        device.device_id,
+        device.alias,
+        device.fixed_loc_lat,
+        device.fixed_loc_lon,
+    ]);
 }
 
 export function splitDeviceIdentity(devIdent, dividerChar) {
-    let dividerIdx;
-    let identityObj = {};
-
-    // Return object with API key and identifier. A valid identity returns err = null, otherwise err = <error string>
-    identityObj.apiKey = null;
-    identityObj.identifier = null;
-    identityObj.err = null;
-
-    // Be sure that identity is defined and a string
+    // Device identity format: <apiKey><divider><identifier>
+    // A device identity should be a string
     if (typeof devIdent !== 'string') {
-        devIdent = '';
+        throw new Error('Device identity should be a string');
     }
-    dividerIdx = devIdent.indexOf(dividerChar);
-    if (dividerIdx < 7) {
-        if (dividerIdx < 0) {
-            identityObj.err = 'No divider (' + dividerChar + ') found';
-        } else {
-            identityObj.err = 'API key too short';
-        }
-    } else {
-        // Check if identifier is 2 - 50 characters long
-        if (
-            devIdent.length - dividerIdx - 1 < 2 ||
-            devIdent.length - dividerIdx - 1 > 50
-        ) {
-            identityObj.err = 'Identifier should be between 2 - 50 characters';
-        } else {
-            identityObj.apiKey = devIdent.slice(0, dividerIdx);
-            identityObj.identifier = devIdent.slice(dividerIdx + 1);
-        }
+    const dividerIdx = devIdent.indexOf(dividerChar);
+    // A device identity should contain a divider character
+    if (dividerIdx === -1) {
+        throw new Error(`No divider (${dividerChar}) found`);
     }
-    logger.debug(
-        'splitDeviceIdentity: ' +
-            identityObj.err +
-            ' ' +
-            identityObj.apiKey +
-            ' ' +
-            identityObj.identifier +
-            ' ',
-    );
-    return identityObj;
+    const apiKey = devIdent.slice(0, dividerIdx);
+    const identifier = devIdent.slice(dividerIdx + 1);
+    // An api key has at least 7 characters
+    if (apiKey.length < 7) {
+        throw new Error('API key too short');
+    }
+    // An identifier has 2 - 50 characters
+    if (identifier.length < 2 || identifier.length > 50) {
+        throw new Error('Identifier should be between 2 - 50 characters');
+    }
+    logger.debug(`splitDeviceIdentity: ${apiKey} ${identifier}`);
+    return { apiKey, identifier };
 }
 
 export async function addSharedUser(sharedUser, ids) {
     // ToDo: check for valid sharedUser and ids ?
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('addSharedUser', [sharedUser, ids]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No shared users were added';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'No shared users were added';
-    }
-    return queryRes;
+    return await queryDbAsync('addSharedUser', [sharedUser, ids]);
 }
 
 export async function addSharedUserByUserId(userId, sharedUser, ids) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('addSharedUserByUserId', [
-            userId,
-            sharedUser.username,
-            ids,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No shared users were added';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'No shared users were added';
-    }
-    return queryRes;
+    return await queryDbAsync('addSharedUserByUserId', [
+        userId,
+        sharedUser.username,
+        ids,
+    ]);
 }
 
 export async function deleteSharedUser(sharedUser, ids) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('deleteSharedUser', [sharedUser, ids]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No shared users were deleted';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'No shared users were deleted';
-    }
-    return queryRes;
+    return await queryDbAsync('deleteSharedUser', [sharedUser, ids]);
 }
 
 export async function deleteSharedUserByUserId(userId, sharedUser, ids) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('deleteSharedUserByUserId', [
-            userId,
-            sharedUser.username,
-            ids,
-        ]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No shared users were deleted';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'No shared users were deleted';
-    }
-    return queryRes;
+    return await queryDbAsync('deleteSharedUserByUserId', [
+        userId,
+        sharedUser.username,
+        ids,
+    ]);
 }
 
 export async function deleteDevicesById(ids) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('deleteDevices', [ids]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No devices were deleted';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'No devices were deleted';
-    }
-    return queryRes;
+    return await queryDbAsync('deleteDevices', [ids]);
 }
 
 export async function deleteDevicesByUserId(userId, ids) {
-    let queryRes = getEmptyQueryRes();
-    try {
-        queryRes = await queryDbAsync('deleteDevicesByUserId', [userId, ids]);
-        if (queryRes.rowCount <= 0) {
-            queryRes.userMessage = 'No devices were deleted';
-        }
-    } catch (err) {
-        queryRes.userMessage = 'No devices were deleted';
-    }
-    return queryRes;
+    return await queryDbAsync('deleteDevicesByUserId', [userId, ids]);
 }

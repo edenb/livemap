@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { request, subset } from './helpers/chai.js';
+import { request } from './helpers/chai.js';
 import {
     addPosition,
     addShare,
@@ -9,19 +9,18 @@ import {
     removeUserAndDevices,
 } from './helpers/database.js';
 import {
-    adm1Auth,
     adm1,
+    adm1Auth,
     adm1Devs,
-    man1Auth,
     man1,
+    man1Auth,
     man1Devs,
-    vwr1Auth,
     vwr1,
+    vwr1Auth,
     vwr1Devs,
-    vwr2Auth,
     vwr2,
-    vwr3Auth,
-    vwr3,
+    vwr2Auth,
+    vwr2Devs,
     devPositions,
 } from './helpers/fixtures.js';
 import { createWebServer, destroyWebServer } from './helpers/webserver.js';
@@ -53,7 +52,7 @@ describe('REST API', function () {
         });
 
         describe('GET /a-path', function () {
-            it('should respond with 404 on a non exiting path', async function () {
+            it('should respond with 404 on a non existing path', async function () {
                 const res = await request(app).get('/api/v1/a-path').send();
                 expect(res).to.have.status(404);
                 expect(res.text).to.equal('Invalid endpoint');
@@ -83,11 +82,9 @@ describe('REST API', function () {
         let token;
 
         beforeEach(async function () {
-            // Add 3 users and their devices
-            await addUserAndDevices({ ...adm1Auth, ...adm1 }, adm1Devs);
-            await addUserAndDevices({ ...man1Auth, ...man1 }, man1Devs);
-            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, vwr1Devs);
-            await addUserAndDevices({ ...vwr2Auth, ...vwr2 }, []);
+            // Add 2 users and their devices
+            await addUserAndDevices({ ...adm1, ...adm1Auth }, adm1Devs);
+            await addUserAndDevices({ ...vwr1, ...vwr1Auth }, vwr1Devs);
             // Login as admin user
             const data = {
                 username: adm1.username,
@@ -101,16 +98,14 @@ describe('REST API', function () {
         });
 
         afterEach(async function () {
-            // Remove the admin user and its owned devices
+            // Remove users and their owned devices
             await removeUserAndDevices(adm1);
-            await removeUserAndDevices(man1);
             await removeUserAndDevices(vwr1);
             await removeUserAndDevices(vwr2);
-            await removeUserAndDevices(vwr3);
         });
 
         describe('GET /account', function () {
-            it('should respond with account details', async function () {
+            it('should get account details', async function () {
                 const res = await request(app)
                     .get('/api/v1/account')
                     .auth(token, { type: 'bearer' })
@@ -118,365 +113,9 @@ describe('REST API', function () {
                 expect(res).to.have.status(200);
                 expect(res.body).to.include(adm1);
             });
-        });
-
-        describe('GET /users', function () {
-            it('should get all users details', async function () {
-                const res = await request(app)
-                    .get('/api/v1/users')
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                // const users = res.body.map(
-                //     ({ user_id, ...remainingAttrs }) => remainingAttrs,
-                // );
-                const users = subset(res.body, Object.keys(adm1));
-                expect(users).to.include.deep.members([adm1, man1, vwr1]);
-            });
-        });
-
-        describe('POST /users', function () {
-            it('should add a new user', async function () {
-                const data = { ...vwr3Auth, ...vwr3 };
-                const res = await request(app)
-                    .post('/api/v1/users')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-            });
-        });
-
-        describe('POST /users without api key', function () {
-            it('should add a new user with generated api key', async function () {
-                const data = {
-                    api_key: null,
-                    email: 'viewer4@example.com',
-                    fullname: 'Viewer 4',
-                    password: 'password-vwr4',
-                    role: 'viewer',
-                    username: 'vwr4',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const newUser = await getUser(data);
-                await removeUserAndDevices(newUser);
-                expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
-            });
-        });
-
-        describe('POST /users with too short full name', function () {
-            it('should fail to add a new user', async function () {
-                const data = {
-                    api_key: 'apikey-vwr4',
-                    email: 'viewer4@example.com',
-                    fullname: '4',
-                    password: 'password-vwr4',
-                    role: 'viewer',
-                    username: 'vwr4',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(400);
-                expect(res.error.text).to.equal('Full name too short');
-            });
-        });
-
-        describe('POST /users with an already existing api key', function () {
-            it('should fail to add a new user', async function () {
-                const data = {
-                    api_key: 'apikey-adm1',
-                    email: 'viewer4@example.com',
-                    fullname: 'Viewer 4',
-                    password: 'password-vwr4',
-                    role: 'viewer',
-                    username: 'vwr4',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(500);
-                expect(res.error.text).to.equal('Internal Server Error');
-            });
-        });
-
-        describe('PUT /users/:userId', function () {
-            it('should change the account details of a user', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    username: 'vwr1',
-                    fullname: 'Viewer 1 modified',
-                    email: 'viewer1modified@example.com',
-                    role: 'viewer',
-                    api_key: 'apikey-vwr1',
-                };
-                const res = await request(app)
-                    .put('/api/v1/users/' + user.user_id)
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(204);
-                const modifiedUser = await getUser(vwr1);
-                expect(modifiedUser).to.include(data);
-            });
-        });
-
-        describe('GET /users/:userId', function () {
-            it('should get details about a user', async function () {
-                const user = await getUser(vwr1);
-                const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id)
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                expect(res.body[0]).to.include(vwr1);
-            });
-        });
-
-        describe('POST /users/:userId/password/change', function () {
-            it('should change your own password', async function () {
-                const user = await getUser(adm1);
-                const data = {
-                    curpwd: adm1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const modifiedUser = await getUser(adm1);
-                expect(modifiedUser.password).to.not.equal(user.password);
-            });
-            it('should respond with 403 on other users', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    curpwd: vwr1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/change')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(403);
-            });
-        });
-
-        describe('POST /users/:userId/password/reset', function () {
-            it('should change the password of a user', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    curpwd: vwr1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/password/reset')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const modifiedUser = await getUser(vwr1);
-                expect(modifiedUser.password).to.not.equal(user.password);
-            });
-            it('should respond with 403 if user does not exist', async function () {
-                const data = {
-                    curpwd: vwr1Auth.password,
-                    newpwd: 'my modified password',
-                    confirmpwd: 'my modified password',
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/0/password/change')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(403);
-            });
-        });
-
-        describe('DELETE /users/:userId', function () {
-            it('should delete a user', async function () {
-                const user = await getUser(vwr2);
-                const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id)
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(204);
-                const deletedUser = await getUser(vwr2);
-                expect(deletedUser).to.be.null;
-            });
-            it('should respond with 400 when deleting own account', async function () {
-                const user = await getUser(adm1);
-                const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id)
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(400);
-                const deletedUser = await getUser(adm1);
-                expect(deletedUser).to.include(adm1);
-            });
-        });
-
-        describe('GET /users/:userId/devices', function () {
-            it('should get all devices of a user', async function () {
-                const user = await getUser(adm1);
-                const res = await request(app)
-                    .get('/api/v1/users/' + user.user_id + '/devices')
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                const devices = subset(res.body, Object.keys(adm1Devs[0]));
-                expect(devices).to.eql(adm1Devs);
-            });
-        });
-
-        describe('POST /users/:userId/devices', function () {
-            it('should add a new device', async function () {
-                const user = await getUser(vwr1);
-                const data = {
-                    identifier: 'vwr1Dev2',
-                    alias: 'Viewer 1 device 2',
-                    fixed_loc_lat: 40.7,
-                    fixed_loc_lon: -73.9,
-                };
-                const res = await request(app)
-                    .post('/api/v1/users/' + user.user_id + '/devices')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const addedDevices = await getDevices(adm1);
-                const devices = subset(addedDevices, Object.keys(data));
-                expect(devices).to.include.deep.members([data]);
-            });
-        });
-
-        describe('PUT /users/:userId/devices/:deviceId', function () {
-            it('should change the attributes of a device', async function () {
-                const user = await getUser(adm1);
-                const orgDevices = await getDevices(adm1);
-                const data = {
-                    device_id: orgDevices[0].device_id,
-                    alias: 'Admin 1 device 1 modified',
-                    fixed_loc_lat: 51.8,
-                    fixed_loc_lon: -84,
-                };
-                const res = await request(app)
-                    .put(
-                        '/api/v1/users/' +
-                            user.user_id +
-                            '/devices/' +
-                            orgDevices[0].device_id,
-                    )
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(204);
-                const modifiedDevices = await getDevices(adm1);
-                const devices = subset(modifiedDevices, Object.keys(data));
-                expect(devices).to.include.deep.members([data]);
-            });
-            it('should respond with 404 if the device does not exist', async function () {
-                const user = await getUser(adm1);
-                const data = {
-                    device_id: -1,
-                    alias: 'Admin 1 device 1 modified',
-                    fixed_loc_lat: 51.8,
-                    fixed_loc_lon: -84,
-                };
-                const res = await request(app)
-                    .put('/api/v1/users/' + user.user_id + '/devices/-1')
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(404);
-            });
-        });
-
-        describe('DELETE /users/:userId/devices/:deviceIds', function () {
-            it('should delete all devices of a user', async function () {
-                const user = await getUser(adm1);
-                const devices = await getDevices(adm1);
-                const ids = devices.map(({ device_id }) => device_id);
-                const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id + '/devices/' + ids)
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(204);
-                const deletedDevices = await getDevices(adm1);
-                expect(deletedDevices).to.be.empty;
-            });
-            it('should respond with 404 if non of the devices exist', async function () {
-                const user = await getUser(adm1);
-                const ids = [-1, -2];
-                const res = await request(app)
-                    .delete('/api/v1/users/' + user.user_id + '/devices/' + ids)
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(404);
-            });
-        });
-
-        describe('POST /users/:userId/devices/:deviceIds/shareduser', function () {
-            it('should add a shared user to a list of devices', async function () {
-                const user = await getUser(adm1);
-                const orgDevices = await getDevices(adm1);
-                const ids = orgDevices.map(({ device_id }) => device_id);
-                const data = vwr1;
-                const res = await request(app)
-                    .post(
-                        '/api/v1/users/' +
-                            user.user_id +
-                            '/devices/' +
-                            ids +
-                            '/shareduser',
-                    )
-                    .auth(token, { type: 'bearer' })
-                    .type('json')
-                    .send(data);
-                expect(res).to.have.status(201);
-                const sharedDevices = await getDevices(vwr1);
-                const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
-                expect(devices).to.include.deep.members([
-                    ...vwr1Devs,
-                    ...adm1Devs,
-                ]);
-            });
-        });
-
-        describe('DELETE /users/:userId/devices/:deviceIds/shareduser', function () {
-            it('should delete a shared user from a list of devices', async function () {
-                const user = await getUser(adm1);
-                const orgDevices = await getDevices(adm1);
-                const ids = orgDevices.map(({ device_id }) => device_id);
-                await addShare(vwr1, ids);
-                const res = await request(app)
-                    .delete(
-                        '/api/v1/users/' +
-                            user.user_id +
-                            '/devices/' +
-                            ids +
-                            '/shareduser',
-                    )
-                    .auth(token, { type: 'bearer' })
-                    .send(vwr1);
-                expect(res).to.have.status(204);
-                const sharedDevices = await getDevices(vwr1);
-                const devices = subset(sharedDevices, Object.keys(vwr1Devs[0]));
-                expect(devices).to.not.include.deep.members([...adm1Devs]);
+            it('should respond with 401 if auth token is missing', async function () {
+                const res = await request(app).get('/api/v1/account').send();
+                expect(res).to.have.status(401);
             });
         });
 
@@ -487,12 +126,11 @@ describe('REST API', function () {
                     .auth(token, { type: 'bearer' })
                     .send();
                 expect(res).to.have.status(200);
-                const devices = subset(res.body, Object.keys(vwr1Devs[0]));
-                expect(devices).to.include.deep.members([
-                    ...vwr1Devs,
-                    ...man1Devs,
-                    ...adm1Devs,
-                ]);
+                expect(res.body).to.containSubset([...vwr1Devs, ...adm1Devs]);
+            });
+            it('should respond with 401 if auth token is missing', async function () {
+                const res = await request(app).get('/api/v1/devices').send();
+                expect(res).to.have.status(401);
             });
         });
 
@@ -510,22 +148,6 @@ describe('REST API', function () {
                     .send();
                 expect(res).to.have.status(200);
                 expect(res.body[0]).to.include(orgPosition);
-            });
-        });
-
-        describe('GET /staticlayers', function () {
-            it('should get all static layers', async function () {
-                const res = await request(app)
-                    .get('/api/v1/staticlayers')
-                    .auth(token, { type: 'bearer' })
-                    .send();
-                expect(res).to.have.status(200);
-                expect(res.body).to.be.an('array');
-                res.body.forEach(function (geojson) {
-                    expect(geojson)
-                        .to.be.an('object')
-                        .that.has.any.keys('type');
-                });
             });
         });
 
@@ -547,6 +169,749 @@ describe('REST API', function () {
                         port: '1883',
                     },
                 });
+            });
+        });
+
+        describe('GET /staticlayers', function () {
+            it('should get all static layers', async function () {
+                const res = await request(app)
+                    .get('/api/v1/staticlayers')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.be.an('array');
+                res.body.forEach(function (geojson) {
+                    expect(geojson)
+                        .to.be.an('object')
+                        .that.has.any.keys('type');
+                });
+            });
+        });
+
+        describe('GET /users', function () {
+            it('should get all users details', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.containSubset([adm1, vwr1]);
+            });
+            it('should respond with 401 if auth token is missing', async function () {
+                const res = await request(app).get('/api/v1/users').send();
+                expect(res).to.have.status(401);
+            });
+        });
+
+        describe('POST /users', function () {
+            it('should add a new user', async function () {
+                const data = { ...vwr2Auth, ...vwr2 };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+            });
+            it('should add a new user with a generated api key', async function () {
+                const data = { ...vwr2Auth, ...vwr2, api_key: null };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                const newUser = await getUser(data);
+                expect(/^[0-9A-F]*$/.test(newUser.api_key)).to.be.true;
+            });
+            it('should respond with 422 if full name too short', async function () {
+                const data = { ...vwr2Auth, ...vwr2, fullname: '2' };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Full name too short',
+                    },
+                ]);
+            });
+            it('should respond with 422 if role empty', async function () {
+                const data = { ...vwr2Auth, ...vwr2, role: '' };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No role',
+                    },
+                ]);
+            });
+            it('should respond with 422 if password empty', async function () {
+                const data = { ...vwr2Auth, ...vwr2, password: '' };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No password',
+                    },
+                ]);
+            });
+            it('should respond with 409 if api key already in use', async function () {
+                const data = { ...vwr2Auth, ...vwr2, api_key: adm1.api_key };
+                const res = await request(app)
+                    .post('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(409);
+                expect(res.body.statusText).to.equal('Conflict');
+                expect(res.body.message).to.include(
+                    'duplicate key value violates unique constraint',
+                );
+            });
+        });
+
+        describe('GET /users/:userId', function () {
+            it('should get details about a user', async function () {
+                const user = await getUser(vwr1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body[0]).to.include(vwr1);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(422);
+            });
+        });
+
+        describe('PUT /users/:userId', function () {
+            it('should change the account details of a user', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(204);
+                const modifiedUser = await getUser(vwr1);
+                expect(modifiedUser).to.include(data);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if userId too large', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/9999999999')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+            });
+            it('should respond with 422 if userId is not an integer', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/42.42')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const data = {
+                    ...vwr1,
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+            });
+            it('should respond with 422 if role empty', async function () {
+                const user = await getUser(vwr1);
+                const data = { ...vwr1, role: '' };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No role',
+                    },
+                ]);
+            });
+            it('should respond with 422 if own role changed', async function () {
+                const user = await getUser(adm1);
+                const data = { ...adm1, role: 'viewer' };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Can not change own role',
+                    },
+                ]);
+            });
+            it('should respond with 422 if full name too short', async function () {
+                const user = await getUser(vwr1);
+                const data = { ...vwr1, fullname: '1' };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.message).to.equal('Validation failed');
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Full name too short',
+                    },
+                ]);
+            });
+            it('should respond with 409 if api key changed', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    ...vwr1,
+                    api_key: 'aaa',
+                    email: 'viewer1modified@example.com',
+                    fullname: 'Viewer 1 modified',
+                };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(409);
+            });
+        });
+
+        describe('DELETE /users/:userId', function () {
+            it('should delete a user without devices', async function () {
+                await addUserAndDevices({ ...vwr2, ...vwr2Auth }, []);
+                const user = await getUser(vwr2);
+                const res = await request(app)
+                    .delete(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(204);
+                const deletedUser = await getUser(vwr2);
+                expect(deletedUser).to.be.null;
+            });
+            it('should respond with 409 if user owns devices', async function () {
+                await addUserAndDevices({ ...vwr2, ...vwr2Auth }, vwr2Devs);
+                const user = await getUser(vwr2);
+                const res = await request(app)
+                    .delete(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                await removeUserAndDevices(vwr2);
+                expect(res).to.have.status(409);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .delete('/api/v1/users/2147483647')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 when deleting own account', async function () {
+                const user = await getUser(adm1);
+                const res = await request(app)
+                    .delete(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(422);
+                const deletedUser = await getUser(adm1);
+                expect(deletedUser).to.include(adm1);
+            });
+            it('should respond with 422 if userId is not a number', async function () {
+                const res = await request(app)
+                    .delete('/api/v1/users/aaa')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(422);
+            });
+        });
+
+        describe('GET /users/:userId/devices', function () {
+            it('should get all owned and shared devices of a user', async function () {
+                // Share both devices of vwr1 with adm1
+                const ids = (await getDevices(vwr1)).map(
+                    ({ device_id }) => device_id,
+                );
+                await addShare(adm1, ids);
+                const user = await getUser(adm1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}/devices`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.containSubset(adm1Devs);
+                expect(res.body).to.containSubset([
+                    { alias: vwr1Devs[0].alias, owner: 'vwr1' },
+                    { alias: vwr1Devs[1].alias, owner: 'vwr1' },
+                ]);
+            });
+            it('should get zero owned and shared devices of a user', async function () {
+                // Create a user with no devices
+                await addUserAndDevices({ ...vwr2, ...vwr2Auth }, []);
+                const user = await getUser(vwr2);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}/devices`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(200);
+                expect(res.body).to.be.empty;
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users/2147483647/devices')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+        });
+
+        describe('POST /users/:userId/devices', function () {
+            it('should add a new device', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    identifier: 'vwr1Dev3',
+                    alias: 'Viewer 1 device 3',
+                    fixed_loc_lat: 40.7,
+                    fixed_loc_lon: -73.9,
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/devices`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                expect(await getDevices(vwr1)).to.containSubset([data]);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const data = {
+                    identifier: 'vwr1Dev3',
+                    alias: 'Viewer 1 device 3',
+                    fixed_loc_lat: 40.7,
+                    fixed_loc_lon: -73.9,
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/2147483647/devices')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 409 if device already exists', async function () {
+                const user = await getUser(vwr1);
+                const data = vwr1Devs[0];
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/devices`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(409);
+            });
+        });
+
+        describe('PUT /users/:userId/devices/:deviceId', function () {
+            it('should change the attributes of a device', async function () {
+                const user = await getUser(adm1);
+                const orgDevices = await getDevices(adm1);
+                const data = {
+                    device_id: orgDevices[0].device_id,
+                    alias: 'Admin 1 device 1 modified',
+                    fixed_loc_lat: 51.8,
+                    fixed_loc_lon: -84,
+                };
+                const res = await request(app)
+                    .put(
+                        `/api/v1/users/${user.user_id}/devices/${orgDevices[0].device_id}`,
+                    )
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(204);
+                const modifiedDevices = await getDevices(adm1);
+                expect(modifiedDevices).to.containSubset([data]);
+            });
+            it('should respond with 404 if the device does not exist', async function () {
+                const user = await getUser(adm1);
+                const data = {
+                    device_id: -1,
+                    alias: 'Admin 1 device 1 modified',
+                    fixed_loc_lat: 51.8,
+                    fixed_loc_lon: -84,
+                };
+                const res = await request(app)
+                    .put(`/api/v1/users/${user.user_id}/devices/-1`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+        });
+
+        describe('DELETE /users/:userId/devices/:deviceIds', function () {
+            it('should delete all devices of a user', async function () {
+                const user = await getUser(adm1);
+                const devices = await getDevices(adm1);
+                const ids = devices.map(({ device_id }) => device_id);
+                const res = await request(app)
+                    .delete(`/api/v1/users/${user.user_id}/devices/${ids}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(204);
+                const deletedDevices = await getDevices(adm1);
+                expect(deletedDevices).to.be.empty;
+            });
+            it('should respond with 404 if non of the devices exist', async function () {
+                const user = await getUser(adm1);
+                const ids = [-1, -2];
+                const res = await request(app)
+                    .delete(`/api/v1/users/${user.user_id}/devices/${ids}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(404);
+            });
+        });
+
+        describe('POST /users/:userId/devices/:deviceIds/shareduser', function () {
+            it('should add a shared user to a list of devices', async function () {
+                const user = await getUser(adm1);
+                const orgDevices = await getDevices(adm1);
+                const ids = orgDevices.map(({ device_id }) => device_id);
+                const data = vwr1;
+                const res = await request(app)
+                    .post(
+                        `/api/v1/users/${user.user_id}/devices/${ids}/shareduser`,
+                    )
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+                const sharedDevices = await getDevices(vwr1);
+                expect(sharedDevices).to.containSubset([
+                    ...vwr1Devs,
+                    ...adm1Devs,
+                ]);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const orgDevices = await getDevices(adm1);
+                const ids = orgDevices.map(({ device_id }) => device_id);
+                const data = vwr1;
+                const res = await request(app)
+                    .post(`/api/v1/users/2147483647/devices/${ids}/shareduser`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+        });
+
+        describe('DELETE /users/:userId/devices/:deviceIds/shareduser', function () {
+            it('should delete a shared user from a list of devices', async function () {
+                const user = await getUser(adm1);
+                const orgDevices = await getDevices(adm1);
+                const ids = orgDevices.map(({ device_id }) => device_id);
+                await addShare(vwr1, ids);
+                const res = await request(app)
+                    .delete(
+                        `/api/v1/users/${user.user_id}/devices/${ids}/shareduser`,
+                    )
+                    .auth(token, { type: 'bearer' })
+                    .send(vwr1);
+                expect(res).to.have.status(204);
+                const sharedDevices = await getDevices(vwr1);
+                expect(sharedDevices).not.to.containSubset(adm1Devs);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const orgDevices = await getDevices(adm1);
+                const ids = orgDevices.map(({ device_id }) => device_id);
+                await addShare(vwr1, ids);
+                const res = await request(app)
+                    .delete(
+                        `/api/v1/users/2147483647/devices/${ids}/shareduser`,
+                    )
+                    .auth(token, { type: 'bearer' })
+                    .send(vwr1);
+                expect(res).to.have.status(404);
+            });
+        });
+
+        describe('POST /users/:userId/password/change', function () {
+            it('should change your own password', async function () {
+                const user = await getUser(adm1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                    currentpwd: adm1Auth.password,
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/change`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+            });
+            it('should change password of other users', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                    currentpwd: vwr1Auth.password,
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/change`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+            });
+            it('should respond with 422 if given current password is incorrect', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                    currentpwd: 'wrong current password',
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/change`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'User and password do not match',
+                    },
+                ]);
+            });
+        });
+
+        describe('POST /users/:userId/password/reset', function () {
+            it('should change the password of a user', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(201);
+            });
+            it('should respond with 404 if user does not exist', async function () {
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'my modified password',
+                };
+                const res = await request(app)
+                    .post('/api/v1/users/2147483647/password/reset')
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(404);
+            });
+            it('should respond with 422 if password is empty', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: '',
+                    confirmpwd: '',
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'No password',
+                    },
+                ]);
+            });
+            it('should respond with 422 if password too short', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'pw',
+                    confirmpwd: 'pw',
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'Password too short',
+                    },
+                ]);
+            });
+            it('should respond with 422 if user and password do not match', async function () {
+                const user = await getUser(vwr1);
+                const data = {
+                    newpwd: 'my modified password',
+                    confirmpwd: 'a different password',
+                };
+                const res = await request(app)
+                    .post(`/api/v1/users/${user.user_id}/password/reset`)
+                    .auth(token, { type: 'bearer' })
+                    .type('json')
+                    .send(data);
+                expect(res).to.have.status(422);
+                expect(res.body.errors).to.containSubset([
+                    {
+                        message: 'New passwords do not match',
+                    },
+                ]);
+            });
+        });
+    });
+
+    describe('Manager user', function () {
+        let token;
+
+        beforeEach(async function () {
+            // Add 2 users and their devices
+            await addUserAndDevices({ ...man1, ...man1Auth }, man1Devs);
+            await addUserAndDevices({ ...vwr1, ...vwr1Auth }, vwr1Devs);
+            // Login as manager user
+            const data = {
+                username: man1.username,
+                password: man1Auth.password,
+            };
+            const res = await request(app)
+                .post('/api/v1/login')
+                .type('json')
+                .send(data);
+            token = res.body.access_token;
+        });
+
+        afterEach(async function () {
+            // Remove users and their owned devices
+            await removeUserAndDevices(man1);
+            await removeUserAndDevices(vwr1);
+        });
+
+        describe('GET /users', function () {
+            it('should respond with 403', async function () {
+                const res = await request(app)
+                    .get('/api/v1/users')
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(403);
+                expect(res.body.message).to.equal('Access denied');
+            });
+        });
+
+        describe('GET /users/:userId', function () {
+            it('should respond with 401 if auth token is missing', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}`)
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Token required');
+            });
+            it('should respond with 401 if token type is invalid', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'unknown' })
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Token required');
+            });
+            it('should respond with 401 if token is empty', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}`)
+                    .auth('', { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Token required');
+            });
+            it('should respond with 401 if token is invalid', async function () {
+                const user = await getUser(man1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}`)
+                    .auth('invalid-token', { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(401);
+                expect(res.body.message).to.equal('Invalid token');
+            });
+            it('should respond with 403 if userId from another user', async function () {
+                const user = await getUser(vwr1);
+                const res = await request(app)
+                    .get(`/api/v1/users/${user.user_id}`)
+                    .auth(token, { type: 'bearer' })
+                    .send();
+                expect(res).to.have.status(403);
+                expect(res.body.message).to.equal('Access denied');
             });
         });
     });

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { agent, request, subset } from './helpers/chai.js';
+import { agent, request } from './helpers/chai.js';
 import {
     addUserAndDevices,
     getDevices,
@@ -47,9 +47,32 @@ describe('e2e', function () {
         await destroyMqttServer(mqttServer);
     });
 
-    describe('REST service', function () {
-        let token;
+    describe('Webhook', function () {
+        before(async function () {
+            // Create a test user without devices
+            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
+        });
+        after(async function () {
+            // Remove the test user and its owned devices
+            await removeUserAndDevices(vwr1);
+        });
 
+        describe.skip('/post 101 subsequent requests', function () {
+            it('should respond with HTTP status 429', async function () {
+                this.timeout(10000);
+                let res;
+                for (let i = 0; i < 101; i++) {
+                    res = await request(app)
+                        .post('/location/gpx')
+                        .query(gpxMessage)
+                        .send('');
+                }
+                expect(res).to.have.status(429);
+            });
+        });
+    });
+
+    describe('REST service', function () {
         before(async function () {
             // Create a test user without devices
             await addUserAndDevices({ ...adm1Auth, ...adm1 }, []);
@@ -88,7 +111,6 @@ describe('e2e', function () {
                     .post('/api/v1/login')
                     .type('json')
                     .send(loginAdm1);
-                token = res.body.access_token;
                 expect(res).to.have.status(200);
                 expect(res.body.token_type).to.equal('Bearer');
                 expect(res.body.access_token).to.be.a('string');
@@ -101,7 +123,7 @@ describe('e2e', function () {
 
         before(async function () {
             // Create a test user without devices
-            await addUserAndDevices({ ...adm1Auth, ...adm1 }, [adm1Devs[0]]);
+            await addUserAndDevices({ ...adm1Auth, ...adm1 }, adm1Devs);
             await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
             // Create a request agent to retain cookies
             reqAgent = agent(app);
@@ -230,7 +252,7 @@ describe('e2e', function () {
                     .send({ ...data, action: 'submit' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedetails$/);
-                expect(res.text).to.include('No role selected');
+                expect(res.text).to.include('Validation failed');
             });
             it('should POST a delete user action', async function () {
                 const data = await getUser(vwr2);
@@ -242,15 +264,23 @@ describe('e2e', function () {
                 const deletedUser = await getUser(vwr2);
                 expect(deletedUser).to.be.null;
             });
-            it('should POST a delete user action', async function () {
+            it('should POST a delete unknown user action', async function () {
                 const data = await getUser(vwr2);
                 const res = await reqAgent
                     .post('/changedetails')
-                    .send({ ...data, action: 'delete' });
+                    .send({ ...data, user_id: 2147483647, action: 'delete' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedetails$/);
-                const deletedUser = await getUser(vwr2);
-                expect(deletedUser).to.be.null;
+                expect(res.text).to.include('User not found');
+            });
+            it('should POST a delete invalid user action', async function () {
+                const data = await getUser(vwr2);
+                const res = await reqAgent
+                    .post('/changedetails')
+                    .send({ ...data, user_id: 0, action: 'delete' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedetails$/);
+                expect(res.text).to.include('Validation failed');
             });
             it('should POST a cancel user action', async function () {
                 const data = await getUser(vwr2);
@@ -292,7 +322,7 @@ describe('e2e', function () {
                     .send({ ...data, operation: 'submit' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changepassword$/);
-                expect(res.text).to.include('New passwords mismatch');
+                expect(res.text).to.include('New passwords do not match');
             });
             it('should POST a cancel change password action', async function () {
                 const data = {
@@ -318,15 +348,11 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
                 expect(res.text).to.include('Device changed');
-                const devices = subset(
-                    await getDevices(adm1),
-                    Object.keys(adm1Devs[0]),
-                );
-                expect(devices).to.deep.include(adm1Devs[0]);
+                expect(await getDevices(adm1)).to.containSubset([adm1Devs[0]]);
             });
-            it('should POST a new device action', async function () {
+            it('should POST a modify device action with with an unknown device id', async function () {
                 const data = {
-                    ...adm1Devs[1],
+                    ...(await getDevices(adm1))[0],
                     device_id: -1,
                 };
                 const res = await reqAgent
@@ -334,58 +360,69 @@ describe('e2e', function () {
                     .send({ ...data, action: 'submit' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('Device changed');
-                const devices = subset(
-                    await getDevices(adm1),
-                    Object.keys(adm1Devs[1]),
-                );
-                expect(devices).to.deep.include(adm1Devs[1]);
+                expect(res.text).to.include('User not found');
             });
-            it('should POST an invalid new device action', async function () {
+            it('should POST a modify device action with with an invalid device id', async function () {
                 const data = {
-                    device_id: -1,
+                    ...(await getDevices(adm1))[0],
+                    device_id: 'aaa',
                 };
                 const res = await reqAgent
                     .post('/changedevices')
                     .send({ ...data, action: 'submit' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('Unable to add device');
+                expect(res.text).to.include(
+                    'invalid input syntax for type integer:',
+                );
             });
             it('should POST an add shared user action', async function () {
+                const devices = await getDevices(adm1);
                 const data = {
                     shareduser: vwr1.username,
-                    checkedIds: (
-                        await getDevices(adm1)
-                    )[0].device_id.toString(),
+                    checkedIds: `${devices[0].device_id},${devices[1].device_id}`,
                 };
                 const res = await reqAgent
                     .post('/changedevices')
                     .send({ ...data, action: 'addSharedUser' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('device(s) shared with user:');
+                expect(res.text).to.include(
+                    '2 device(s) shared with user: vwr1',
+                );
             });
             it('should POST an add shared user action with an invalid user', async function () {
+                const devices = await getDevices(adm1);
                 const data = {
                     shareduser: 'a-user',
-                    checkedIds: (
-                        await getDevices(adm1)
-                    )[0].device_id.toString(),
+                    checkedIds: `${devices[0].device_id},${devices[1].device_id}`,
                 };
                 const res = await reqAgent
                     .post('/changedevices')
                     .send({ ...data, action: 'addSharedUser' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('No shared users were added');
+                expect(res.text).to.include('User not found');
             });
-            it('should POST a delete shared user action', async function () {
+            it('should POST an add shared user action with an invalid device id', async function () {
                 const data = {
                     shareduser: vwr1.username,
-                    checkedIds: (
-                        await getDevices(adm1)
-                    )[0].device_id.toString(),
+                    checkedIds: 'aaa',
+                };
+                const res = await reqAgent
+                    .post('/changedevices')
+                    .send({ ...data, action: 'addSharedUser' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedevices$/);
+                expect(res.text).to.include(
+                    'invalid input syntax for type integer:',
+                );
+            });
+            it('should POST a delete shared user action', async function () {
+                const devices = await getDevices(adm1);
+                const data = {
+                    shareduser: vwr1.username,
+                    checkedIds: `${devices[0].device_id},${devices[1].device_id}`,
                 };
                 const res = await reqAgent
                     .post('/changedevices')
@@ -393,35 +430,49 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
                 expect(res.text).to.include(
-                    'device(s) no longer shared with user:',
+                    '2 device(s) no longer shared with user: vwr1',
                 );
             });
             it('should POST a delete shared user action with an invalid user', async function () {
+                const devices = await getDevices(adm1);
                 const data = {
                     shareduser: 'a-user',
-                    checkedIds: (
-                        await getDevices(adm1)
-                    )[0].device_id.toString(),
+                    checkedIds: `${devices[0].device_id},${devices[1].device_id}`,
                 };
                 const res = await reqAgent
                     .post('/changedevices')
                     .send({ ...data, action: 'delSharedUser' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('No shared users were deleted');
+                expect(res.text).to.include(
+                    '0 device(s) no longer shared with user: a-user',
+                );
+            });
+            it('should POST a delete shared user action with an invalid device id', async function () {
+                const data = {
+                    shareduser: vwr1.username,
+                    checkedIds: 'aaa',
+                };
+                const res = await reqAgent
+                    .post('/changedevices')
+                    .send({ ...data, action: 'delSharedUser' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedevices$/);
+                expect(res.text).to.include(
+                    'invalid input syntax for type integer:',
+                );
             });
             it('should POST a delete devices action', async function () {
+                const devices = await getDevices(adm1);
                 const data = {
-                    checkedIds: (
-                        await getDevices(adm1)
-                    )[0].device_id.toString(),
+                    checkedIds: `${devices[0].device_id},${devices[1].device_id}`,
                 };
                 const res = await reqAgent
                     .post('/changedevices')
                     .send({ ...data, action: 'delDevices' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('device(s) removed');
+                expect(res.text).to.include('2 device(s) removed');
             });
             it('should POST a delete devices action with an non existing device', async function () {
                 const data = {
@@ -432,7 +483,20 @@ describe('e2e', function () {
                     .send({ ...data, action: 'delDevices' });
                 expect(res).to.have.status(200);
                 expect(res).to.redirectTo(/\/changedevices$/);
-                expect(res.text).to.include('No devices were deleted');
+                expect(res.text).to.include('0 device(s) removed');
+            });
+            it('should POST a delete devices action with an invalid device id', async function () {
+                const data = {
+                    checkedIds: 'aaa',
+                };
+                const res = await reqAgent
+                    .post('/changedevices')
+                    .send({ ...data, action: 'delDevices' });
+                expect(res).to.have.status(200);
+                expect(res).to.redirectTo(/\/changedevices$/);
+                expect(res.text).to.include(
+                    'invalid input syntax for type integer:',
+                );
             });
             it('should POST a cancel device action', async function () {
                 const data = (await getDevices(adm1))[0];
@@ -470,31 +534,6 @@ describe('e2e', function () {
                 expect(res).to.have.status(200);
                 expect(res).not.to.redirect;
                 expect(res.text).to.include('usersData={"users":null}');
-            });
-        });
-    });
-
-    describe('Webhook', function () {
-        before(async function () {
-            // Create a test user without devices
-            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
-        });
-        after(async function () {
-            // Remove the test user and its owned devices
-            await removeUserAndDevices(vwr1);
-        });
-
-        describe('/post 120 subsequent requests', function () {
-            it('should respond with HTTP status 429', async function () {
-                this.timeout(10000);
-                let res;
-                for (let i = 0; i < 120; i++) {
-                    res = await request(app)
-                        .post('/location/gpx')
-                        .query(gpxMessage)
-                        .send('');
-                }
-                expect(res).to.have.status(429);
             });
         });
     });

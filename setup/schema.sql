@@ -43,4 +43,4 @@ CREATE TABLE sessions (
 
 INSERT INTO users (username, password, role, api_key, fullname) VALUES
   ('admin','$2a$10$Rve2CVutQ8bi2Yph/u/tsesnFWt1SPtMRXBkKWZeQbJLZz16Uqn1y','admin','adminkey','Administrator'),
-  ('demo','$2a$10$vSxHwtKriE1zYRb29YP0IOA7L.q/u3FYr15KLtJ2RHzJJ6vKN5Tn.','viewer','demokey','Demo User');
+  ('demo','$2a$10$vSxHwtKriE1zYRb29YP0IOA7L.q/u3FYr15KLtJ2RHzJJ6vKN5Tn.','viewer','demonstrationkey','Demo User');

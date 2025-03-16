@@ -56,8 +56,8 @@ export default () => {
 
     // Set up the UI part of our express application
     app.use(morgan('combined', { stream: logger.stream })); // log every request to the logger
-    app.use(express.json()); // get information from html forms
-    app.use(express.urlencoded({ extended: true }));
+    app.use(express.json()); // for parsing application/json
+    app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
     if (config.get('server.proxy')) {
         app.set('trust proxy', 1);
     }

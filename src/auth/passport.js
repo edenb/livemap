@@ -7,10 +7,10 @@ passport.serializeUser((user, done) => {
     done(null, user.user_id);
 });
 
-passport.deserializeUser(async (req, id, done) => {
-    const queryRes = await usr.getUserByField('user_id', id);
-    if (queryRes.rowCount > 0) {
-        done(null, queryRes.rows[0]);
+passport.deserializeUser(async (_req, id, done) => {
+    const { rows, rowCount } = await usr.getUserByField('user_id', id);
+    if (rowCount > 0) {
+        done(null, rows[0]);
     } else {
         done(null, {});
     }
@@ -24,14 +24,17 @@ passport.use(
             passReqToCallback: true,
         },
         async (req, username, password, done) => {
-            const queryRes = await usr.getUserByField('username', username);
-            if (queryRes.rowCount > 0) {
-                const authOK = await usr.checkPassword(
+            const { rows, rowCount } = await usr.getUserByField(
+                'username',
+                username,
+            );
+            if (rowCount > 0) {
+                const authOK = await usr.credentialsMatch(
+                    rows[0].user_id,
                     password,
-                    queryRes.rows[0].password,
                 );
                 if (authOK) {
-                    return done(null, queryRes.rows[0]);
+                    return done(null, rows[0]);
                 } else {
                     // No sessions with API logins, so don't store flash message and save sessions
                     try {
