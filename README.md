@@ -20,7 +20,7 @@ The demo contains 3 devices that play back recorded tracks.
 
 > Username: demo
 >
->Password: demo
+>Password: demodemo
 
 ### [Demo modern UI](https://livemap.vercel.app)
 ![Screenshot livemap](https://github.com/edenb/livemap-ui/raw/master/docs/img/screenshot.png)
