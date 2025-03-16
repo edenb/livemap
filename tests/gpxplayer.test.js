@@ -8,17 +8,17 @@ import App from '../src/app.js';
 import routesWebhook from '../src/routes/webhook.js';
 import GpxPlayer from '../src/services/gpxplayer.js';
 
-const test7p1s = { api_key: 'testkey', identifier: '7p1s' };
-const test4p2s = { api_key: 'testkey', identifier: '4p2s' };
-const test3p3s = { api_key: 'testkey', identifier: '3p3s' };
-const test2p6s = { api_key: 'testkey', identifier: '2p6s' };
+const test7p1s = { api_key: 'testerkey', identifier: '7p1s' };
+const test4p2s = { api_key: 'testerkey', identifier: '4p2s' };
+const test3p3s = { api_key: 'testerkey', identifier: '3p3s' };
+const test2p6s = { api_key: 'testerkey', identifier: '2p6s' };
 const test_delay_too_short = {
-    api_key: 'testkey',
+    api_key: 'testerkey',
     identifier: 'delay-too-short',
 };
 const trackTest7p1s = {
     dirName: './tracks/test/',
-    name: 'testkey_7p1s',
+    name: 'testerkey_7p1s',
     destPath: '/test/location/gpx',
     points: [],
     pointsIndex: 0,
@@ -135,35 +135,35 @@ describe('GPX player', function () {
             });
             expect(totalRunning).to.equal(0);
         });
-        it('should report 7 points and 1 second delay (testkey_7p1s.gpx)', function () {
+        it('should report 7 points and 1 second delay (testerkey_7p1s.gpx)', function () {
             const report = reportPoints(getTrackname(test7p1s));
             expect(report.totalPoints).to.equal(7);
             expect(report.minDelay).to.be.within(800, 1200);
             expect(report.maxDelay).to.be.within(800, 1200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 4 points and 2 seconds delay (testkey_4p2s.gpx)', function () {
+        it('should report 4 points and 2 seconds delay (testerkey_4p2s.gpx)', function () {
             const report = reportPoints(getTrackname(test4p2s));
             expect(report.totalPoints).to.equal(4);
             expect(report.minDelay).to.be.within(1800, 2200);
             expect(report.maxDelay).to.be.within(1800, 2200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 3 points and 3 seconds delay (testkey_3p3s.gpx)', function () {
+        it('should report 3 points and 3 seconds delay (testerkey_3p3s.gpx)', function () {
             const report = reportPoints(getTrackname(test3p3s));
             expect(report.totalPoints).to.equal(3);
             expect(report.minDelay).to.be.within(2800, 3200);
             expect(report.maxDelay).to.be.within(2800, 3200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 2 points and 6 seconds delay (testkey_2p6s.gpx)', function () {
+        it('should report 2 points and 6 seconds delay (testerkey_2p6s.gpx)', function () {
             const report = reportPoints(getTrackname(test2p6s));
             expect(report.totalPoints).to.equal(2);
             expect(report.minDelay).to.be.within(5800, 6200);
             expect(report.maxDelay).to.be.within(5800, 6200);
             expect(report.duration).to.be.within(5500, 6500);
         });
-        it('should report 7 points and 1 second delay (testkey_delay-too-short.gpx)', function () {
+        it('should report 7 points and 1 second delay (testerkey_delay-too-short.gpx)', function () {
             const report = reportPoints(getTrackname(test_delay_too_short));
             expect(report.totalPoints).to.equal(7);
             expect(report.minDelay).to.be.within(800, 1200);
@@ -188,7 +188,7 @@ describe('GPX player', function () {
         it('should find all 6 gpx test files', async function () {
             gpxPlayer = new GpxPlayer(`${testBasePath}/gpx`, function () {});
             await gpxPlayer.createFileList('./tracks/test/');
-            gpxPlayer.addTracksByApiKey('testkey');
+            gpxPlayer.addTracksByApiKey('testerkey');
             expect(gpxPlayer.tracks.length).to.equal(6);
         });
     });
