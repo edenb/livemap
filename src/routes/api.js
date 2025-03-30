@@ -8,6 +8,7 @@ import * as positions from '../controllers/position.js';
 import * as staticLayers from '../controllers/staticlayer.js';
 import * as server from '../controllers/server.js';
 import { httpErrorHandler } from '../middlewares/httperrorhandler.js';
+import { HttpError } from '../utils/error.js';
 
 export default (passport) => {
     const router = Router();
@@ -45,7 +46,17 @@ export default (passport) => {
         res.status(200).send(`API V1 is up`);
     });
 
-    router.post('/login', passport.authenticate('local'), (req, res) => {
+    const requireSignin = function (req, res, next) {
+        passport.authenticate('local', (err, user) => {
+            if (err || !user) {
+                return next(new HttpError(401, 'Login failed'));
+            }
+            req.user = user;
+            return next();
+        })(req, res, next);
+    };
+
+    router.post('/login', requireSignin, (req, res) => {
         let token = getNewToken(req.user);
         res.status(200).json({
             access_token: token,
