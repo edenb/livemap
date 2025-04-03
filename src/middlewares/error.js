@@ -81,3 +81,7 @@ export function httpErrorHandler(err, _req, res, _next) {
         stack: process.env.NODE_ENV === 'development' ? err.stack : {},
     });
 }
+
+export function catchAll404(_req, _res, next) {
+    next(new HttpError(404, 'Invalid endpoint'));
+}

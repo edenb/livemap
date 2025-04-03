@@ -55,7 +55,7 @@ describe('REST API', function () {
             it('should respond with 404 on a non existing path', async function () {
                 const res = await request(app).get('/api/v1/a-path').send();
                 expect(res).to.have.status(404);
-                expect(res.text).to.equal('Invalid endpoint');
+                expect(res.body.message).to.equal('Invalid endpoint');
             });
         });
 

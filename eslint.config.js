@@ -15,5 +15,6 @@ export default [
             },
         },
     },
-    eslintPluginPrettierRecommended, // Prettier config always last
+    // Prettier config always last
+    eslintPluginPrettierRecommended,
 ];
