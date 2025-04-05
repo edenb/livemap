@@ -35,7 +35,7 @@
     "chai-http": "^5.0.0",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-prettier": "^5.2.6",
     "mocha": "^11.1.0",
     "prettier": "^3.5.3",
     "sinon": "^19.0.0",
