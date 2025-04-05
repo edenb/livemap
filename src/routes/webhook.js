@@ -1,6 +1,6 @@
 import config from 'config';
 import { Router, urlencoded } from 'express';
-import { rateLimit } from 'express-rate-limit';
+import { rateLimiter } from '../middlewares/ratelimiter.js';
 import Logger from '../utils/logger.js';
 
 export default (onLocation) => {
@@ -8,13 +8,12 @@ export default (onLocation) => {
     const router = Router();
 
     // Apply rate limiting middleware to webhook routes
-    const rateLimiter = rateLimit({
-        windowMs: config.get('rateLimiter.window'),
-        limit: config.get('rateLimiter.limit'),
-        standardHeaders: 'draft-7',
-        legacyHeaders: false,
-    });
-    router.use(rateLimiter);
+    router.use(
+        rateLimiter(
+            config.get('rateLimiter.window'),
+            config.get('rateLimiter.limit'),
+        ),
+    );
 
     router.post('/gpx', urlencoded({ extended: false }), async (req, res) => {
         let payload;

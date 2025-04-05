@@ -1,8 +1,8 @@
 import config from 'config';
 import 'connect-flash';
 import { Router } from 'express';
-import { rateLimit } from 'express-rate-limit';
 import { getNewToken } from '../auth/jwt.js';
+import { rateLimiter } from '../middlewares/ratelimiter.js';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import * as pos from '../models/position.js';
@@ -46,13 +46,12 @@ export default (passport) => {
     const router = Router();
 
     // Apply rate limiting middleware to index routes
-    const rateLimiter = rateLimit({
-        windowMs: config.get('rateLimiter.window'),
-        limit: config.get('rateLimiter.limit'),
-        standardHeaders: 'draft-7',
-        legacyHeaders: false,
-    });
-    router.use(rateLimiter);
+    router.use(
+        rateLimiter(
+            config.get('rateLimiter.window'),
+            config.get('rateLimiter.limit'),
+        ),
+    );
 
     // GET login page
     router.get('/', (req, res) => {

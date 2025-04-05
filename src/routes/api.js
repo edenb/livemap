@@ -1,6 +1,5 @@
 import config from 'config';
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
 import { getNewToken, isAuthorized } from '../auth/jwt.js';
 import * as users from '../controllers/user.js';
 import * as devices from '../controllers/device.js';
@@ -8,19 +7,19 @@ import * as positions from '../controllers/position.js';
 import * as staticLayers from '../controllers/staticlayer.js';
 import * as server from '../controllers/server.js';
 import { catchAll404, httpErrorHandler } from '../middlewares/error.js';
+import { rateLimiter } from '../middlewares/ratelimiter.js';
 import { HttpError } from '../utils/error.js';
 
 export default (passport) => {
     const router = Router();
 
     // Apply rate limiting middleware to api routes
-    const rateLimiter = rateLimit({
-        windowMs: config.get('rateLimiter.window'),
-        limit: config.get('rateLimiter.limit'),
-        standardHeaders: 'draft-7',
-        legacyHeaders: false,
-    });
-    router.use(rateLimiter);
+    router.use(
+        rateLimiter(
+            config.get('rateLimiter.window'),
+            config.get('rateLimiter.limit'),
+        ),
+    );
 
     // Enable CORS for API
     router.use((req, res, next) => {
