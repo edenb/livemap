@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import favicon from 'serve-favicon';
 import passport from './auth/passport.js';
 import { bindStore, getStore } from './database/db.js';
+import { forceHttps } from './middlewares/forcehttps.js';
 import routesApi from './routes/api.js';
 import routesIndex from './routes/index.js';
 import routesWebhook from './routes/webhook.js';
@@ -21,21 +22,7 @@ export default () => {
     app.disable('x-powered-by');
 
     // Force HTTPS
-    if (config.get('server.forceSSL')) {
-        app.use((req, res, next) => {
-            if (
-                req.headers['x-forwarded-proto'] &&
-                req.headers['x-forwarded-proto'] !== 'https'
-            ) {
-                return res.redirect(
-                    301,
-                    `https://${req.headers.host}${req.url}`,
-                );
-            } else {
-                next();
-            }
-        });
-    }
+    app.use(forceHttps(config.get('server.forceSSL')));
 
     // Directory and filename of this module
     const __filename = fileURLToPath(import.meta.url);

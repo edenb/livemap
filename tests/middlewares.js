@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import express from 'express';
 import { createRequest, createResponse } from 'node-mocks-http';
 import { spy } from 'sinon';
+import { forceHttps } from '../src/middlewares/forcehttps.js';
 import { rateLimiter } from '../src/middlewares/ratelimiter.js';
 
 describe('Middlewares', function () {
@@ -15,6 +16,84 @@ describe('Middlewares', function () {
 
     afterEach(function () {
         next.resetHistory();
+    });
+
+    describe('Force HTTPS', function () {
+        describe('when disabled', function () {
+            const enabled = false;
+            describe('and without proxy', function () {
+                it('should not redirect on HTTP', function () {
+                    req.secure = false;
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.calledOnce).to.equal(true);
+                    expect(res.statusCode).to.equal(200);
+                });
+                it('should not redirect on HTTPS', function () {
+                    req.secure = true;
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.calledOnce).to.equal(true);
+                    expect(res.statusCode).to.equal(200);
+                });
+            });
+            describe('and behind proxy', function () {
+                it('should not redirect on HTTP', function () {
+                    req.secure = false;
+                    req.headers = { 'x-forwarded-proto': 'http' };
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.calledOnce).to.equal(true);
+                    expect(res.statusCode).to.equal(200);
+                });
+                it('should not redirect on HTTPS', function () {
+                    req.secure = true;
+                    req.headers = { 'x-forwarded-proto': 'https' };
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.calledOnce).to.equal(true);
+                    expect(res.statusCode).to.equal(200);
+                });
+            });
+        });
+
+        describe('when enabled', function () {
+            const enabled = true;
+            describe('and without proxy', function () {
+                it('should redirect on HTTP', function () {
+                    req.secure = false;
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.called).to.equal(false);
+                    expect(res.statusCode).to.equal(301);
+                });
+                it('should not redirect on HTTPS', function () {
+                    req.secure = true;
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.calledOnce).to.equal(true);
+                    expect(res.statusCode).to.equal(200);
+                });
+            });
+            describe('and behind proxy', function () {
+                it('should redirect on HTTP', function () {
+                    req.secure = false;
+                    req.headers = { 'x-forwarded-proto': 'http' };
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.called).to.equal(false);
+                    expect(res.statusCode).to.equal(301);
+                });
+                it('should not redirect on HTTPS', function () {
+                    req.secure = true;
+                    req.headers = { 'x-forwarded-proto': 'https' };
+                    const forceHttpsTest = forceHttps(enabled);
+                    forceHttpsTest(req, res, next);
+                    expect(next.calledOnce).to.equal(true);
+                    expect(res.statusCode).to.equal(200);
+                });
+            });
+        });
     });
 
     describe('Rate limiter', function () {
