@@ -4,7 +4,7 @@ import { createRequest, createResponse } from 'node-mocks-http';
 import { spy } from 'sinon';
 import { rateLimiter } from '../src/middlewares/ratelimiter.js';
 
-describe.only('Middlewares', function () {
+describe('Middlewares', function () {
     let req, res, next;
 
     beforeEach(function () {
