@@ -1,7 +1,7 @@
 [![CircleCI](https://circleci.com/gh/edenb/livemap.svg?style=shield)](https://circleci.com/gh/edenb/livemap)
 [![Depfu](https://badges.depfu.com/badges/596aa36af8f27ab1beeb0cd800248679/overview.svg)](https://depfu.com/github/edenb/livemap?project_id=32744)
 [![codecov](https://codecov.io/gh/edenb/livemap/graph/badge.svg?token=OPU2FZM6XF)](https://codecov.io/gh/edenb/livemap)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![CodeFactor](https://www.codefactor.io/repository/github/edenb/livemap/badge)](https://www.codefactor.io/repository/github/edenb/livemap)
 
 # Livemap
