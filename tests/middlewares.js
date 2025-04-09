@@ -128,7 +128,7 @@ describe('Middlewares', function () {
         });
     });
 
-    describe.only('HTTP catch all', function () {
+    describe('HTTP catch all', function () {
         it('should respond with 404 and message details', async function () {
             const catchAll404Test = catchAll404;
             catchAll404Test(req, res, next);
