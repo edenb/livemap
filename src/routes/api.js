@@ -6,11 +6,13 @@ import * as devices from '../controllers/device.js';
 import * as positions from '../controllers/position.js';
 import * as staticLayers from '../controllers/staticlayer.js';
 import * as server from '../controllers/server.js';
-import { catchAll404, httpErrorHandler } from '../middlewares/error.js';
+import { catchAll404, httpErrorHandler } from '../middlewares/httperror.js';
 import { rateLimiter } from '../middlewares/ratelimiter.js';
 import { HttpError } from '../utils/error.js';
+import Logger from '../utils/logger.js';
 
 export default (passport) => {
+    const logger = Logger(import.meta.url);
     const router = Router();
 
     // Apply rate limiting middleware to api routes
@@ -154,7 +156,7 @@ export default (passport) => {
     router.use(catchAll404);
 
     // Error handling middleware (should be placed at the end)
-    router.use(httpErrorHandler);
+    router.use(httpErrorHandler(logger));
 
     return router;
 };

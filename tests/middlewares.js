@@ -3,22 +3,26 @@ import express from 'express';
 import { createRequest, createResponse } from 'node-mocks-http';
 import pg from 'pg';
 import { spy } from 'sinon';
-import { catchAll404, httpErrorHandler } from '../src/middlewares/error.js';
+import { catchAll404, httpErrorHandler } from '../src/middlewares/httperror.js';
 import { forceHttps } from '../src/middlewares/forcehttps.js';
 import { rateLimiter } from '../src/middlewares/ratelimiter.js';
 import { HttpError, ValidationError } from '../src/utils/error.js';
+import Logger from '../src/utils/logger.js';
 
 describe('Middlewares', function () {
+    const logger = Logger(import.meta.url);
     let req, res, next;
 
     beforeEach(function () {
         req = createRequest({ method: 'GET', url: '/' });
         res = createResponse();
         next = spy();
+        spy(logger, 'error');
     });
 
     afterEach(function () {
         next.resetHistory();
+        logger.error.restore();
     });
 
     describe('HTTP error handler', function () {
@@ -26,40 +30,40 @@ describe('Middlewares', function () {
             let err = new pg.DatabaseError('Test message', 0, 'error');
             it('should respond with 409 on database error 23503', async function () {
                 err.code = '23503';
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res.statusCode).to.equal(409);
                 expect(res._getJSONData().statusCode).to.equal(409);
             });
             it('should respond with message details on database error 23503', async function () {
                 err.code = '23503';
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().message).to.equal('Test message');
             });
             it('should respond with 503 on database error 08', async function () {
                 err.code = '08';
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res.statusCode).to.equal(503);
                 expect(res._getJSONData().statusCode).to.equal(503);
             });
             it('should respond without message details on database error 08', async function () {
                 err.code = '08';
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().message).to.equal('');
             });
             it('should respond with 500 on unknown database error', async function () {
                 err.code = 'AAAAA';
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res.statusCode).to.equal(500);
                 expect(res._getJSONData().statusCode).to.equal(500);
             });
             it('should respond without message details on unknown database error', async function () {
                 err.code = 'AAAAA';
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().message).to.equal('');
             });
@@ -68,13 +72,13 @@ describe('Middlewares', function () {
         describe('when HttpError', function () {
             let err = new HttpError(404, 'User not found');
             it('should respond with 404', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res.statusCode).to.equal(404);
                 expect(res._getJSONData().statusCode).to.equal(404);
             });
             it('should respond with message details', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().message).to.equal('User not found');
             });
@@ -90,20 +94,20 @@ describe('Middlewares', function () {
             ];
             let err = new ValidationError(errors);
             it('should respond with 422', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res.statusCode).to.equal(422);
                 expect(res._getJSONData().statusCode).to.equal(422);
             });
             it('should respond with message details', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().message).to.equal(
                     'Validation failed',
                 );
             });
             it('should respond with an error list', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().errors).to.be.an('array');
                 expect(res._getJSONData().errors).to.deep.include.members(
@@ -112,18 +116,34 @@ describe('Middlewares', function () {
             });
         });
 
-        describe('when an unknown error', function () {
-            let err = new Error();
+        describe('when any other error', function () {
+            let err = new Error('Test message');
             it('should respond with 500', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res.statusCode).to.equal(500);
                 expect(res._getJSONData().statusCode).to.equal(500);
             });
             it('should respond without message details', async function () {
-                const httpErrorHandlerTest = httpErrorHandler;
+                const httpErrorHandlerTest = httpErrorHandler(logger);
                 httpErrorHandlerTest(err, req, res, next);
                 expect(res._getJSONData().message).to.equal('');
+            });
+            it('should log the error', async function () {
+                const httpErrorHandlerTest = httpErrorHandler(logger);
+                httpErrorHandlerTest(err, req, res, next);
+                expect(logger.error.calledOnce).to.equal(true);
+                expect(logger.error.args[0][0]).to.equal('Test message');
+            });
+            it('should not log the error when the logger is undefined', async function () {
+                const httpErrorHandlerTest = httpErrorHandler();
+                httpErrorHandlerTest(err, req, res, next);
+                expect(logger.error.calledOnce).to.equal(false);
+            });
+            it('should not log the error when the logger is null', async function () {
+                const httpErrorHandlerTest = httpErrorHandler(null);
+                httpErrorHandlerTest(err, req, res, next);
+                expect(logger.error.calledOnce).to.equal(false);
             });
         });
     });

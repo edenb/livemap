@@ -1,9 +1,6 @@
 import { STATUS_CODES } from 'node:http';
 import pg from 'pg';
 import { HttpError, ValidationError } from '../utils/error.js';
-import Logger from '../utils/logger.js';
-
-const logger = Logger(import.meta.url);
 
 // Based on https://docs.postgrest.org/en/latest/references/errors.html
 const databaseErrorStatusList = [
@@ -49,37 +46,40 @@ function statusCodeFromDatabaseError(err) {
     }
 }
 
-export function httpErrorHandler(err, _req, res, _next) {
-    let errors = [];
-    let errStatusCode;
-    let message = '';
+export function httpErrorHandler(parentLogger) {
+    return (err, _req, res, _next) => {
+        const logger = parentLogger?.child({ fileUrl: import.meta.url });
+        let errors = [];
+        let errStatusCode;
+        let message = '';
 
-    if (err instanceof pg.DatabaseError) {
-        errStatusCode = statusCodeFromDatabaseError(err);
-        // Only provide details on client errors (4XX)
-        if (errStatusCode >= 400 && errStatusCode < 500) {
+        if (err instanceof pg.DatabaseError) {
+            errStatusCode = statusCodeFromDatabaseError(err);
+            // Only provide details on client errors (4XX)
+            if (errStatusCode >= 400 && errStatusCode < 500) {
+                message = err.message;
+            }
+        } else if (err instanceof HttpError) {
+            errStatusCode = err.statusCode;
             message = err.message;
+        } else if (err instanceof ValidationError) {
+            errStatusCode = 422;
+            message = err.message;
+            errors = err.errors;
+        } else {
+            errStatusCode = 500;
+            logger?.error(err.message);
         }
-    } else if (err instanceof HttpError) {
-        errStatusCode = err.statusCode;
-        message = err.message;
-    } else if (err instanceof ValidationError) {
-        errStatusCode = 422;
-        message = err.message;
-        errors = err.errors;
-    } else {
-        errStatusCode = 500;
-        logger.error(err.message);
-    }
 
-    res.status(errStatusCode).json({
-        success: false,
-        statusCode: errStatusCode,
-        statusText: STATUS_CODES[errStatusCode],
-        message: message,
-        errors: errors,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : {},
-    });
+        res.status(errStatusCode).json({
+            success: false,
+            statusCode: errStatusCode,
+            statusText: STATUS_CODES[errStatusCode],
+            message: message,
+            errors: errors,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : {},
+        });
+    };
 }
 
 export function catchAll404(_req, _res, next) {
