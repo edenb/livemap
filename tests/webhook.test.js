@@ -162,4 +162,13 @@ describe('Webhooks', function () {
             expect(callbackSpy.args[0][2]).to.deep.equal(parse(loc_tag1_exit));
         });
     });
+
+    describe('/post locative without location data', function () {
+        it('should respond with HTTP status 422', async function () {
+            const res = await request(app)
+                .post(`${testBasePath}/locative`)
+                .send('');
+            expect(res).to.have.status(422);
+        });
+    });
 });
