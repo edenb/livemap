@@ -1,14 +1,13 @@
 import config from 'config';
 import flash from 'connect-flash';
 import express from 'express';
-import session from 'express-session';
 import morgan from 'morgan';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import favicon from 'serve-favicon';
 import passport from './auth/passport.js';
-import { bindStore, getStore } from './database/db.js';
 import { forceHttps } from './middlewares/forcehttps.js';
+import { sessionMiddleware } from './middlewares/session.js';
 import routesApi from './routes/api.js';
 import routesIndex from './routes/index.js';
 import routesWebhook from './routes/webhook.js';
@@ -49,23 +48,14 @@ export default () => {
         app.set('trust proxy', 1);
     }
 
-    // Store sessions in the database
-    bindStore(session);
-    // Don't use sessions for API calls,
-    // i.e. a token is given in the header (Authorization: <some_token>)
-    const sessionMiddleware = session({
-        name: config.get('sessions.name'),
-        store: getStore(),
-        secret: config.get('sessions.secret'),
-        cookie: { maxAge: config.get('sessions.maxAge'), sameSite: 'strict' },
-        resave: false,
-        saveUninitialized: true,
-        unset: 'keep',
-    });
-
-    app.use((req, res, next) => {
-        return sessionMiddleware(req, res, next);
-    });
+    // Apply session middleware
+    const sessionName = config.get('sessions.name');
+    const sessionSecret = config.get('sessions.secret');
+    const sessionCookie = {
+        maxAge: config.get('sessions.maxAge'),
+        sameSite: 'strict',
+    };
+    app.use(sessionMiddleware(sessionName, sessionSecret, sessionCookie));
 
     // Set-up flash messages stored in session
     app.use(flash());
