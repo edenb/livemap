@@ -1,26 +1,34 @@
 import config from 'config';
-import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
+import express from 'express';
+import morgan from 'morgan';
 import { getNewToken, isAuthorized } from '../auth/jwt.js';
 import * as users from '../controllers/user.js';
 import * as devices from '../controllers/device.js';
 import * as positions from '../controllers/position.js';
 import * as staticLayers from '../controllers/staticlayer.js';
 import * as server from '../controllers/server.js';
-import { httpErrorHandler } from '../middlewares/httperrorhandler.js';
+import { catchAll404, httpErrorHandler } from '../middlewares/httperror.js';
+import { rateLimiter } from '../middlewares/ratelimiter.js';
 import { HttpError } from '../utils/error.js';
+import Logger from '../utils/logger.js';
 
 export default (passport) => {
-    const router = Router();
+    const logger = Logger(import.meta.url);
+    const router = express.Router();
 
     // Apply rate limiting middleware to api routes
-    const rateLimiter = rateLimit({
-        windowMs: config.get('rateLimiter.window'),
-        limit: config.get('rateLimiter.limit'),
-        standardHeaders: 'draft-7',
-        legacyHeaders: false,
-    });
-    router.use(rateLimiter);
+    router.use(
+        rateLimiter(
+            config.get('rateLimiter.window'),
+            config.get('rateLimiter.limit'),
+        ),
+    );
+
+    // Apply logging middleware
+    router.use(morgan('combined', { stream: logger.stream }));
+
+    // Apply parser middleware
+    router.use(express.json()); // for parsing application/json
 
     // Enable CORS for API
     router.use((req, res, next) => {
@@ -152,12 +160,10 @@ export default (passport) => {
         server.getInfo,
     );
 
-    router.use('*', (req, res) => {
-        res.status(404).send(`Invalid endpoint`);
-    });
+    router.use(catchAll404);
 
-    // Error handling middleware (should be placed at the end)
-    router.use(httpErrorHandler);
+    // Custom error handling middleware (should be placed at the end)
+    router.use(httpErrorHandler(logger));
 
     return router;
 };

@@ -33,36 +33,32 @@ export function getTokenPayload(token) {
 
 export function isAuthorized(rolesAllowed) {
     return (req, _res, next) => {
-        try {
-            // Get the token from the header
-            let token;
-            const authHeader = req.get('authorization');
-            if (authHeader?.split(' ')[0] === 'Bearer') {
-                token = authHeader?.split(' ')[1];
-            }
-
-            if (!token) {
-                throw new HttpError(401, 'Token required');
-            }
-            const tokenPayload = getTokenPayload(token);
-            if (!tokenPayload) {
-                throw new HttpError(401, 'Invalid token');
-            }
-            if (!rolesAllowed.includes(tokenPayload.role)) {
-                throw new HttpError(403, 'Access denied');
-            }
-            // Only admins have access to resources of other users
-            if (
-                tokenPayload.role !== 'admin' &&
-                req.params?.userId &&
-                tokenPayload.userId !== Number(req.params?.userId)
-            ) {
-                throw new HttpError(403, 'Access denied');
-            }
-            req.tokenPayload = tokenPayload;
-            return next();
-        } catch (err) {
-            next(err);
+        // Get the token from the header
+        let token;
+        const authHeader = req.get('authorization');
+        if (authHeader?.split(' ')[0] === 'Bearer') {
+            token = authHeader?.split(' ')[1];
         }
+
+        if (!token) {
+            throw new HttpError(401, 'Token required');
+        }
+        const tokenPayload = getTokenPayload(token);
+        if (!tokenPayload) {
+            throw new HttpError(401, 'Invalid token');
+        }
+        if (!rolesAllowed.includes(tokenPayload.role)) {
+            throw new HttpError(403, 'Access denied');
+        }
+        // Only admins have access to resources of other users
+        if (
+            tokenPayload.role !== 'admin' &&
+            req.params?.userId &&
+            tokenPayload.userId !== Number(req.params?.userId)
+        ) {
+            throw new HttpError(403, 'Access denied');
+        }
+        req.tokenPayload = tokenPayload;
+        return next();
     };
 }

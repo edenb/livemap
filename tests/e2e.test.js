@@ -47,31 +47,6 @@ describe('e2e', function () {
         await destroyMqttServer(mqttServer);
     });
 
-    describe('Webhook', function () {
-        before(async function () {
-            // Create a test user without devices
-            await addUserAndDevices({ ...vwr1Auth, ...vwr1 }, []);
-        });
-        after(async function () {
-            // Remove the test user and its owned devices
-            await removeUserAndDevices(vwr1);
-        });
-
-        describe.skip('/post 101 subsequent requests', function () {
-            it('should respond with HTTP status 429', async function () {
-                this.timeout(10000);
-                let res;
-                for (let i = 0; i < 101; i++) {
-                    res = await request(app)
-                        .post('/location/gpx')
-                        .query(gpxMessage)
-                        .send('');
-                }
-                expect(res).to.have.status(429);
-            });
-        });
-    });
-
     describe('REST service', function () {
         before(async function () {
             // Create a test user without devices

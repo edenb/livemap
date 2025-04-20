@@ -1,13 +1,17 @@
 import config from 'config';
-import 'connect-flash';
-import { Router } from 'express';
-import { rateLimit } from 'express-rate-limit';
+import flash from 'connect-flash';
+import express from 'express';
+import morgan from 'morgan';
+import favicon from 'serve-favicon';
 import { getNewToken } from '../auth/jwt.js';
+import { rateLimiter } from '../middlewares/ratelimiter.js';
+import { sessionMiddleware } from '../middlewares/session.js';
 import * as usr from '../models/user.js';
 import * as dev from '../models/device.js';
 import * as pos from '../models/position.js';
 import * as sl from '../models/staticlayer.js';
 import { getBrokerUrl } from '../services/mqtt.js';
+import Logger from '../utils/logger.js';
 
 function isNumber(num) {
     if (parseInt(num) == num || parseFloat(num) == num) {
@@ -43,16 +47,45 @@ function ensureAuthenticated(req, res, next) {
 }
 
 export default (passport) => {
-    const router = Router();
+    const logger = Logger(import.meta.url);
+    const router = express.Router();
 
     // Apply rate limiting middleware to index routes
-    const rateLimiter = rateLimit({
-        windowMs: config.get('rateLimiter.window'),
-        limit: config.get('rateLimiter.limit'),
-        standardHeaders: 'draft-7',
-        legacyHeaders: false,
-    });
-    router.use(rateLimiter);
+    router.use(
+        rateLimiter(
+            config.get('rateLimiter.window'),
+            config.get('rateLimiter.limit'),
+        ),
+    );
+
+    // Directory and filename of this module
+    const rootDir = process.cwd();
+
+    // Static route for JavaScript libraries, css files, etc.
+    router.use(express.static(`${rootDir}/public`));
+
+    // Set favicon
+    router.use(favicon(`${rootDir}/public/images/favicon.ico`));
+
+    // Apply logging middleware
+    router.use(morgan('combined', { stream: logger.stream }));
+
+    // Apply parser middlewares
+    router.use(express.json()); // for parsing application/json
+    router.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+    // Apply session middleware
+    const sessionName = config.get('sessions.name');
+    const sessionSecret = config.get('sessions.secret');
+    const sessionCookie = {
+        maxAge: config.get('sessions.maxAge'),
+        sameSite: 'strict',
+    };
+    router.use(sessionMiddleware(sessionName, sessionSecret, sessionCookie));
+    router.use(passport.session());
+
+    // Set-up flash messages stored in session
+    router.use(flash());
 
     // GET login page
     router.get('/', (req, res) => {
