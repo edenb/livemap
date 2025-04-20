@@ -171,4 +171,14 @@ describe('Webhooks', function () {
             expect(res).to.have.status(422);
         });
     });
+
+    describe('/post gpx on non-existing path', function () {
+        it('should respond with HTTP status 404', async function () {
+            const res = await request(app)
+                .post(`${testBasePath}/nonexisting`)
+                .query(gpx1)
+                .send('');
+            expect(res).to.have.status(404);
+        });
+    });
 });

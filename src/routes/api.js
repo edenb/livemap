@@ -1,5 +1,6 @@
 import config from 'config';
-import { Router } from 'express';
+import express from 'express';
+import morgan from 'morgan';
 import { getNewToken, isAuthorized } from '../auth/jwt.js';
 import * as users from '../controllers/user.js';
 import * as devices from '../controllers/device.js';
@@ -13,7 +14,7 @@ import Logger from '../utils/logger.js';
 
 export default (passport) => {
     const logger = Logger(import.meta.url);
-    const router = Router();
+    const router = express.Router();
 
     // Apply rate limiting middleware to api routes
     router.use(
@@ -22,6 +23,12 @@ export default (passport) => {
             config.get('rateLimiter.limit'),
         ),
     );
+
+    // Apply logging middleware
+    router.use(morgan('combined', { stream: logger.stream }));
+
+    // Apply parser middleware
+    router.use(express.json()); // for parsing application/json
 
     // Enable CORS for API
     router.use((req, res, next) => {
@@ -155,7 +162,7 @@ export default (passport) => {
 
     router.use(catchAll404);
 
-    // Error handling middleware (should be placed at the end)
+    // Custom error handling middleware (should be placed at the end)
     router.use(httpErrorHandler(logger));
 
     return router;
