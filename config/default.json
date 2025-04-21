@@ -5,7 +5,7 @@
   },
   "server": {
     "port": 3000,
-    "forceSSL": false,
+    "forceSSL": true,
     "proxy": false
   },
   "rateLimiter": {
