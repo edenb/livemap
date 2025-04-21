@@ -5,7 +5,7 @@
     "proxy": false
   },
   "rateLimiter": {
-    "limit": 100,
+    "limit": 200,
     "window": 10000
   },
   "logger": {
