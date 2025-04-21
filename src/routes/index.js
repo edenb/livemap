@@ -80,6 +80,7 @@ export default (passport) => {
     const sessionCookie = {
         maxAge: config.get('sessions.maxAge'),
         sameSite: 'strict',
+        secure: config.get('server.forceSSL'),
     };
     router.use(sessionMiddleware(sessionName, sessionSecret, sessionCookie));
     router.use(passport.session());
