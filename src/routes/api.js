@@ -7,6 +7,7 @@ import * as devices from '../controllers/device.js';
 import * as positions from '../controllers/position.js';
 import * as staticLayers from '../controllers/staticlayer.js';
 import * as server from '../controllers/server.js';
+import { forceHttps } from '../middlewares/forcehttps.js';
 import { catchAll404, httpErrorHandler } from '../middlewares/httperror.js';
 import { rateLimiter } from '../middlewares/ratelimiter.js';
 import { HttpError } from '../utils/error.js';
@@ -15,6 +16,9 @@ import Logger from '../utils/logger.js';
 export default (passport) => {
     const logger = Logger(import.meta.url);
     const router = express.Router();
+
+    // Force HTTPS
+    router.use(forceHttps(config.get('server.forceSSL')));
 
     // Apply rate limiting middleware to api routes
     router.use(

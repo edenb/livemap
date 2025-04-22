@@ -2,7 +2,7 @@ import config from 'config';
 import pgStore from 'connect-pg-simple';
 import { readFile } from 'node:fs';
 import pg from 'pg';
-import pgConnectionString from 'pg-connection-string';
+import { parseIntoClientConfig } from 'pg-connection-string';
 import { load, invalidate, save } from './dbcache.js';
 import Logger from '../utils/logger.js';
 
@@ -173,7 +173,7 @@ queryDef.getNumberOfTables = {
 // To set environment variable:
 //  set DATABASE_URL=user:pass@abc.com/table (Windows)
 //  export DATABASE_URL=user:pass@abc.com/table (*nix)
-const dbConfig = pgConnectionString.parse(config.get('db.url'));
+const dbConfig = parseIntoClientConfig(config.get('db.url'));
 // Overwrite tls.connect options to allow self signed certs
 if (config.get('db.ssl')) {
     dbConfig.ssl = { rejectUnauthorized: false };

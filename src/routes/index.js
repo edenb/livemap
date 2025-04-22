@@ -4,6 +4,7 @@ import express from 'express';
 import morgan from 'morgan';
 import favicon from 'serve-favicon';
 import { getNewToken } from '../auth/jwt.js';
+import { forceHttps } from '../middlewares/forcehttps.js';
 import { rateLimiter } from '../middlewares/ratelimiter.js';
 import { sessionMiddleware } from '../middlewares/session.js';
 import * as usr from '../models/user.js';
@@ -49,6 +50,9 @@ function ensureAuthenticated(req, res, next) {
 export default (passport) => {
     const logger = Logger(import.meta.url);
     const router = express.Router();
+
+    // Force HTTPS
+    router.use(forceHttps(config.get('server.forceSSL')));
 
     // Apply rate limiting middleware to index routes
     router.use(
