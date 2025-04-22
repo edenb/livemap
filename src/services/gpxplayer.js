@@ -119,6 +119,7 @@ export default class GpxPlayer {
             host: 'localhost',
             port: config.get('server.port'),
             path: this.destPath,
+            protocol: config.get('server.forceSSL') ? 'https:' : 'http:',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
