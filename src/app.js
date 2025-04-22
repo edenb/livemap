@@ -1,7 +1,6 @@
 import config from 'config';
 import express from 'express';
 import passport from './auth/passport.js';
-import { forceHttps } from './middlewares/forcehttps.js';
 import { unless } from './middlewares/unless.js';
 import routesApi from './routes/api.js';
 import routesIndex from './routes/index.js';
@@ -11,9 +10,6 @@ import { processLocation } from './utils/ingester.js';
 export default () => {
     const app = express();
     app.disable('x-powered-by');
-
-    // Force HTTPS
-    app.use(forceHttps(config.get('server.forceSSL')));
 
     // Set if server is behind a proxy
     if (config.get('server.proxy')) {
