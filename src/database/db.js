@@ -1,7 +1,7 @@
 import config from 'config';
 import pgStore from 'connect-pg-simple';
 import { readFile } from 'node:fs';
-import pg from 'pg';
+import { Pool } from 'pg';
 import { parseIntoClientConfig } from 'pg-connection-string';
 import { load, invalidate, save } from './dbcache.js';
 import Logger from '../utils/logger.js';
@@ -178,7 +178,7 @@ const dbConfig = parseIntoClientConfig(config.get('db.url'));
 if (config.get('db.ssl')) {
     dbConfig.ssl = { rejectUnauthorized: false };
 }
-const pgPool = new pg.Pool(dbConfig);
+const pgPool = new Pool(dbConfig);
 
 // The pool emits an error if a backend or network error occurs
 // on any idle client. This is fatal so exit
