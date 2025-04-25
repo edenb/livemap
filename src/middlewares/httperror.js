@@ -1,5 +1,5 @@
 import { STATUS_CODES } from 'node:http';
-import pg from 'pg';
+import { DatabaseError } from 'pg';
 import { HttpError, ValidationError } from '../utils/error.js';
 
 // Based on https://docs.postgrest.org/en/latest/references/errors.html
@@ -53,7 +53,7 @@ export function httpErrorHandler(parentLogger) {
         let errStatusCode;
         let message = '';
 
-        if (err instanceof pg.DatabaseError) {
+        if (err instanceof DatabaseError) {
             errStatusCode = statusCodeFromDatabaseError(err);
             // Only provide details on client errors (4XX)
             if (errStatusCode >= 400 && errStatusCode < 500) {

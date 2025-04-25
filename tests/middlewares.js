@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import express from 'express';
 import { createRequest, createResponse } from 'node-mocks-http';
-import pg from 'pg';
+import { DatabaseError } from 'pg';
 import { spy } from 'sinon';
 import { catchAll404, httpErrorHandler } from '../src/middlewares/httperror.js';
 import { forceHttps } from '../src/middlewares/forcehttps.js';
@@ -27,7 +27,7 @@ describe('Middlewares', function () {
 
     describe('HTTP error handler', function () {
         describe('when DatabaseError', function () {
-            let err = new pg.DatabaseError('Test message', 0, 'error');
+            let err = new DatabaseError('Test message', 0, 'error');
             it('should respond with 409 on database error 23503', async function () {
                 err.code = '23503';
                 const httpErrorHandlerTest = httpErrorHandler(logger);
