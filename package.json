@@ -37,7 +37,7 @@
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
     "globals": "^16.0.0",
-    "mocha": "^11.2.2",
+    "mocha": "^11.3.0",
     "node-mocks-http": "^1.17.2",
     "prettier": "^3.5.3",
     "sinon": "^20.0.0",
