@@ -44,7 +44,7 @@
     "socket.io-client": "^4.8.1"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24"
   },
   "scripts": {
     "format": "prettier src tests --write",
