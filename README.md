@@ -32,7 +32,7 @@ The demo contains 3 devices that play back recorded tracks.
 The easiest way to get started is to deploy the application on Docker. The [Docker-livemap](https://github.com/edenb/docker-livemap) project deploys livemap including Postgres and an MQTT broker. 
 
 On a local NodeJS setup you first need to install some packages.
-* Download and install the newest Node.js 22 version from [Node.js](https://nodejs.org)
+* Download and install the newest Node.js 24 version from [Node.js](https://nodejs.org)
 * Download and install the newest [PostgreSQL 16](http://www.postgresql.org/download/)
 * Copy or clone the latest Live Map from GitHub into a project directory of your choice
 * In the project directory run `npm install`

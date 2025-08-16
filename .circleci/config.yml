@@ -1,11 +1,11 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@2.8.2
-  codecov: codecov/codecov@5.3.0
+  docker: circleci/docker@3.0.0
+  codecov: codecov/codecov@5.4.3
 jobs:
   lint:
     docker:
-      - image: cimg/node:22.15
+      - image: cimg/node:24.6
     steps:
       - checkout
       - run:
@@ -16,7 +16,7 @@ jobs:
           command: npm run lint
   test:
     docker:
-      - image: cimg/node:22.15
+      - image: cimg/node:24.6
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
       - image: cimg/postgres:16.4
@@ -87,8 +87,8 @@ workflows:
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
           tag: $CIRCLE_SHA1,latest
           dockerfile: Dockerfile.prod
-          update-description: true
-          use-buildkit: true
+          update_description: true
+          use_buildkit: true
           requires:
             - lint
             - test
