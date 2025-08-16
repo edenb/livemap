@@ -87,8 +87,8 @@ workflows:
           image: $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
           tag: $CIRCLE_SHA1,latest
           dockerfile: Dockerfile.prod
-          update-description: true
-          use-buildkit: true
+          update_description: true
+          use_buildkit: true
           requires:
             - lint
             - test
