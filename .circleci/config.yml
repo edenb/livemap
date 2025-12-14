@@ -56,7 +56,7 @@ jobs:
       - run:
           name: Deploy Fly development
           command: |
-            curl -L https://fly.io/install.sh | sh
+            curl -L https://fly.io/install.sh | sh -s -- --non-interactive
             export FLYCTL_INSTALL="/home/circleci/.fly"
             export PATH="$FLYCTL_INSTALL/bin:$PATH"
             flyctl auth docker
@@ -71,7 +71,7 @@ jobs:
       - run:
           name: Deploy Fly demo
           command: |
-            curl -L https://fly.io/install.sh | sh
+            curl -L https://fly.io/install.sh | sh -s -- --non-interactive
             export FLYCTL_INSTALL="/home/circleci/.fly"
             export PATH="$FLYCTL_INSTALL/bin:$PATH"
             flyctl auth docker
