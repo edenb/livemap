@@ -56,9 +56,9 @@ jobs:
       - run:
           name: Deploy Fly development
           command: |
-            curl -L https://fly.io/install.sh | sh -s -- --non-interactive --setup-path
-            # export FLYCTL_INSTALL="/home/circleci/.fly"
-            # export PATH="$FLYCTL_INSTALL/bin:$PATH"
+            curl -L https://fly.io/install.sh | sh -s -- --non-interactive
+            export FLYCTL_INSTALL="/home/circleci/.fly"
+            export PATH="$FLYCTL_INSTALL/bin:$PATH"
             flyctl auth docker
             DOCKER_BUILDKIT=1 docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_DEV:$CIRCLE_BUILD_NUM
@@ -71,9 +71,9 @@ jobs:
       - run:
           name: Deploy Fly demo
           command: |
-            curl -L https://fly.io/install.sh | sh -s -- --non-interactive --setup-path
-            # export FLYCTL_INSTALL="/home/circleci/.fly"
-            # export PATH="$FLYCTL_INSTALL/bin:$PATH"
+            curl -L https://fly.io/install.sh | sh -s -- --non-interactive
+            export FLYCTL_INSTALL="/home/circleci/.fly"
+            export PATH="$FLYCTL_INSTALL/bin:$PATH"
             flyctl auth docker
             DOCKER_BUILDKIT=1 docker build -f Dockerfile.demo -t registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM .
             docker push registry.fly.io/$FLY_APP_NAME_PROD:$CIRCLE_BUILD_NUM
