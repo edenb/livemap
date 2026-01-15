@@ -35,7 +35,7 @@
     "chai-http": "^5.1.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-prettier": "^5.5.5",
     "globals": "^16.5.0",
     "mocha": "^11.7.5",
     "node-mocks-http": "^1.17.2",
