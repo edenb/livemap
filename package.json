@@ -20,7 +20,7 @@
     "passport": "~0.7.0",
     "passport-local": "~1.0.0",
     "pg": "^8.17.1",
-    "pg-connection-string": "^2.10.0",
+    "pg-connection-string": "^2.10.1",
     "pug": "^3.0.2",
     "serve-favicon": "~2.5.1",
     "socket.io": "^4.8.3",
