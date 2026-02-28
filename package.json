@@ -19,7 +19,7 @@
     "mqtt": "^5.15.0",
     "passport": "~0.7.0",
     "passport-local": "~1.0.0",
-    "pg": "^8.18.0",
+    "pg": "^8.19.0",
     "pg-connection-string": "^2.10.0",
     "pug": "^3.0.2",
     "serve-favicon": "~2.5.1",
