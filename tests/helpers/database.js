@@ -25,7 +25,7 @@ export async function addUserAndDevices(user, devices) {
             }
         }
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err.message, { cause: err });
     }
 }
 
@@ -36,7 +36,7 @@ export async function addShare(user, ids) {
             throw new Error('No shared users were added');
         }
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err.message, { cause: err });
     }
 }
 
@@ -55,7 +55,7 @@ export async function removeUserAndDevices(fromUser) {
             }
         }
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err.message, { cause: err });
     }
 }
 
@@ -64,7 +64,7 @@ export async function getUser(user) {
         const { rows } = await usr.getUserByField('username', user.username);
         return rows[0] || null;
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err.message, { cause: err });
     }
 }
 
@@ -74,7 +74,7 @@ export async function getDevices(fromUser) {
         const { rows } = await dev.getAllowedDevices(user.user_id);
         return rows;
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err.message, { cause: err });
     }
 }
 
@@ -90,6 +90,6 @@ export async function addPosition(position) {
             position.loc_attr,
         ]);
     } catch (err) {
-        throw new Error(err.message);
+        throw new Error(err.message, { cause: err });
     }
 }

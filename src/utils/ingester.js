@@ -119,7 +119,9 @@ async function processMqtt(payload, validator) {
     try {
         srcData = JSON.parse(payload);
     } catch (err) {
-        throw new Error(`Unable to parse payload. ${err.message}`);
+        throw new Error(`Unable to parse payload. ${err.message}`, {
+            cause: err,
+        });
     }
 
     if (validator) {

@@ -17,7 +17,7 @@ export function getNewToken(user) {
 }
 
 export function getTokenPayload(token) {
-    let payload = null;
+    let payload;
     let options = { algorithm: config.get('auth.tokenAlgorithm') };
     try {
         payload = jsonwebtoken.verify(
