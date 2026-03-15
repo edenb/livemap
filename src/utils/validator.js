@@ -33,7 +33,9 @@ export default class Validator {
             addFormats(this.ajvValidator);
             return this.compileSchema(this.ajvValidator, schema);
         } catch (err) {
-            throw new Error(`Unable to create validator. ${err.message}`);
+            throw new Error(`Unable to create validator. ${err.message}`, {
+                cause: err,
+            });
         }
     }
 
@@ -46,6 +48,7 @@ export default class Validator {
         } catch (err) {
             throw new Error(
                 `Unable to load schema '${schemaName}'. ${err.message}`,
+                { cause: err },
             );
         }
     }
@@ -54,7 +57,9 @@ export default class Validator {
         try {
             return validator.compile(schema);
         } catch (err) {
-            throw new Error(`Unable to compile schema. ${err.message}`);
+            throw new Error(`Unable to compile schema. ${err.message}`, {
+                cause: err,
+            });
         }
     }
 

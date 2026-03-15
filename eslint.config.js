@@ -1,25 +1,15 @@
 import js from '@eslint/js';
-import { defineConfig } from 'eslint/config';
 import globals from 'globals';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import pluginPrettier from 'eslint-plugin-prettier/recommended';
+import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     {
         files: ['**/*.js'],
-        plugins: {
-            js,
-        },
+        plugins: { js },
         extends: ['js/recommended'],
-        rules: {
-            'no-unused-vars': 'off',
-        },
-        languageOptions: {
-            globals: {
-                ...globals.mocha,
-                ...globals.node,
-            },
-        },
+        rules: { 'no-unused-vars': 'off' },
+        languageOptions: { globals: { ...globals.node, ...globals.mocha } },
     },
-    // Prettier config always last
-    eslintPluginPrettierRecommended,
+    pluginPrettier, // Prettier always last
 ]);
