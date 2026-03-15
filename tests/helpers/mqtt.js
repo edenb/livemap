@@ -1,4 +1,4 @@
-import Aedes from 'aedes';
+import { Aedes } from 'aedes';
 import mqtt from 'mqtt';
 import { createServer } from 'node:net';
 import * as mqttService from '../../src/services/mqtt.js';
@@ -6,20 +6,22 @@ import * as mqttService from '../../src/services/mqtt.js';
 export function createMqttServer(port) {
     return new Promise(function (resolve, reject) {
         try {
-            const aedes = new Aedes();
-            const mqttServer = createServer(aedes.handle);
+            // Promise executor functions should not be async
+            Aedes.createBroker().then((aedes) => {
+                const mqttServer = createServer(aedes.handle);
 
-            mqttServer.on('close', function () {
-                // Aedes should be closed also because otherwise mocha will not exit
-                aedes.close();
-            });
+                mqttServer.on('close', function () {
+                    // Aedes should be closed also because otherwise mocha will not exit
+                    aedes.close();
+                });
 
-            mqttServer.on('error', function (err) {
-                reject(err);
-            });
+                mqttServer.on('error', function (err) {
+                    reject(err);
+                });
 
-            mqttServer.listen(port, function () {
-                resolve(mqttServer);
+                mqttServer.listen(port, function () {
+                    resolve(mqttServer);
+                });
             });
         } catch (err) {
             reject(err);
