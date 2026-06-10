@@ -39,7 +39,7 @@
     "globals": "^17.6.0",
     "mocha": "^11.7.6",
     "node-mocks-http": "^1.17.2",
-    "prettier": "^3.8.3",
+    "prettier": "^3.8.4",
     "sinon": "^22.0.0",
     "socket.io-client": "^4.8.3"
   },
