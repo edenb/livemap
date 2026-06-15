@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@3.0.0
+  docker: circleci/docker@4.0.0
   codecov: codecov/codecov@6.0.0
 jobs:
   lint:
