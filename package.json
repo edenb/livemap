@@ -38,7 +38,7 @@
     "eslint-plugin-prettier": "^5.5.6",
     "globals": "^17.7.0",
     "mocha": "^11.7.6",
-    "node-mocks-http": "^1.18.0",
+    "node-mocks-http": "^1.18.1",
     "prettier": "^3.9.5",
     "sinon": "^22.0.0",
     "socket.io-client": "^4.8.3"
