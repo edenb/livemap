@@ -40,7 +40,7 @@
     "mocha": "^11.7.6",
     "node-mocks-http": "^1.18.1",
     "prettier": "^3.9.5",
-    "sinon": "^22.0.0",
+    "sinon": "^22.1.0",
     "socket.io-client": "^4.8.3"
   },
   "engines": {
