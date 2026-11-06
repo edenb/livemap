@@ -1,11 +1,11 @@
 version: 2.1
 orbs:
-  docker: circleci/docker@4.0.0
-  codecov: codecov/codecov@6.0.0
+  docker: circleci/docker@4.0.1
+  codecov: codecov/codecov@6.1.0
 jobs:
   lint:
     docker:
-      - image: cimg/node:24.16.0
+      - image: cimg/node:24.22
     steps:
       - checkout
       - run:
@@ -16,10 +16,10 @@ jobs:
           command: npm run lint
   test:
     docker:
-      - image: cimg/node:24.16.0
+      - image: cimg/node:24.22
         environment:
           C_DB_URL: postgres://livemap@localhost:5432/livemapdb
-      - image: cimg/postgres:16.4
+      - image: cimg/postgres:16.15
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
